@@ -30,6 +30,8 @@ import akka.http.javadsl.ConnectHttp;
 import akka.http.javadsl.Http;
 import akka.http.javadsl.IncomingConnection;
 import akka.http.javadsl.ServerBinding;
+import akka.routing.DefaultResizer;
+import akka.routing.RoundRobinPool;
 import akka.stream.ActorMaterializer;
 import akka.stream.Materializer;
 import com.arpnetworking.clusteraggregator.aggregation.AggMessageExtractor;
@@ -54,6 +56,7 @@ import com.arpnetworking.metrics.Sink;
 import com.arpnetworking.metrics.impl.TsdLogSink;
 import com.arpnetworking.metrics.impl.TsdMetricsFactory;
 import com.arpnetworking.utility.ActorConfigurator;
+import com.arpnetworking.utility.ConfiguredLaunchableFactory;
 import com.arpnetworking.utility.Database;
 import com.arpnetworking.utility.ParallelLeastShardAllocationStrategy;
 import com.arpnetworking.utility.partitioning.PartitionSet;
@@ -167,7 +170,7 @@ public class GuiceModule extends AbstractModule {
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
     private ActorRef provideHostEmitter(final Injector injector, final ActorSystem system) {
         final ActorRef emitterConfigurationProxy = system.actorOf(
-                ConfigurableActorProxy.props(Emitter::props),
+                ConfigurableActorProxy.props(new RREmitterFactory()),
                 "host-emitter-configurator");
         final ActorConfigurator<EmitterConfiguration> configurator =
                 new ActorConfigurator<>(emitterConfigurationProxy, EmitterConfiguration.class);
@@ -265,7 +268,6 @@ public class GuiceModule extends AbstractModule {
                 .run(materializer);
     }
 
-
     @Provides
     @Singleton
     @Named("periodic-statistics")
@@ -348,6 +350,15 @@ public class GuiceModule extends AbstractModule {
 
 
     private final ClusterAggregatorConfiguration _configuration;
+
+    private static final class RREmitterFactory implements ConfiguredLaunchableFactory<Props, EmitterConfiguration> {
+
+        @Override
+        public Props create(final EmitterConfiguration config) {
+            final DefaultResizer resizer = new DefaultResizer(5, 5);
+            return new RoundRobinPool(5).withResizer(resizer).props(Emitter.props(config));
+        }
+    }
 
     private static final class DatabaseProvider implements com.google.inject.Provider<Database> {
 
