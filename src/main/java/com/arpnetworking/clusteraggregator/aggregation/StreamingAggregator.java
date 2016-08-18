@@ -59,6 +59,7 @@ import java.util.concurrent.TimeUnit;
  * Actual actor responsible for aggregating.
  *
  * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Matthew Hayter (mhayter at groupon dot com)
  */
 public class StreamingAggregator extends UntypedActor {
 
@@ -130,12 +131,11 @@ public class StreamingAggregator extends UntypedActor {
             processAggregationMessage((Messages.StatisticSetRecord) message);
         } else if (message instanceof BucketCheck) {
             if (_initialized) {
-                while (_aggBuckets.size() > 0) {
-                    final Pair<DateTime, Map<Map<String, String>, StreamingAggregationBucket>> bucketSlice = _aggBuckets.getFirst();
-                    final DateTime bucketStartTime = bucketSlice.first();
-                    final Map<Map<String, String>, StreamingAggregationBucket> bucketMap = bucketSlice.second();
-                    if (bucketStartTime.plus(_period).plus(AGG_TIMEOUT).isBeforeNow()) {
-                        _aggBuckets.removeFirst();
+                while (_bucketList.getPeriodCount() > 0) {
+                    if (_bucketList.getEarliestStartTime().plus(_period).plus(AGG_TIMEOUT).isBeforeNow()) {
+                        final Pair<DateTime, Map<Map<String, String>, StreamingAggregationBucket>> period = _bucketList.removeFirst();
+                        final DateTime bucketStartTime = period.first();
+                        final Map<Map<String, String>, StreamingAggregationBucket> bucketMap = period.second();
 
                         for (final Map.Entry<Map<String, String>, StreamingAggregationBucket> dimensionToBucketEntry : bucketMap.entrySet()) {
                             final StreamingAggregationBucket bucket = dimensionToBucketEntry.getValue();
@@ -174,7 +174,6 @@ public class StreamingAggregator extends UntypedActor {
                                     .build();
                             final PeriodicData periodicData = new PeriodicData.Builder()
                                     .setData(builder.build())
-                                    // TODO: assume that the dimensions list does not contain host. Validate.
                                     .setDimensions(dimensions)
                                     .setConditions(ImmutableList.of())
                                     .setPeriod(_period)
@@ -223,8 +222,6 @@ public class StreamingAggregator extends UntypedActor {
 
     private void processAggregationMessage(final Messages.StatisticSetRecord data) {
 
-        final Messages.DimensionEntry dimensionEntry = data.getDimensionsList().get(0);
-
         final CombinedMetricData metricData = CombinedMetricData.Builder.fromStatisticSetRecord(data).build();
         // First message sets the data we know about this actor
         if (!_initialized) {
@@ -258,33 +255,22 @@ public class StreamingAggregator extends UntypedActor {
         }
         // Find the time bucket to dump this in
         final DateTime periodStart = DateTime.parse(data.getPeriodStart());
-        if (_aggBuckets.size() > 0 && _aggBuckets.getFirst().first().isAfter(periodStart)) {
+        if (_bucketList.getPeriodCount() > 0 && _bucketList.getEarliestStartTime().isAfter(periodStart)) {
             // We got a bit of data that is too old for us to aggregate.
             LOGGER.warn()
                     .setMessage("Received a work item that is too old to aggregate")
-                    .addData("bucketStart", _aggBuckets.getFirst().first())
+                    .addData("bucketStart", _bucketList.getEarliestStartTime())
                     .addData("workItem", data)
                     .addContext("actor", self())
                     .log();
         } else {
-            // Build a map of the dimensions, calling out any duplicate keys.
-            final Map<String, String> dimensions = Maps.<String, String>newHashMapWithExpectedSize(data.getDimensionsCount());
-            for (final Messages.DimensionEntry entry : data.getDimensionsList()) {
-                if (dimensions.containsKey(entry.getKey())) {
-                    final String existingValue = dimensions.get(entry.getKey());
-                    LOGGER.error()
-                            .setMessage("Found duplicate value for dimension")
-                            .addData("dimension", entry.getKey())
-                            .addData("firstValue", existingValue)
-                            .addData("secondValue", existingValue)
-                            .addData("workItem", data)
-                            .log();
-                    // Select the smaller of the two strings using natural ordering for consistency.
-                    dimensions.put(entry.getKey(), Collections.min(Arrays.asList(existingValue, entry.getValue())));
-                }
-            }
+            // Build a map of the dimensions, calling out (but discarding) any duplicate keys.
+            final Map<String, String> dimensions = buildDimensionsMap(data);
+            // We are aggregating across hosts, so remove the host dimension from the key. This causes metrics which have
+            // the same name and dimensions, but different hosts, to get aggregated together.
+            dimensions.remove("host");
 
-            if (_aggBuckets.size() == 0 || _aggBuckets.getLast().first().isBefore(periodStart)) {
+            if (_bucketList.getPeriodCount() == 0 || _bucketList.getLatestStartTime().isBefore(periodStart)) {
                 // We need to create a new period to hold this data.
                 LOGGER.debug()
                         .setMessage("Creating new aggregation bucket for period")
@@ -292,61 +278,71 @@ public class StreamingAggregator extends UntypedActor {
                         .addContext("actor", self())
                         .log();
                 final StreamingAggregationBucket bucket = new StreamingAggregationBucket(periodStart);
+                bucket.update(metricData);
+                _bucketList.addNewPeriodWithBucket(periodStart, dimensions, bucket);
 
-                Map<Map<String, String>, StreamingAggregationBucket> dimsToBucketMap = Maps.newHashMap();
-                dimsToBucketMap.put(dimensions, bucket);
-                final Pair<DateTime, Map<Map<String, String>, StreamingAggregationBucket>> dateTimeMapPair = new Pair<>(periodStart, dimsToBucketMap);
 
-                _aggBuckets.add(dateTimeMapPair);
-            }
-            final Iterator<Pair<DateTime, Map<Map<String, String>, StreamingAggregationBucket>>> periodIterator = _aggBuckets.iterator();
-            Pair<DateTime, Map<Map<String, String>, StreamingAggregationBucket>> currentPair;
-            Map<Map<String, String>, StreamingAggregationBucket> correctBucket = null;
-            while (periodIterator.hasNext()) {
-                currentPair = periodIterator.next();
-                if (currentPair.first().equals(periodStart)) {
-                    // We found the correct bucket
-                    correctBucket = currentPair.second();
-                    break;
-                }
-            }
-
-            if (correctBucket == null) {
-                LOGGER.error()
-                        .setMessage("No bucket found to aggregate into, bug in the bucket walk")
-                        .addContext("actor", self())
-                        .log();
             } else {
+                // Search the list of periods.
+                final Map<Map<String, String>, StreamingAggregationBucket> correctPeriod = _bucketList.findPeriod(periodStart);
 
-                LOGGER.debug()
-                        .setMessage("Updating bucket")
-                        .addData("bucket", correctBucket)
-                        .addData("data", metricData)
-                        .addContext("actor", self())
-                        .log();
-                if (correctBucket.containsKey(dimensions)) {
-                    final StreamingAggregationBucket bucket = correctBucket.get(dimensions);
-                    bucket.update(metricData);
+                if (correctPeriod == null) {
+                    LOGGER.error()
+                            .setMessage("No bucket found to aggregate into, bug in the bucket walk")
+                            .addData("periodStart", periodStart)
+                            .addData("earliestPeriod", _bucketList.getEarliestStartTime())
+                            .addData("latestPeriod", _bucketList.getLatestStartTime())
+                            .addContext("actor", self())
+                            .log();
                 } else {
-                    final StreamingAggregationBucket bucket = new StreamingAggregationBucket(periodStart);
-                    bucket.update(metricData);
-                    correctBucket.put(dimensions, bucket);
+                    LOGGER.debug()
+                            .setMessage("Updating bucket")
+                            .addData("bucket", correctPeriod)
+                            .addData("data", metricData)
+                            .addContext("actor", self())
+                            .log();
+                    if (correctPeriod.containsKey(dimensions)) {
+                        final StreamingAggregationBucket bucket = correctPeriod.get(dimensions);
+                        bucket.update(metricData);
+                    } else {
+                        final StreamingAggregationBucket bucket = new StreamingAggregationBucket(periodStart);
+                        bucket.update(metricData);
+                        correctPeriod.put(dimensions, bucket);
+                    }
+                    LOGGER.debug()
+                            .setMessage("Done updating bucket")
+                            .addData("bucket", correctPeriod)
+                            .addContext("actor", self())
+                            .log();
                 }
-                LOGGER.debug()
-                        .setMessage("Done updating bucket")
-                        .addData("bucket", correctBucket)
-                        .addContext("actor", self())
-                        .log();
             }
         }
+    }
+
+    private Map<String, String> buildDimensionsMap(final Messages.StatisticSetRecord data) {
+        final Map<String, String> dimensions = Maps.<String, String>newHashMapWithExpectedSize(data.getDimensionsCount());
+        for (final Messages.DimensionEntry entry : data.getDimensionsList()) {
+            if (dimensions.containsKey(entry.getKey())) {
+                final String existingValue = dimensions.get(entry.getKey());
+                LOGGER.error()
+                        .setMessage("Found duplicate value for dimension")
+                        .addData("dimension", entry.getKey())
+                        .addData("firstValue", existingValue)
+                        .addData("secondValue", existingValue)
+                        .addData("workItem", data)
+                        .log();
+                // Select the smaller of the two strings using natural ordering for consistency.
+                dimensions.put(entry.getKey(), Collections.min(Arrays.asList(existingValue, entry.getValue())));
+            }
+        }
+        return dimensions;
     }
 
     private String createHost() {
         return _cluster + "-cluster" + _clusterHostSuffix;
     }
 
-    private final LinkedList<Pair<DateTime, Map<Map<String, String>, StreamingAggregationBucket>>> _aggBuckets = Lists.newLinkedList();
-    private final BucketList _bucketList = new BucketList(_aggBuckets);
+    private final BucketList _bucketList = new BucketList(Lists.newLinkedList());
     private final ActorRef _emitter;
     private final ActorRef _lifecycleTracker;
     private final ActorRef _periodicStatistics;
@@ -361,17 +357,58 @@ public class StreamingAggregator extends UntypedActor {
     private static final Duration AGG_TIMEOUT = Duration.standardMinutes(1);
     private static final Logger LOGGER = LoggerFactory.getLogger(StreamingAggregator.class);
 
+    /**
+     * Represents a list of buckets. This implementation indexes first by period start and then by dimension set, as is
+     * pertinent for use by this class.
+     *
+     * @author Matthew Hayter (mhayter at groupon dot com)
+     */
     private static final class BucketList {
         public BucketList(final LinkedList<Pair<DateTime, Map<Map<String, String>, StreamingAggregationBucket>>> aggBuckets) {
             _aggBuckets = aggBuckets;
         }
 
-        private final LinkedList<Pair<DateTime, Map<Map<String, String>, StreamingAggregationBucket>>> _aggBuckets;
+        public void addNewPeriodWithBucket(final DateTime periodStart, final Map<String, String> dimensions, final StreamingAggregationBucket bucket) {
+            Map<Map<String, String>, StreamingAggregationBucket> dimsToBucketMap = Maps.newHashMap();
+            dimsToBucketMap.put(dimensions, bucket);
+            final Pair<DateTime, Map<Map<String, String>, StreamingAggregationBucket>> dateTimeMapPair = new Pair<>(periodStart, dimsToBucketMap);
 
+            _aggBuckets.add(dateTimeMapPair);
+        }
+
+        public Map<Map<String, String>, StreamingAggregationBucket> findPeriod(DateTime periodStart) {
+            final Iterator<Pair<DateTime, Map<Map<String, String>, StreamingAggregationBucket>>> periodIterator = _aggBuckets.iterator();
+            Pair<DateTime, Map<Map<String, String>, StreamingAggregationBucket>> currentPair;
+            Map<Map<String, String>, StreamingAggregationBucket> correctPeriod = null;
+            while (periodIterator.hasNext()) {
+                currentPair = periodIterator.next();
+                if (currentPair.first().equals(periodStart)) {
+                    // We found the correct bucket
+                    correctPeriod = currentPair.second();
+                    break;
+                }
+            }
+            return correctPeriod;
+        }
 
         public int getPeriodCount() {
             return _aggBuckets.size();
         }
+
+
+        public DateTime getLatestStartTime() {
+            return _aggBuckets.getLast().first();
+        }
+
+        public DateTime getEarliestStartTime() {
+            return _aggBuckets.getFirst().first();
+        }
+
+        public Pair<DateTime, Map<Map<String, String>, StreamingAggregationBucket>> removeFirst() {
+            return _aggBuckets.removeFirst();
+        }
+
+        private final LinkedList<Pair<DateTime, Map<Map<String, String>, StreamingAggregationBucket>>> _aggBuckets;
 
     }
 
