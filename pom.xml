@@ -203,6 +203,7 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <argLine>${argLine} -Xms512m -Xmx1024m -ea -Duser.timezone="UTC"</argLine>
+          <trimStackTrace>false</trimStackTrace>
         </configuration>
       </plugin>
       <plugin>
@@ -369,6 +370,9 @@
             <goals>
               <goal>start</goal>
             </goals>
+            <configuration>
+              <skip>${skipIntegrationTests}</skip>
+            </configuration>
           </execution>
           <execution>
             <id>stop</id>
@@ -376,6 +380,9 @@
             <goals>
               <goal>stop</goal>
             </goals>
+            <configuration>
+              <skip>${skipIntegrationTests}</skip>
+            </configuration>
           </execution>
           <execution>
             <id>push</id>
