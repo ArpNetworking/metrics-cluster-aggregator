@@ -46,7 +46,7 @@ import java.util.Map;
  */
 public final class CombinedMetricData {
     /**
-     * Public constructor.
+     * Private constructor.
      */
     private CombinedMetricData(final Builder builder) {
         _metricName = builder._metricName;
