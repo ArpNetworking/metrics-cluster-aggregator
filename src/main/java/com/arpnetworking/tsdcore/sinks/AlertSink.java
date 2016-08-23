@@ -101,11 +101,11 @@ public final class AlertSink extends BaseSink {
                                 .setObjectMapper(OBJECT_MAPPER)
                                 .addListener(_configurationListener),
                         _clusterServices);
+                newConfiguration.launch();
                 final DynamicConfiguration oldConfiguration = _configuration.getAndSet(newConfiguration);
                 if (oldConfiguration != null) {
                     oldConfiguration.shutdown();
                 }
-                newConfiguration.launch();
             }
             metrics.setGauge("sinks/alert/" + getMetricSafeName() + "/cluster_services", _clusterServices.size());
 
