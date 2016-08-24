@@ -39,6 +39,7 @@ import scala.concurrent.duration.FiniteDuration;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -170,11 +171,11 @@ public class HttpSinkActor extends UntypedActor {
                     .addContext("actor", self())
                     .log();
         } else {
-            String responseBody;
+            Optional<String> responseBody;
             try {
-                responseBody = response.getResponseBody();
+                responseBody = Optional.of(response.getResponseBody());
             } catch (final IOException e) {
-                responseBody = null;
+                responseBody = Optional.empty();
             }
 
             LOGGER.warn()
