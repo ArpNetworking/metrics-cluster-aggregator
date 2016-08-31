@@ -283,9 +283,18 @@ public class AggClientConnection extends UntypedActor {
             AggClientConnection.class,
             Duration.ofSeconds(30));
     private static final boolean IS_ENABLED;
-    private static final String HOST_KEY = "host";
-    private static final String SERVICE_KEY = "service";
-    private static final String CLUSTER_KEY = "cluster";
+    /**
+     * The key used in dimensions to specify the host-dimension.
+     */
+    public static final String HOST_KEY = "host";
+    /**
+     * The key used in dimensions to specify the service-dimension.
+     */
+    public static final String SERVICE_KEY = "service";
+    /**
+     * The key used in dimensions to specify the cluster-dimension.
+     */
+    public static final String CLUSTER_KEY = "cluster";
 
 
     static {
