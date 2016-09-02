@@ -16,7 +16,7 @@
 package com.arpnetworking.clusteraggregator.aggregation;
 
 import akka.cluster.sharding.ShardRegion;
-import com.arpnetworking.clusteraggregator.client.AggClientConnection;
+import com.arpnetworking.clusteraggregator.models.CombinedMetricData;
 import com.arpnetworking.metrics.aggregation.protocol.Messages;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 
@@ -55,9 +55,9 @@ public class AggMessageExtractor implements ShardRegion.MessageExtractor {
                     .append(metricData.getPeriod());
             for (final Messages.DimensionEntry dimensionEntry : metricData.getDimensionsList()) {
                 final String k = dimensionEntry.getKey();
-                if (!(k.equals(AggClientConnection.CLUSTER_KEY)
-                        || k.equals(AggClientConnection.HOST_KEY)
-                        || k.equals(AggClientConnection.SERVICE_KEY))) {
+                if (!(k.equals(CombinedMetricData.CLUSTER_KEY)
+                        || k.equals(CombinedMetricData.HOST_KEY)
+                        || k.equals(CombinedMetricData.SERVICE_KEY))) {
                     builder
                             .append("||")
                             .append(dimensionEntry.getKey())

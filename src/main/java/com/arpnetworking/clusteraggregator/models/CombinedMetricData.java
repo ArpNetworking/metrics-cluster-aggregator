@@ -81,6 +81,19 @@ public final class CombinedMetricData {
         return _cluster;
     }
 
+    /**
+     * The key used in dimensions to specify the host-dimension.
+     */
+    public static final String HOST_KEY = "host";
+    /**
+     * The key used in dimensions to specify the service-dimension.
+     */
+    public static final String SERVICE_KEY = "service";
+    /**
+     * The key used in dimensions to specify the cluster-dimension.
+     */
+    public static final String CLUSTER_KEY = "cluster";
+
     private final String _metricName;
     private final Period _period;
     private final Map<Statistic, StatisticValue> _calculatedValues;

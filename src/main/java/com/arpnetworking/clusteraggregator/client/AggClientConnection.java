@@ -202,11 +202,11 @@ public class AggClientConnection extends UntypedActor {
         Optional<String> service = Optional.absent();
         Optional<String> cluster = Optional.absent();
         for (final Messages.DimensionEntry dimensionEntry : setRecord.getDimensionsList()) {
-            if (HOST_KEY.equals(dimensionEntry.getKey())) {
+            if (CombinedMetricData.HOST_KEY.equals(dimensionEntry.getKey())) {
                 host = Optional.fromNullable(dimensionEntry.getValue());
-            } else if (SERVICE_KEY.equals(dimensionEntry.getKey())) {
+            } else if (CombinedMetricData.SERVICE_KEY.equals(dimensionEntry.getKey())) {
                 service = Optional.fromNullable(dimensionEntry.getValue());
-            } else if (CLUSTER_KEY.equals(dimensionEntry.getKey())) {
+            } else if (CombinedMetricData.CLUSTER_KEY.equals(dimensionEntry.getKey())) {
                 cluster = Optional.fromNullable(dimensionEntry.getValue());
             } else {
                 dimensionBuilder.put(dimensionEntry.getKey(), dimensionEntry.getValue());
@@ -228,9 +228,9 @@ public class AggClientConnection extends UntypedActor {
             host = _hostName;
         }
 
-        dimensionBuilder.put(HOST_KEY, host.or(""));
-        dimensionBuilder.put(SERVICE_KEY, service.or(""));
-        dimensionBuilder.put(CLUSTER_KEY, cluster.or(""));
+        dimensionBuilder.put(CombinedMetricData.HOST_KEY, host.or(""));
+        dimensionBuilder.put(CombinedMetricData.SERVICE_KEY, service.or(""));
+        dimensionBuilder.put(CombinedMetricData.CLUSTER_KEY, cluster.or(""));
 
         if (!(host.isPresent() && service.isPresent() && cluster.isPresent())) {
             INCOMPLETE_RECORD_LOGGER.warn()
@@ -283,18 +283,6 @@ public class AggClientConnection extends UntypedActor {
             AggClientConnection.class,
             Duration.ofSeconds(30));
     private static final boolean IS_ENABLED;
-    /**
-     * The key used in dimensions to specify the host-dimension.
-     */
-    public static final String HOST_KEY = "host";
-    /**
-     * The key used in dimensions to specify the service-dimension.
-     */
-    public static final String SERVICE_KEY = "service";
-    /**
-     * The key used in dimensions to specify the cluster-dimension.
-     */
-    public static final String CLUSTER_KEY = "cluster";
 
 
     static {
