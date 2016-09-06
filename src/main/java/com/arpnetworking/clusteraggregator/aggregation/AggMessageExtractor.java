@@ -20,6 +20,9 @@ import com.arpnetworking.clusteraggregator.models.CombinedMetricData;
 import com.arpnetworking.metrics.aggregation.protocol.Messages;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+
 /**
  * Handles extracting the sharding information from an aggregation message.
  *
@@ -53,7 +56,9 @@ public class AggMessageExtractor implements ShardRegion.MessageExtractor {
                     .append(metricData.getMetric())
                     .append("||")
                     .append(metricData.getPeriod());
-            for (final Messages.DimensionEntry dimensionEntry : metricData.getDimensionsList()) {
+            final ArrayList<Messages.DimensionEntry> sortedDimensions = new ArrayList<>(metricData.getDimensionsList());
+            sortedDimensions.sort(Comparator.comparing(Messages.DimensionEntry::getKey));
+            for (final Messages.DimensionEntry dimensionEntry : sortedDimensions) {
                 final String k = dimensionEntry.getKey();
                 if (!(k.equals(CombinedMetricData.CLUSTER_KEY)
                         || k.equals(CombinedMetricData.HOST_KEY)
