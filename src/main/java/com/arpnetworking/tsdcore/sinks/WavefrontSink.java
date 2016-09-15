@@ -15,6 +15,7 @@
  */
 package com.arpnetworking.tsdcore.sinks;
 
+import com.arpnetworking.clusteraggregator.models.CombinedMetricData;
 import com.arpnetworking.metrics.com.arpnetworking.steno.Logger;
 import com.arpnetworking.metrics.com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
@@ -66,9 +67,26 @@ public final class WavefrontSink extends BaseSink {
             // Build the list of annotations based on cluster and white listed dimensions
             final Map<String, String> annotations = Maps.newHashMap();
             annotations.put("cluster", fqdsn.getCluster());
-            periodicData.getDimensions().entrySet().stream()
-                    .filter(entry -> _whiteListedDimensions.contains(entry.getKey()))
-                    .forEach(entry -> annotations.put(entry.getKey(), entry.getValue()));
+            if (_whiteListedDimensions.isPresent()) {
+                // Respect the whitelist.
+                final ImmutableSet<String> whiteList = _whiteListedDimensions.get();
+                for (final Map.Entry<String, String> dimension : periodicData.getDimensions().entrySet()) {
+                    if (whiteList.contains(dimension.getKey())) {
+                        annotations.put(dimension.getKey(), dimension.getValue());
+                    }
+                }
+            } else {
+                // Don't use the whitelist, send everything.
+                for (final Map.Entry<String, String> dimension : periodicData.getDimensions().entrySet()) {
+                    final String k = dimension.getKey();
+                    if (!k.equals(CombinedMetricData.CLUSTER_KEY)
+                            && !k.equals(CombinedMetricData.HOST_KEY)
+                            && !k.equals(CombinedMetricData.SERVICE_KEY)) {
+                        annotations.put(dimension.getKey(), dimension.getValue());
+                    }
+                }
+            }
+
             reportPointBuilder.setAnnotations(annotations);
 
             // Report the actual data point
@@ -151,7 +169,7 @@ public final class WavefrontSink extends BaseSink {
         _pushFlushInterval = Optional.ofNullable(builder._pushFlushInterval);
         _pushFlushMaxPoints = Optional.ofNullable(builder._pushFlushMaxPoints);
         _idFile = builder._idFile;
-        _whiteListedDimensions = builder._whiteListedDimensions;
+        _whiteListedDimensions = Optional.ofNullable(builder._whiteListedDimensions);
         _bufferBasename = Optional.ofNullable(builder._bufferBasename);
         final WavefrontAgent agent = AgentFactory.getInstance(_token, buildAgentArgs());
         _pointHandler = agent.createPointHandler();
@@ -166,7 +184,7 @@ public final class WavefrontSink extends BaseSink {
     private final Optional<Integer> _pushFlushMaxPoints;
     private final String _idFile;
     private final PointHandler _pointHandler;
-    private final ImmutableSet<String> _whiteListedDimensions;
+    private final Optional<ImmutableSet<String>> _whiteListedDimensions;
     private final Optional<String> _bufferBasename;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WavefrontSink.class);
@@ -318,8 +336,7 @@ public final class WavefrontSink extends BaseSink {
         @NotNull
         @NotEmpty
         private String _idFile;
-        @NotNull
-        private ImmutableSet<String> _whiteListedDimensions = new ImmutableSet.Builder<String>().build();
+        private ImmutableSet<String> _whiteListedDimensions = null;
         private String _bufferBasename;
     }
 
