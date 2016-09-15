@@ -22,7 +22,6 @@ import com.arpnetworking.metrics.com.arpnetworking.steno.Logger;
 import com.arpnetworking.metrics.com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.google.common.collect.Maps;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Comparator;
 import java.util.Map;
@@ -87,7 +86,6 @@ public class AggMessageExtractor implements ShardRegion.MessageExtractor {
      * @param metricData The <code>StatisticSetRecord</code> from which to pull dimensions.
      * @return A sorted, de-duped TreeMap of the dimensions.
      */
-    @NotNull
     private TreeMap<String, String> dimensionsToMap(final Messages.StatisticSetRecord metricData) {
         final TreeMap<String, String> sortedDimensionsMap = Maps.newTreeMap(Comparator.<String>naturalOrder());
 
