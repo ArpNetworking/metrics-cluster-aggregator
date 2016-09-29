@@ -144,7 +144,7 @@ public class GuiceModule extends AbstractModule {
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
     private ActorRef provideClusterEmitter(final Injector injector, final ActorSystem system) {
         final ActorRef emitterConfigurationProxy = system.actorOf(
-                ConfigurableActorProxy.props(Emitter::props),
+                ConfigurableActorProxy.props(new RoundRobinEmitterFactory()),
                 "cluster-emitter-configurator");
         final ActorConfigurator<EmitterConfiguration> configurator =
                 new ActorConfigurator<>(emitterConfigurationProxy, EmitterConfiguration.class);
