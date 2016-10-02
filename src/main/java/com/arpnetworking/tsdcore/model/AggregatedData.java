@@ -19,7 +19,6 @@ import com.arpnetworking.commons.builder.OvalBuilder;
 import com.arpnetworking.logback.annotations.LogValue;
 import com.arpnetworking.steno.LogValueMapFactory;
 import com.google.common.base.Objects;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import net.sf.oval.constraint.NotEmpty;
 import net.sf.oval.constraint.NotNull;
@@ -344,38 +343,6 @@ public final class AggregatedData implements Serializable {
         public Builder setSupportingData(final Object value) {
             _supportingData = value;
             return this;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public AggregatedData build() {
-            if (_fqdsn == null) {
-                throw new IllegalStateException("fqdsn must not be null");
-            }
-            if (_value == null) {
-                throw new IllegalStateException("value must not be null");
-            }
-            if (_samples == null) {
-                throw new IllegalStateException("samples must not be null");
-            }
-            if (_populationSize == null) {
-                throw new IllegalStateException("populationSize must not be null");
-            }
-            if (_start == null) {
-                throw new IllegalStateException("start must not be null");
-            }
-            if (_period == null) {
-                throw new IllegalStateException("period must not be null");
-            }
-            if (Strings.isNullOrEmpty(_host)) {
-                throw new IllegalStateException("host must not be null or empty");
-            }
-            if (_isSpecified == null) {
-                throw new IllegalStateException("isSpecified must not be null");
-            }
-            return new AggregatedData(this);
         }
 
         @NotNull

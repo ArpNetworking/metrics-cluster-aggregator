@@ -123,17 +123,6 @@ public final class DatabaseConfiguration {
         }
 
         /**
-         * {@inheritDoc}
-         */
-        @Override
-        public DatabaseConfiguration build() {
-            if (_minimumIdle == null) {
-                _minimumIdle = _maximumPoolSize;
-            }
-            return super.build();
-        }
-
-        /**
          * Database JDBC url. Required. Cannot be null or empty.
          *
          * @param value JDBC url.

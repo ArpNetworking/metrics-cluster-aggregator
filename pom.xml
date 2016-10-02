@@ -106,7 +106,7 @@
     <akka.persistence.cassandra.version>0.6</akka.persistence.cassandra.version>
     <apache.httpclient.version>4.5.1</apache.httpclient.version>
     <apache.httpcore.version>4.4.3</apache.httpcore.version>
-    <arpnetworking.commons.version>1.4.0</arpnetworking.commons.version>
+    <arpnetworking.commons.version>1.7.1</arpnetworking.commons.version>
     <aspectjrt.version>1.8.9</aspectjrt.version>
     <cglib.version>3.2.1</cglib.version>
     <commons.codec.version>1.10</commons.codec.version>
@@ -119,6 +119,8 @@
     <hikari.version>2.4.1</hikari.version>
     <h2.version>1.4.190</h2.version>
     <jackson.version>2.7.3</jackson.version>
+    <javassist.version>3.20.0-GA</javassist.version>
+    <javassist.maven.core.version>0.1.2</javassist.maven.core.version>
     <javax.persistence.version>1.0</javax.persistence.version>
     <joda.time.version>2.8.2</joda.time.version>
     <jsr305.version>3.0.0</jsr305.version>
@@ -138,7 +140,7 @@
     <netty.version>3.10.3.Final</netty.version>
     <netty.all.version>4.0.21.Final</netty.all.version>
     <ning.http.client.version>1.9.31</ning.http.client.version>
-    <oval.version>1.82</oval.version>
+    <oval.version>1.86-SNAPSHOT</oval.version>
     <play.version>2.4.3</play.version>
     <postgresql.version>9.4-1202-jdbc42</postgresql.version>
     <protobuf.version>3.0.0-beta-2</protobuf.version>
@@ -158,6 +160,7 @@
     <aspectjtools.maven.plugin>1.8.9</aspectjtools.maven.plugin>
     <aspectj.maven.plugin.version>1.8</aspectj.maven.plugin.version>
     <docker.maven.plugin.version>0.15.9</docker.maven.plugin.version>
+    <javassist.maven.plugin.version>0.1.2</javassist.maven.plugin.version>
     <maven.assembly.plugin.version>2.6</maven.assembly.plugin.version>
     <rpm.maven.plugin.version>2.1.5</rpm.maven.plugin.version>
 
@@ -167,6 +170,9 @@
     <!-- Code Coverage -->
     <jacoco.check.line.coverage>0.25</jacoco.check.line.coverage>
     <jacoco.check.branch.coverage>0.25</jacoco.check.branch.coverage>
+
+    <!-- TODO: Remove me with OVal release. -->
+    <enforcer.skip>true</enforcer.skip>
 
     <!-- JVM Debug -->
     <debugJavaOptions />
@@ -182,6 +188,14 @@
     </resources>
     <plugins>
       <!-- Enable Inherited Plugins -->
+      <plugin>
+         <!-- TODO: Remove me with OVal release. -->
+         <groupId>org.apache.maven.plugins</groupId>
+         <artifactId>maven-release-plugin</artifactId>
+         <configuration>
+           <allowTimestampedSnapshots>true</allowTimestampedSnapshots>
+         </configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
@@ -300,6 +314,31 @@
               <descriptors>
                 <descripto>src/main/assembly/docker.xml</descripto>
               </descriptors>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.arpnetworking.commons</groupId>
+        <artifactId>javassist-maven-plugin</artifactId>
+        <version>${javassist.maven.plugin.version}</version>
+        <executions>
+          <execution>
+            <id>javassist-process</id>
+            <goals>
+              <goal>process</goal>
+            </goals>
+            <configuration>
+              <processor>com.arpnetworking.commons.builder.ValidationProcessor</processor>
+            </configuration>
+          </execution>
+          <execution>
+            <id>javassist-test-process</id>
+            <goals>
+              <goal>test-process</goal>
+            </goals>
+            <configuration>
+              <processor>com.arpnetworking.commons.builder.ValidationProcessor</processor>
             </configuration>
           </execution>
         </executions>
@@ -639,6 +678,17 @@
       <version>${oval.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.javassist</groupId>
+      <artifactId>javassist</artifactId>
+      <version>${javassist.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.arpnetworking.commons</groupId>
+      <artifactId>javassist-maven-core</artifactId>
+      <version>${javassist.maven.core.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.luaj</groupId>
       <artifactId>luaj-jse</artifactId>
       <version>${luaj.version}</version>
@@ -781,6 +831,10 @@
       <id>krasserm</id>
       <name>Akka Cassandra Persistence</name>
       <url>http://dl.bintray.com/krasserm/maven</url>
+    </repository>
+    <repository>
+      <id>local-maven-repo</id>
+      <url>file:///${project.basedir}/local-maven-repo</url>
     </repository>
   </repositories>
   <profiles>
