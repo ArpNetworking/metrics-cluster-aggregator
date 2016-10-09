@@ -140,7 +140,7 @@
     <netty.version>3.10.3.Final</netty.version>
     <netty.all.version>4.0.21.Final</netty.all.version>
     <ning.http.client.version>1.9.31</ning.http.client.version>
-    <oval.version>1.86-SNAPSHOT</oval.version>
+    <oval.version>1.86</oval.version>
     <play.version>2.4.3</play.version>
     <postgresql.version>9.4-1202-jdbc42</postgresql.version>
     <protobuf.version>3.0.0-beta-2</protobuf.version>
@@ -171,9 +171,6 @@
     <jacoco.check.line.coverage>0.25</jacoco.check.line.coverage>
     <jacoco.check.branch.coverage>0.25</jacoco.check.branch.coverage>
 
-    <!-- TODO: Remove me with OVal release. -->
-    <enforcer.skip>true</enforcer.skip>
-
     <!-- JVM Debug -->
     <debugJavaOptions />
     <debugJavaPort>9000</debugJavaPort>
@@ -188,14 +185,6 @@
     </resources>
     <plugins>
       <!-- Enable Inherited Plugins -->
-      <plugin>
-         <!-- TODO: Remove me with OVal release. -->
-         <groupId>org.apache.maven.plugins</groupId>
-         <artifactId>maven-release-plugin</artifactId>
-         <configuration>
-           <allowTimestampedSnapshots>true</allowTimestampedSnapshots>
-         </configuration>
-      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
@@ -831,10 +820,6 @@
       <id>krasserm</id>
       <name>Akka Cassandra Persistence</name>
       <url>http://dl.bintray.com/krasserm/maven</url>
-    </repository>
-    <repository>
-      <id>local-maven-repo</id>
-      <url>file:///${project.basedir}/local-maven-repo</url>
     </repository>
   </repositories>
   <profiles>
