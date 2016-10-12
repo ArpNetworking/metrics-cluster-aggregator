@@ -35,6 +35,7 @@ import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -50,6 +51,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -160,9 +162,10 @@ public class StreamingAggregator extends UntypedActor {
 
                             _periodicStatistics.tell(result, getSelf());
                         }
+                        _dimensions.put(CombinedMetricData.HOST_KEY, createHost());
                         final PeriodicData periodicData = new PeriodicData.Builder()
                                 .setData(builder.build())
-                                .setDimensions(ImmutableMap.of("host", createHost()))
+                                .setDimensions(ImmutableMap.copyOf(_dimensions))
                                 .setConditions(ImmutableList.of())
                                 .setPeriod(_period)
                                 .setStart(bucket.getPeriodStart())
@@ -215,6 +218,7 @@ public class StreamingAggregator extends UntypedActor {
             _cluster = metricData.getCluster();
             _metric = metricData.getMetricName();
             _service = metricData.getService();
+            _dimensions = dimensionsToMap(data);
             _resultBuilder = new AggregatedData.Builder()
                     .setHost(createHost())
                     .setPeriod(_period)
@@ -293,6 +297,10 @@ public class StreamingAggregator extends UntypedActor {
         }
     }
 
+    private TreeMap<String, String> dimensionsToMap(final Messages.StatisticSetRecord statisticSetRecord) {
+        return Maps.newTreeMap(AggMessageExtractor.dimensionsToMap(statisticSetRecord));
+    }
+
     private String createHost() {
         return _cluster + "-cluster" + _clusterHostSuffix;
     }
@@ -308,6 +316,7 @@ public class StreamingAggregator extends UntypedActor {
     private String _cluster;
     private String _metric;
     private String _service;
+    private TreeMap<String, String> _dimensions;
     private AggregatedData.Builder _resultBuilder;
     private static final Duration AGG_TIMEOUT = Duration.standardMinutes(1);
     private static final Logger LOGGER = LoggerFactory.getLogger(StreamingAggregator.class);

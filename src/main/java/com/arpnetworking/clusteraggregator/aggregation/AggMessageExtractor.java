@@ -86,7 +86,8 @@ public class AggMessageExtractor implements ShardRegion.MessageExtractor {
      * @param metricData The <code>StatisticSetRecord</code> from which to pull dimensions.
      * @return A sorted, de-duped TreeMap of the dimensions.
      */
-    private TreeMap<String, String> dimensionsToMap(final Messages.StatisticSetRecord metricData) {
+    // TODO(mhayter): export this to a shared location.
+    public static TreeMap<String, String> dimensionsToMap(final Messages.StatisticSetRecord metricData) {
         final TreeMap<String, String> sortedDimensionsMap = Maps.newTreeMap(Comparator.<String>naturalOrder());
 
         for (final Messages.DimensionEntry dimensionEntry : metricData.getDimensionsList()) {
