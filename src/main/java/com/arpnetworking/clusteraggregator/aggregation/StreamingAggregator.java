@@ -51,6 +51,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 /**
  * Actual actor responsible for aggregating.
@@ -161,7 +162,7 @@ public class StreamingAggregator extends AbstractActor {
                                 }
                                 final PeriodicData periodicData = new PeriodicData.Builder()
                                         .setData(builder.build())
-                                        .setDimensions(ImmutableMap.of("host", createHost()))
+                                        .setDimensions(_dimensions)
                                         .setConditions(ImmutableList.of())
                                         .setPeriod(_period)
                                         .setStart(bucket.getPeriodStart())
@@ -214,11 +215,12 @@ public class StreamingAggregator extends AbstractActor {
             _cluster = metricData.getCluster();
             _metric = metricData.getMetricName();
             _service = metricData.getService();
+            _dimensions = dimensionsToMap(data);
             _resultBuilder = new AggregatedData.Builder()
                     .setHost(createHost())
                     .setPeriod(_period)
                     .setPopulationSize(1L)
-                    .setSamples(Collections.<Quantity>emptyList())
+                    .setSamples(Collections.emptyList())
                     .setStart(DateTime.now().hourOfDay().roundFloorCopy())
                     .setValue(new Quantity.Builder().setValue(0d).build());
 
@@ -292,6 +294,21 @@ public class StreamingAggregator extends AbstractActor {
         }
     }
 
+    private ImmutableMap<String, String> dimensionsToMap(final Messages.StatisticSetRecord statisticSetRecord) {
+        final ImmutableMap.Builder<String, String> builder = ImmutableMap.<String, String>builder()
+                .put(CombinedMetricData.CLUSTER_KEY, statisticSetRecord.getCluster())
+                .put(CombinedMetricData.SERVICE_KEY, statisticSetRecord.getService())
+                .put(CombinedMetricData.HOST_KEY, createHost());
+
+        statisticSetRecord.getDimensionsMap()
+                .entrySet()
+                .stream()
+                .filter(NOT_EXPLICIT_DIMENSION)
+                .forEach(entry -> builder.put(entry.getKey(), entry.getValue()));
+
+        return builder.build();
+    }
+
     private String createHost() {
         return _cluster + "-cluster" + _clusterHostSuffix;
     }
@@ -307,9 +324,14 @@ public class StreamingAggregator extends AbstractActor {
     private String _cluster;
     private String _metric;
     private String _service;
+    private ImmutableMap<String, String> _dimensions;
     private AggregatedData.Builder _resultBuilder;
     private static final Duration AGG_TIMEOUT = Duration.standardMinutes(1);
     private static final Logger LOGGER = LoggerFactory.getLogger(StreamingAggregator.class);
+    private static final Predicate<Map.Entry<String, String>> NOT_EXPLICIT_DIMENSION = entry ->
+            !(entry.getKey().equals(CombinedMetricData.CLUSTER_KEY)
+                    || entry.getKey().equals(CombinedMetricData.HOST_KEY)
+                    || entry.getKey().equals(CombinedMetricData.SERVICE_KEY));
 
     private static final class BucketCheck implements Serializable {
         private static final long serialVersionUID = 1L;
