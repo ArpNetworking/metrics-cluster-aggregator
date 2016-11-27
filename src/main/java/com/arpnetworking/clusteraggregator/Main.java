@@ -197,6 +197,11 @@ public final class Main implements Launchable {
         injector.getInstance(Key.get(ActorRef.class, Names.named("jvm-metrics-collector")));
 
         LOGGER.info()
+                .setMessage("Launching cluster joiner")
+                .log();
+        injector.getInstance(Key.get(ActorRef.class, Names.named("cluster-joiner")));
+
+        LOGGER.info()
                 .setMessage("Launching http server")
                 .log();
         injector.getInstance(

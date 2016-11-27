@@ -15,11 +15,15 @@
  */
 package com.arpnetworking.clusteraggregator.configuration;
 
+import akka.actor.Props;
+import com.arpnetworking.akka.NonJoiningClusterJoiner;
 import com.arpnetworking.commons.builder.OvalBuilder;
 import com.arpnetworking.commons.jackson.databind.ObjectMapperFactory;
+import com.arpnetworking.configuration.jackson.akka.ActorBuilderDeserializer;
 import com.arpnetworking.utility.InterfaceDatabase;
 import com.arpnetworking.utility.ReflectionsDatabase;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Maps;
 import net.sf.oval.constraint.NotEmpty;
@@ -43,7 +47,11 @@ public final class ClusterAggregatorConfiguration {
      * @return An <code>ObjectMapper</code> for TsdAggregator configuration.
      */
     public static ObjectMapper createObjectMapper() {
-        return ObjectMapperFactory.getInstance();
+        final ObjectMapper objectMapper = ObjectMapperFactory.createInstance();
+        final SimpleModule module = new SimpleModule();
+        module.addDeserializer(Props.class, new ActorBuilderDeserializer(objectMapper));
+        objectMapper.registerModule(module);
+        return objectMapper;
     }
 
     public String getMonitoringCluster() {
@@ -114,6 +122,10 @@ public final class ClusterAggregatorConfiguration {
         return _clusterHostSuffix;
     }
 
+    public Props getClusterJoinActor() {
+        return _clusterJoinActor;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -138,6 +150,7 @@ public final class ClusterAggregatorConfiguration {
                 .add("RebalanceConfiguration", _rebalanceConfiguration)
                 .add("ClusterHostSuffix", _clusterHostSuffix)
                 .add("DatabaseConfigurations", _databaseConfigurations)
+                .add("ClusterJoinActor", _clusterJoinActor)
                 .toString();
     }
 
@@ -159,6 +172,7 @@ public final class ClusterAggregatorConfiguration {
         _rebalanceConfiguration = builder._rebalanceConfiguration;
         _clusterHostSuffix = builder._clusterHostSuffix;
         _databaseConfigurations = Maps.newHashMap(builder._databaseConfigurations);
+        _clusterJoinActor = builder._clusterJoinActor;
     }
 
     private final String _monitoringCluster;
@@ -177,6 +191,7 @@ public final class ClusterAggregatorConfiguration {
     private final Period _jvmMetricsCollectionInterval;
     private final RebalanceConfiguration _rebalanceConfiguration;
     private final String _clusterHostSuffix;
+    private final Props _clusterJoinActor;
     private final Map<String, DatabaseConfiguration> _databaseConfigurations;
 
     private static final InterfaceDatabase INTERFACE_DATABASE = ReflectionsDatabase.newInstance();
@@ -390,6 +405,17 @@ public final class ClusterAggregatorConfiguration {
             return this;
         }
 
+        /**
+         * Configuration a cluster join actor.
+         *
+         * @param value The cluster join actor configuration.
+         * @return This instance of <code>Builder</code>.
+         */
+        public Builder setClusterJoinActor(final Props value) {
+            _clusterJoinActor = value;
+            return this;
+        }
+
         @NotNull
         @NotEmpty
         private String _monitoringCluster;
@@ -429,6 +455,8 @@ public final class ClusterAggregatorConfiguration {
         private RebalanceConfiguration _rebalanceConfiguration;
         @NotNull
         private String _clusterHostSuffix = "";
+        @NotNull
+        private Props _clusterJoinActor = new NonJoiningClusterJoiner.Builder().build();
         private Map<String, DatabaseConfiguration> _databaseConfigurations;
     }
 }
