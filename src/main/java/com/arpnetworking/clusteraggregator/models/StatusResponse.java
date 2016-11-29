@@ -295,13 +295,17 @@ public final class StatusResponse {
          * {@inheritDoc}
          */
         @Override
-        public void serialize(final Member value, final JsonGenerator gen, final SerializerProvider serializers) throws IOException {
+        public void serialize(
+                final Member value,
+                final JsonGenerator gen,
+                final SerializerProvider serializers)
+                throws IOException {
             gen.writeStartObject();
             gen.writeStringField("address", value.address().toString());
             gen.writeObjectField("roles", JavaConversions.setAsJavaSet(value.roles()));
             gen.writeNumberField("upNumber", value.upNumber());
             gen.writeStringField("status", value.status().toString());
-            gen.writeNumberField("uniqueAddress", value.uniqueAddress().uid());
+            gen.writeNumberField("uniqueAddress", value.uniqueAddress().longUid());
             gen.writeEndObject();
         }
     }

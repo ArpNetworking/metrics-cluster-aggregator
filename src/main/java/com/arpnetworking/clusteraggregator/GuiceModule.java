@@ -48,6 +48,7 @@ import com.arpnetworking.clusteraggregator.configuration.RebalanceConfiguration;
 import com.arpnetworking.clusteraggregator.http.Routes;
 import com.arpnetworking.clusteraggregator.partitioning.DatabasePartitionSet;
 import com.arpnetworking.commons.builder.Builder;
+import com.arpnetworking.commons.jackson.databind.ObjectMapperFactory;
 import com.arpnetworking.configuration.jackson.DynamicConfiguration;
 import com.arpnetworking.configuration.jackson.HoconFileSource;
 import com.arpnetworking.configuration.jackson.JsonNodeFileSource;
@@ -65,6 +66,7 @@ import com.arpnetworking.utility.ParallelLeastShardAllocationStrategy;
 import com.arpnetworking.utility.partitioning.PartitionSet;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
@@ -73,9 +75,12 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigParseOptions;
+import com.typesafe.config.ConfigSyntax;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
@@ -117,7 +122,19 @@ public class GuiceModule extends AbstractModule {
     @Named("akka-config")
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
     private Config provideAkkaConfig() {
-        return ConfigFactory.parseMap(_configuration.getAkkaConfiguration(), _configuration.toString());
+        // This is necessary because the keys contain periods which when
+        // transforming from a map are considered compound path elements. By
+        // rendering to JSON and then parsing it this forces the keys to be
+        // quoted and thus considered single path elements even with periods.
+        try {
+            final String akkaJsonConfig = OBJECT_MAPPER.writeValueAsString(_configuration.getAkkaConfiguration());
+            return ConfigFactory.parseString(
+                    akkaJsonConfig,
+                    ConfigParseOptions.defaults()
+                            .setSyntax(ConfigSyntax.JSON));
+        } catch (final IOException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     @Provides
@@ -362,10 +379,10 @@ public class GuiceModule extends AbstractModule {
         return new DatabasePartitionSet(database, partitionSet);
     }
 
-
     private final ClusterAggregatorConfiguration _configuration;
 
     private static final String HOCON_FILE_EXTENSION = ".hocon";
+    private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.getInstance();
 
     private static final class RoundRobinEmitterFactory implements ConfiguredLaunchableFactory<Props, EmitterConfiguration> {
 

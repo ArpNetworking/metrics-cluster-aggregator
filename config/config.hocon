@@ -42,11 +42,25 @@ databaseConfigurations {
 }
 akkaConfiguration {
   akka {
+    extensions=["com.romix.akka.serialization.kryo.KryoSerializationExtension$"]
     loggers=["akka.event.slf4j.Slf4jLogger"]
     loglevel="DEBUG"
     stdout-loglevel="DEBUG"
     logging-filter="akka.event.slf4j.Slf4jLoggingFilter"
     actor {
+      serializers {
+        kryo="com.romix.akka.serialization.kryo.KryoSerializer"
+      }
+      serialization-bindings {
+        "java.lang.Object"="kryo"
+        "java.io.Serializable"="none"
+      }
+      kryo {
+        type="graph"
+        idstrategy="default"
+        buffer-size=4096
+        max-buffer-size=-1
+      }
       debug {
         unhandled="on"
       }
