@@ -17,7 +17,6 @@ package com.arpnetworking.clusteraggregator.partitioning;
 
 import com.arpnetworking.utility.partitioning.PartitionSet;
 import com.arpnetworking.utility.partitioning.PartitionSetFactory;
-import com.google.common.base.Optional;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,6 +24,7 @@ import org.junit.runners.Parameterized;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Optional;
 
 /**
  * Tests for generic partition sets.

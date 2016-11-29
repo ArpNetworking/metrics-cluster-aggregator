@@ -28,7 +28,6 @@ import com.arpnetworking.tsdcore.sinks.circonus.api.BrokerListResponse;
 import com.arpnetworking.tsdcore.sinks.circonus.api.CheckBundle;
 import com.arpnetworking.tsdcore.statistics.HistogramStatistic;
 import com.arpnetworking.utility.partitioning.PartitionSet;
-import com.google.common.base.Optional;
 import com.google.common.collect.EvictingQueue;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -52,6 +51,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -227,7 +227,7 @@ public final class CirconusSinkActor extends UntypedActor {
         final BrokerListResponse response = message.getResponse();
         final List<BrokerListResponse.Broker> brokers = response.getBrokers();
 
-        Optional<BrokerListResponse.Broker> selectedBroker = Optional.absent();
+        Optional<BrokerListResponse.Broker> selectedBroker = Optional.empty();
         for (final BrokerListResponse.Broker broker : response.getBrokers()) {
             if (broker.getName().equalsIgnoreCase(_brokerName)) {
                 selectedBroker = Optional.of(broker);
@@ -338,7 +338,9 @@ public final class CirconusSinkActor extends UntypedActor {
 
     private void registerMetricPartition(final AggregatedData data) {
         final String metric = getMetricKey(data);
-        final Integer partition = _partitionMap.computeIfAbsent(metric, key -> _partitionSet.getOrCreatePartition(key).orNull());
+        final Integer partition = _partitionMap.computeIfAbsent(
+                metric,
+                key -> _partitionSet.getOrCreatePartition(key).orElse(null));
         if (partition == null) {
             CANT_FIND_PARTITION_LOGGER.warn()
                     .setMessage("Cannot find or create partition for check bundle")
@@ -482,7 +484,7 @@ public final class CirconusSinkActor extends UntypedActor {
                         _dispatcher);
     }
 
-    private Optional<String> _selectedBrokerCid = Optional.absent();
+    private Optional<String> _selectedBrokerCid = Optional.empty();
     private ActorRef _checkBundleRefresher;
     private int _inflightRequestsCount = 0;
     private boolean _waiting = false;
@@ -531,7 +533,7 @@ public final class CirconusSinkActor extends UntypedActor {
 
     private static final class CheckBundleLookupResponse {
         public static CheckBundleLookupResponse success(final String key, final CheckBundle checkBundle) {
-            return new CheckBundleLookupResponse(key, Optional.<Throwable>absent(), checkBundle);
+            return new CheckBundleLookupResponse(key, Optional.<Throwable>empty(), checkBundle);
         }
 
         public static CheckBundleLookupResponse failure(final String key, final Throwable throwable, final CheckBundle request) {

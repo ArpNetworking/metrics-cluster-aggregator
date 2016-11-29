@@ -65,7 +65,6 @@ import com.arpnetworking.utility.Database;
 import com.arpnetworking.utility.ParallelLeastShardAllocationStrategy;
 import com.arpnetworking.utility.partitioning.PartitionSet;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -84,6 +83,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 
 /**

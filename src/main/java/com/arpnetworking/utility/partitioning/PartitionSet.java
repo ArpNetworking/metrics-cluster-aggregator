@@ -15,7 +15,7 @@
  */
 package com.arpnetworking.utility.partitioning;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 /**
  * Represents a set of partitions and a way to register and retrieve the mappings.

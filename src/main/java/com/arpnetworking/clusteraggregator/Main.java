@@ -30,7 +30,6 @@ import com.arpnetworking.utility.Configurator;
 import com.arpnetworking.utility.Database;
 import com.arpnetworking.utility.Launchable;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.inject.Guice;
@@ -45,6 +44,7 @@ import scala.concurrent.duration.Duration;
 import java.io.File;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -92,8 +92,8 @@ public final class Main implements Launchable {
                 .addData("file", args[0])
                 .log();
 
-        Optional<DynamicConfiguration> configuration = Optional.absent();
-        Optional<Configurator<Main, ClusterAggregatorConfiguration>> configurator = Optional.absent();
+        Optional<DynamicConfiguration> configuration = Optional.empty();
+        Optional<Configurator<Main, ClusterAggregatorConfiguration>> configurator = Optional.empty();
         try {
             final File configurationFile = new File(args[0]);
             configurator = Optional.of(new Configurator<>(Main::new, ClusterAggregatorConfiguration.class));

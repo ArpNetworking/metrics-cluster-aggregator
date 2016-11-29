@@ -21,7 +21,6 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.testkit.TestActorRef;
 import akka.testkit.TestProbe;
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -35,6 +34,7 @@ import scala.concurrent.duration.FiniteDuration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -50,7 +50,7 @@ public class ParallelLeastShardAllocationStrategyTest extends BaseActorTest {
         final ParallelLeastShardAllocationStrategy realloc = new ParallelLeastShardAllocationStrategy(
                 10,
                 10,
-                Optional.<ActorSelection>absent());
+                Optional.<ActorSelection>empty());
         final Map<ActorRef, IndexedSeq<String>> currentAllocations = Maps.newHashMap();
 
         final Set<String> rebalance = realloc.rebalance(currentAllocations, Sets.newHashSet()).value().get().get();
@@ -62,7 +62,7 @@ public class ParallelLeastShardAllocationStrategyTest extends BaseActorTest {
         final ParallelLeastShardAllocationStrategy realloc = new ParallelLeastShardAllocationStrategy(
                 10,
                 10,
-                Optional.<ActorSelection>absent());
+                Optional.<ActorSelection>empty());
         final Map<ActorRef, IndexedSeq<String>> currentAllocations = Maps.newHashMap();
         allocateShardsToNewActor(10, currentAllocations);
 
@@ -75,7 +75,7 @@ public class ParallelLeastShardAllocationStrategyTest extends BaseActorTest {
         final ParallelLeastShardAllocationStrategy realloc = new ParallelLeastShardAllocationStrategy(
                 10,
                 10,
-                Optional.<ActorSelection>absent());
+                Optional.<ActorSelection>empty());
         final Map<ActorRef, IndexedSeq<String>> currentAllocations = Maps.newHashMap();
         allocateShardsToNewActor(10, currentAllocations);
         allocateShardsToNewActor(19, currentAllocations);
@@ -89,7 +89,7 @@ public class ParallelLeastShardAllocationStrategyTest extends BaseActorTest {
         final ParallelLeastShardAllocationStrategy realloc = new ParallelLeastShardAllocationStrategy(
                 5,
                 10,
-                Optional.<ActorSelection>absent());
+                Optional.<ActorSelection>empty());
         final Map<ActorRef, IndexedSeq<String>> currentAllocations = Maps.newHashMap();
         allocateShardsToNewActor(10, currentAllocations);
         final TestActorRef<DoNothingActor> rebalancedActor = allocateShardsToNewActor(20, currentAllocations);
@@ -153,7 +153,7 @@ public class ParallelLeastShardAllocationStrategyTest extends BaseActorTest {
         final ParallelLeastShardAllocationStrategy realloc = new ParallelLeastShardAllocationStrategy(
                 5,
                 10,
-                Optional.<ActorSelection>absent());
+                Optional.<ActorSelection>empty());
         final Map<ActorRef, IndexedSeq<String>> currentAllocations = Maps.newHashMap();
         allocateShardsToNewActor(10, currentAllocations);
         final TestActorRef<DoNothingActor> rebalancedActor = allocateShardsToNewActor(30, currentAllocations);
@@ -177,7 +177,7 @@ public class ParallelLeastShardAllocationStrategyTest extends BaseActorTest {
         final ParallelLeastShardAllocationStrategy realloc = new ParallelLeastShardAllocationStrategy(
                 5,
                 10,
-                Optional.<ActorSelection>absent());
+                Optional.<ActorSelection>empty());
         final Map<ActorRef, IndexedSeq<String>> currentAllocations = Maps.newHashMap();
         allocateShardsToNewActor(10, currentAllocations);
         final TestActorRef<DoNothingActor> rebalancedActor = allocateShardsToNewActor(30, currentAllocations);
@@ -206,7 +206,7 @@ public class ParallelLeastShardAllocationStrategyTest extends BaseActorTest {
         final ParallelLeastShardAllocationStrategy realloc = new ParallelLeastShardAllocationStrategy(
                 100,
                 10,
-                Optional.<ActorSelection>absent());
+                Optional.<ActorSelection>empty());
         final Map<ActorRef, IndexedSeq<String>> currentAllocations = Maps.newHashMap();
         allocateShardsToNewActor(10, currentAllocations);
         final TestActorRef<DoNothingActor> rebalancedActor = allocateShardsToNewActor(39, currentAllocations);
@@ -232,7 +232,7 @@ public class ParallelLeastShardAllocationStrategyTest extends BaseActorTest {
         final ParallelLeastShardAllocationStrategy realloc = new ParallelLeastShardAllocationStrategy(
                 100,
                 5,
-                Optional.<ActorSelection>absent());
+                Optional.<ActorSelection>empty());
         final Map<ActorRef, IndexedSeq<String>> currentAllocations = Maps.newHashMap();
         allocateShardsToNewActor(0, currentAllocations);
         final TestActorRef<DoNothingActor> rebalancedActor = allocateShardsToNewActor(50, currentAllocations);
@@ -259,7 +259,7 @@ public class ParallelLeastShardAllocationStrategyTest extends BaseActorTest {
         final ParallelLeastShardAllocationStrategy realloc = new ParallelLeastShardAllocationStrategy(
                 5,
                 10,
-                Optional.<ActorSelection>absent());
+                Optional.<ActorSelection>empty());
         final Map<ActorRef, IndexedSeq<String>> currentAllocations = Maps.newHashMap();
         final TestActorRef<DoNothingActor> first = allocateShardsToNewActor(0, currentAllocations);
         final TestActorRef<DoNothingActor> sender = createShardRegion();
@@ -273,7 +273,7 @@ public class ParallelLeastShardAllocationStrategyTest extends BaseActorTest {
         final ParallelLeastShardAllocationStrategy realloc = new ParallelLeastShardAllocationStrategy(
                 5,
                 10,
-                Optional.<ActorSelection>absent());
+                Optional.<ActorSelection>empty());
         final Map<ActorRef, IndexedSeq<String>> currentAllocations = Maps.newHashMap();
         final TestActorRef<DoNothingActor> first = allocateShardsToNewActor(0, currentAllocations);
         final TestActorRef<DoNothingActor> second = allocateShardsToNewActor(2, currentAllocations);

@@ -16,9 +16,9 @@
 package com.arpnetworking.clusteraggregator.partitioning;
 
 import com.arpnetworking.utility.partitioning.PartitionSet;
-import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 
+import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 
 /**
@@ -43,7 +43,7 @@ public class InMemoryPartitionSet implements PartitionSet {
      */
     @Override
     public Optional<Integer> getExistingPartition(final String key) {
-        return Optional.fromNullable(_mappings.get(key));
+        return Optional.ofNullable(_mappings.get(key));
     }
 
     /**
@@ -52,7 +52,7 @@ public class InMemoryPartitionSet implements PartitionSet {
     @Override
     public Optional<Integer> getOrCreatePartition(final String key) {
         if (_currentPartition > _maxPartitions) {
-            return Optional.absent();
+            return Optional.empty();
         }
         return Optional.of(_mappings.compute(key, (k, currentVal) -> {
                     Integer partition = currentVal;

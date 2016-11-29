@@ -20,7 +20,6 @@ import com.arpnetworking.logback.annotations.LogValue;
 import com.arpnetworking.steno.LogValueMapFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.PeriodicData;
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Request;
@@ -33,6 +32,7 @@ import org.joda.time.format.ISOPeriodFormat;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Publishes aggregations to Signal FX. This class is thread safe.
@@ -131,7 +131,7 @@ public final class SignalFxSink extends HttpPostSink {
         sfxDataPoint.addAllDimensions(sfxDimensions);
         sfxDataPoint.setTimestamp(timestamp);
         sfxDataPoint.setValue(sfxDatum);
-        sfxDataPoint.setSource(_source.orNull());
+        sfxDataPoint.setSource(_source.orElse(null));
         return sfxDataPoint.build();
     }
 
@@ -158,7 +158,7 @@ public final class SignalFxSink extends HttpPostSink {
 
     private SignalFxSink(final Builder builder) {
         super(builder);
-        _source = Optional.fromNullable(builder._source);
+        _source = Optional.ofNullable(builder._source);
         _organizationId = builder._organizationId;
         _apiToken = builder._apiToken;
         _maxMetricDimensions = builder._maxMetricDimensions;

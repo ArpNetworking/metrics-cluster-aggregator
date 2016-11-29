@@ -18,8 +18,8 @@ package com.arpnetworking.tsdcore.scripting;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.FQDSN;
 import com.arpnetworking.tsdcore.model.PeriodicData;
-import com.google.common.base.Optional;
 
+import java.util.Optional;
 import java.util.Set;
 
 /**
