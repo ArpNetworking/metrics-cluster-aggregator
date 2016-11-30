@@ -47,8 +47,11 @@ import com.arpnetworking.clusteraggregator.configuration.EmitterConfiguration;
 import com.arpnetworking.clusteraggregator.configuration.RebalanceConfiguration;
 import com.arpnetworking.clusteraggregator.http.Routes;
 import com.arpnetworking.clusteraggregator.partitioning.DatabasePartitionSet;
+import com.arpnetworking.commons.builder.Builder;
 import com.arpnetworking.configuration.jackson.DynamicConfiguration;
+import com.arpnetworking.configuration.jackson.HoconFileSource;
 import com.arpnetworking.configuration.jackson.JsonNodeFileSource;
+import com.arpnetworking.configuration.jackson.JsonNodeSource;
 import com.arpnetworking.configuration.triggers.FileTrigger;
 import com.arpnetworking.guice.akka.GuiceActorCreator;
 import com.arpnetworking.metrics.MetricsFactory;
@@ -72,7 +75,9 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
+import java.io.File;
 import java.util.Collections;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
 
@@ -149,12 +154,21 @@ public class GuiceModule extends AbstractModule {
         final ActorConfigurator<EmitterConfiguration> configurator =
                 new ActorConfigurator<>(emitterConfigurationProxy, EmitterConfiguration.class);
         final ObjectMapper objectMapper = EmitterConfiguration.createObjectMapper(injector);
+        final File configurationFile = _configuration.getClusterPipelineConfiguration();
+        final Builder<? extends JsonNodeSource> sourceBuilder;
+        if (configurationFile.getName().toLowerCase(Locale.getDefault()).endsWith(HOCON_FILE_EXTENSION)) {
+            sourceBuilder = new HoconFileSource.Builder()
+                    .setObjectMapper(objectMapper)
+                    .setFile(configurationFile);
+        } else {
+            sourceBuilder = new JsonNodeFileSource.Builder()
+                    .setObjectMapper(objectMapper)
+                    .setFile(configurationFile);
+        }
+
         final DynamicConfiguration configuration = new DynamicConfiguration.Builder()
                 .setObjectMapper(objectMapper)
-                .addSourceBuilder(
-                        new JsonNodeFileSource.Builder()
-                                .setObjectMapper(objectMapper)
-                                .setFile(_configuration.getClusterPipelineConfiguration()))
+                .addSourceBuilder(sourceBuilder)
                 .addTrigger(new FileTrigger.Builder().setFile(_configuration.getClusterPipelineConfiguration()).build())
                 .addListener(configurator)
                 .build();
@@ -350,6 +364,8 @@ public class GuiceModule extends AbstractModule {
 
 
     private final ClusterAggregatorConfiguration _configuration;
+
+    private static final String HOCON_FILE_EXTENSION = ".hocon";
 
     private static final class RoundRobinEmitterFactory implements ConfiguredLaunchableFactory<Props, EmitterConfiguration> {
 

@@ -29,7 +29,7 @@ ENV ADDITIONAL_JAVA_OPTS=""
 ENV JAVA_OPTS="${LOGBACK_CONFIG} ${ADDITIONAL_JAVA_OPTS}"
 
 # CAgg configuration
-ENV APP_CONFIG_FILE="/opt/cluster-aggregator/config/config.json"
+ENV APP_CONFIG_FILE="/opt/cluster-aggregator/config/config.hocon"
 ENV ADDITIONAL_APP_PARAMS=""
 ENV APP_PARAMS="${APP_CONFIG_FILE} ${ADDITIONAL_APP_PARAMS}"
 
