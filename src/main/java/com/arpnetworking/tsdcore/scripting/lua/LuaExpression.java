@@ -30,7 +30,6 @@ import com.arpnetworking.tsdcore.scripting.ScriptingException;
 import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.arpnetworking.tsdcore.statistics.StatisticFactory;
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -63,6 +62,7 @@ import java.io.ByteArrayInputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -86,7 +86,7 @@ public class LuaExpression implements Expression {
                         .addData("dependency", dependency)
                         .addData("periodicData", periodicData)
                         .log();
-                return Optional.absent();
+                return Optional.empty();
             }
         }
 
@@ -221,12 +221,12 @@ public class LuaExpression implements Expression {
 
             // Determine the unit
             final Optional<Unit> unit = LuaValue.NIL.equals(unitName)
-                    ? Optional.<Unit>absent() : Optional.of(Unit.valueOf(unitName.tojstring()));
+                    ? Optional.<Unit>empty() : Optional.of(Unit.valueOf(unitName.tojstring()));
 
             // Construct and return the Quantity
             return new Quantity.Builder()
                     .setValue(result.get("value").todouble())
-                    .setUnit(unit.orNull())
+                    .setUnit(unit.orElse(null))
                     .build();
         } else if (result.isuserdata(LuaQuantity.class)) {
             // Coerce the Java instance

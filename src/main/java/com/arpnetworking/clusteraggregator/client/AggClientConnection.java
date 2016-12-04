@@ -32,7 +32,6 @@ import com.arpnetworking.tsdcore.model.AggregationMessage;
 import com.arpnetworking.tsdcore.model.FQDSN;
 import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.arpnetworking.tsdcore.statistics.Statistic;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.GeneratedMessage;
@@ -44,6 +43,7 @@ import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
@@ -141,15 +141,15 @@ public class AggClientConnection extends UntypedActor {
             if (gm instanceof Messages.HostIdentification) {
                 final Messages.HostIdentification hostIdent = (Messages.HostIdentification) gm;
                 if (hostIdent.hasHostName()) {
-                    _hostName = Optional.fromNullable(hostIdent.getHostName());
+                    _hostName = Optional.ofNullable(hostIdent.getHostName());
                 }
                 if (hostIdent.hasClusterName()) {
-                    _clusterName = Optional.fromNullable(hostIdent.getClusterName());
+                    _clusterName = Optional.ofNullable(hostIdent.getClusterName());
                 }
                 LOGGER.info()
                         .setMessage("Handshake received")
-                        .addData("host", _hostName.or(""))
-                        .addData("cluster", _clusterName.or(""))
+                        .addData("host", _hostName.orElse(""))
+                        .addData("cluster", _clusterName.orElse(""))
                         .addContext("actor", self())
                         .log();
             } else if (gm instanceof Messages.StatisticSetRecord) {
@@ -169,8 +169,8 @@ public class AggClientConnection extends UntypedActor {
             } else if (gm instanceof Messages.HeartbeatRecord) {
                 LOGGER.debug()
                         .setMessage("Heartbeat received")
-                        .addData("host", _hostName.or(""))
-                        .addData("cluster", _clusterName.or(""))
+                        .addData("host", _hostName.orElse(""))
+                        .addData("cluster", _clusterName.orElse(""))
                         .addContext("actor", self())
                         .log();
             } else {
@@ -198,27 +198,27 @@ public class AggClientConnection extends UntypedActor {
         final ImmutableList.Builder<AggregatedData> builder = ImmutableList.builder();
         final ImmutableMap.Builder<String, String> dimensionBuilder = ImmutableMap.builder();
 
-        Optional<String> host = Optional.absent();
-        Optional<String> service = Optional.absent();
-        Optional<String> cluster = Optional.absent();
+        Optional<String> host = Optional.empty();
+        Optional<String> service = Optional.empty();
+        Optional<String> cluster = Optional.empty();
         for (final Messages.DimensionEntry dimensionEntry : setRecord.getDimensionsList()) {
             if (CombinedMetricData.HOST_KEY.equals(dimensionEntry.getKey())) {
-                host = Optional.fromNullable(dimensionEntry.getValue());
+                host = Optional.ofNullable(dimensionEntry.getValue());
             } else if (CombinedMetricData.SERVICE_KEY.equals(dimensionEntry.getKey())) {
-                service = Optional.fromNullable(dimensionEntry.getValue());
+                service = Optional.ofNullable(dimensionEntry.getValue());
             } else if (CombinedMetricData.CLUSTER_KEY.equals(dimensionEntry.getKey())) {
-                cluster = Optional.fromNullable(dimensionEntry.getValue());
+                cluster = Optional.ofNullable(dimensionEntry.getValue());
             } else {
                 dimensionBuilder.put(dimensionEntry.getKey(), dimensionEntry.getValue());
             }
         }
 
         if (!service.isPresent()) {
-            service = Optional.fromNullable(setRecord.getService());
+            service = Optional.ofNullable(setRecord.getService());
         }
 
         if (!cluster.isPresent()) {
-            cluster = Optional.fromNullable(setRecord.getCluster());
+            cluster = Optional.ofNullable(setRecord.getCluster());
             if (!cluster.isPresent()) {
                 cluster = _clusterName;
             }
@@ -228,9 +228,9 @@ public class AggClientConnection extends UntypedActor {
             host = _hostName;
         }
 
-        dimensionBuilder.put(CombinedMetricData.HOST_KEY, host.or(""));
-        dimensionBuilder.put(CombinedMetricData.SERVICE_KEY, service.or(""));
-        dimensionBuilder.put(CombinedMetricData.CLUSTER_KEY, cluster.or(""));
+        dimensionBuilder.put(CombinedMetricData.HOST_KEY, host.orElse(""));
+        dimensionBuilder.put(CombinedMetricData.SERVICE_KEY, service.orElse(""));
+        dimensionBuilder.put(CombinedMetricData.CLUSTER_KEY, cluster.orElse(""));
 
         if (!(host.isPresent() && service.isPresent() && cluster.isPresent())) {
             INCOMPLETE_RECORD_LOGGER.warn()
@@ -239,7 +239,7 @@ public class AggClientConnection extends UntypedActor {
                     .addData("service", service)
                     .addData("cluster", cluster)
                     .log();
-            return Optional.absent();
+            return Optional.empty();
         }
 
         final ImmutableMap<String, String> dimensions = dimensionBuilder.build();
@@ -273,8 +273,8 @@ public class AggClientConnection extends UntypedActor {
                 .build());
     }
 
-    private Optional<String> _hostName = Optional.absent();
-    private Optional<String> _clusterName = Optional.absent();
+    private Optional<String> _hostName = Optional.empty();
+    private Optional<String> _clusterName = Optional.empty();
     private ByteString _buffer = ByteString.empty();
     private final ActorRef _connection;
     private final InetSocketAddress _remoteAddress;

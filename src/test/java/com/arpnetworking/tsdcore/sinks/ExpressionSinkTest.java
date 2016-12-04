@@ -23,7 +23,6 @@ import com.arpnetworking.tsdcore.scripting.Expression;
 import com.arpnetworking.tsdcore.scripting.ScriptingException;
 import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.arpnetworking.tsdcore.statistics.StatisticFactory;
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.hamcrest.collection.IsEmptyIterable;
@@ -39,6 +38,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 

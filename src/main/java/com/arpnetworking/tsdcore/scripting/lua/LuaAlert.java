@@ -26,7 +26,6 @@ import com.arpnetworking.tsdcore.model.Quantity;
 import com.arpnetworking.tsdcore.scripting.Alert;
 import com.arpnetworking.tsdcore.scripting.ScriptingException;
 import com.arpnetworking.tsdcore.statistics.Statistic;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import net.sf.oval.constraint.NotEmpty;
 import net.sf.oval.constraint.NotNull;
@@ -37,6 +36,7 @@ import org.luaj.vm2.lib.jse.JsePlatform;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Defines and supports evaluation of an alert (aka condition) using Lua. The
@@ -110,7 +110,7 @@ public final class LuaAlert implements Alert {
                 .setName(_name)
                 .setFQDSN(_fqdsn)
                 .setThreshold(_value)
-                .setTriggered(convertToBoolean(result).orNull())
+                .setTriggered(convertToBoolean(result).orElse(null))
                 .setExtensions(_extensions)
                 .build();
     }

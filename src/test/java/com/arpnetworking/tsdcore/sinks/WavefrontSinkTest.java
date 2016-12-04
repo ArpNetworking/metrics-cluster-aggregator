@@ -78,7 +78,7 @@ public class WavefrontSinkTest extends BaseActorTest {
                 .setBufferBasename("target/buffer")
                 .build();
 
-        final DateTime start = new DateTime(1445313091000L);
+        final DateTime start = DateTime.now();
         final PeriodicData periodicData = TestBeanFactory.createPeriodicDataBuilder()
                 .setPeriod(Period.seconds(1))
                 .setStart(start)

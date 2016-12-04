@@ -20,7 +20,8 @@ import akka.actor.ActorRef;
 import com.arpnetworking.clusteraggregator.configuration.ConfigurableActorProxy;
 import com.arpnetworking.configuration.Configuration;
 import com.arpnetworking.configuration.Listener;
-import com.google.common.base.Optional;
+
+import java.util.Optional;
 
 /**
  * A launchable intended to be used from a Configurator to notify an actor about new configuration.
@@ -58,10 +59,10 @@ public class ActorConfigurator<T> implements Listener {
             throw new IllegalStateException("No offered configuration to apply.");
         }
         _notifyTarget.tell(new ConfigurableActorProxy.ApplyConfiguration<>(_offeredConfiguration.get()), ActorRef.noSender());
-        _offeredConfiguration = Optional.absent();
+        _offeredConfiguration = Optional.empty();
     }
 
-    private Optional<T> _offeredConfiguration = Optional.absent();
+    private Optional<T> _offeredConfiguration = Optional.empty();
     private final ActorRef _notifyTarget;
     private final Class<? extends T> _configurationClass;
 }

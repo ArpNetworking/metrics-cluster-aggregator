@@ -28,7 +28,6 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Resources;
 import net.sf.oval.constraint.NotEmpty;
@@ -40,6 +39,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Response model for the status http endpoint.
@@ -74,7 +74,7 @@ public final class StatusResponse {
     }
 
     public Optional<List<ShardAllocation>> getAllocations() {
-        return _allocations.transform(Collections::unmodifiableList);
+        return _allocations.map(Collections::unmodifiableList);
     }
 
     public String getVersion() {
@@ -102,15 +102,15 @@ public final class StatusResponse {
         _metrics = builder._bookkeeperData;
         _localMetrics = builder._localMetrics;
         _allocations = flatten(
-                Optional.fromNullable(builder._clusterState)
-                        .transform(ClusterStatusCache.StatusResponse::getAllocations));
+                Optional.ofNullable(builder._clusterState)
+                        .map(ClusterStatusCache.StatusResponse::getAllocations));
     }
 
     private <T> Optional<T> flatten(final Optional<Optional<T>> value) {
         if (value.isPresent()) {
             return value.get();
         }
-        return Optional.absent();
+        return Optional.empty();
     }
 
     private final Address _localAddress;
@@ -295,13 +295,17 @@ public final class StatusResponse {
          * {@inheritDoc}
          */
         @Override
-        public void serialize(final Member value, final JsonGenerator gen, final SerializerProvider serializers) throws IOException {
+        public void serialize(
+                final Member value,
+                final JsonGenerator gen,
+                final SerializerProvider serializers)
+                throws IOException {
             gen.writeStartObject();
             gen.writeStringField("address", value.address().toString());
             gen.writeObjectField("roles", JavaConversions.setAsJavaSet(value.roles()));
             gen.writeNumberField("upNumber", value.upNumber());
             gen.writeStringField("status", value.status().toString());
-            gen.writeNumberField("uniqueAddress", value.uniqueAddress().uid());
+            gen.writeNumberField("uniqueAddress", value.uniqueAddress().longUid());
             gen.writeEndObject();
         }
     }

@@ -27,10 +27,10 @@ import com.arpnetworking.clusteraggregator.models.ShardAllocation;
 import com.arpnetworking.metrics.Metrics;
 import com.arpnetworking.metrics.MetricsFactory;
 import com.arpnetworking.utility.ParallelLeastShardAllocationStrategy;
-import com.google.common.base.Optional;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import scala.compat.java8.JFunction;
 import scala.concurrent.duration.Duration;
 
@@ -39,6 +39,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -140,7 +141,7 @@ public class ClusterStatusCache extends UntypedActor {
 
     private void sendResponse(final ActorRef sender) {
         final StatusResponse response = new StatusResponse(
-                _clusterState.or(_cluster.state()),
+                _clusterState.orElse(_cluster.state()),
                 _rebalanceState);
         sender.tell(response, self());
     }
@@ -154,10 +155,10 @@ public class ClusterStatusCache extends UntypedActor {
 
     private final Cluster _cluster;
     private final MetricsFactory _metricsFactory;
-    private Optional<ClusterEvent.CurrentClusterState> _clusterState = Optional.absent();
+    private Optional<ClusterEvent.CurrentClusterState> _clusterState = Optional.empty();
     @Nullable
     private Cancellable _pollTimer;
-    private Optional<ParallelLeastShardAllocationStrategy.RebalanceNotification> _rebalanceState = Optional.absent();
+    private Optional<ParallelLeastShardAllocationStrategy.RebalanceNotification> _rebalanceState = Optional.empty();
 
     private static final String POLL = "poll";
 
@@ -203,7 +204,7 @@ public class ClusterStatusCache extends UntypedActor {
                                 .map(shardRegion -> computeShardAllocation(pendingRebalances, currentAllocations, shardRegion))
                                 .collect(Collectors.toList()));
             } else {
-                _allocations = Optional.absent();
+                _allocations = Optional.empty();
             }
         }
 
@@ -245,6 +246,7 @@ public class ClusterStatusCache extends UntypedActor {
         }
 
         private final ClusterEvent.CurrentClusterState _clusterState;
+        @SuppressFBWarnings("SE_BAD_FIELD")
         private final Optional<List<ShardAllocation>> _allocations;
         private static final long serialVersionUID = 603308359721162702L;
     }

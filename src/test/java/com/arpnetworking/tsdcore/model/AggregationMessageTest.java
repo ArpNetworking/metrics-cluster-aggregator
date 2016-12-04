@@ -20,7 +20,6 @@ import akka.util.ByteStringBuilder;
 import com.arpnetworking.metrics.aggregation.protocol.Messages;
 import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.arpnetworking.tsdcore.statistics.StatisticFactory;
-import com.google.common.base.Optional;
 import com.google.protobuf.GeneratedMessage;
 import com.google.protobuf.UnknownFieldSet;
 import org.junit.Assert;
@@ -29,6 +28,7 @@ import org.mockito.Mockito;
 import org.vertx.java.core.buffer.Buffer;
 
 import java.nio.ByteOrder;
+import java.util.Optional;
 
 /**
  * Tests for the AggregationMessage class.
@@ -84,17 +84,17 @@ public class AggregationMessageTest {
         // Too little data
         buffer = new ByteStringBuilder().putInt(Integer.SIZE / 8 - 1, ByteOrder.BIG_ENDIAN).result();
         message = AggregationMessage.deserialize(buffer);
-        Assert.assertEquals(Optional.absent(), message);
+        Assert.assertEquals(Optional.empty(), message);
 
         // Too much data
         buffer = new ByteStringBuilder().putInt(Integer.SIZE / 8 + 1, ByteOrder.BIG_ENDIAN).result();
         message = AggregationMessage.deserialize(buffer);
-        Assert.assertEquals(Optional.absent(), message);
+        Assert.assertEquals(Optional.empty(), message);
 
         // No data
         buffer = new ByteStringBuilder().putInt(0, ByteOrder.BIG_ENDIAN).result();
         message = AggregationMessage.deserialize(buffer);
-        Assert.assertEquals(Optional.absent(), message);
+        Assert.assertEquals(Optional.empty(), message);
 
         // Negative data
         buffer = ByteString.fromInts(-1);
@@ -109,17 +109,17 @@ public class AggregationMessageTest {
         // Type: 0
         buffer = new ByteStringBuilder().putInt(Integer.SIZE / 8 + 1, ByteOrder.BIG_ENDIAN).putByte((byte) 0).result();
         message = AggregationMessage.deserialize(buffer);
-        Assert.assertEquals(Optional.absent(), message);
+        Assert.assertEquals(Optional.empty(), message);
 
         // Type: 3
         buffer = new ByteStringBuilder().putInt(Integer.SIZE / 8 + 1, ByteOrder.BIG_ENDIAN).putByte((byte) 3).result();
         message = AggregationMessage.deserialize(buffer);
-        Assert.assertEquals(Optional.absent(), message);
+        Assert.assertEquals(Optional.empty(), message);
 
         // Type: -1
         buffer = new ByteStringBuilder().putInt(Integer.SIZE / 8 + 1, ByteOrder.BIG_ENDIAN).putByte((byte) -1).result();
         message = AggregationMessage.deserialize(buffer);
-        Assert.assertEquals(Optional.absent(), message);
+        Assert.assertEquals(Optional.empty(), message);
     }
 
     @Test
@@ -131,12 +131,12 @@ public class AggregationMessageTest {
         // NOTE: Some messages will deserialize from an empty buffer.
         buffer = new ByteStringBuilder().putInt(Integer.SIZE / 8 + 1, ByteOrder.BIG_ENDIAN).putByte((byte) 3).result();
         message = AggregationMessage.deserialize(buffer);
-        Assert.assertEquals(Optional.absent(), message);
+        Assert.assertEquals(Optional.empty(), message);
 
         // Just one byte
         buffer = new ByteStringBuilder().putInt(Integer.SIZE / 8 + 2, ByteOrder.BIG_ENDIAN).putByte((byte) 1).putByte((byte) 0).result();
         message = AggregationMessage.deserialize(buffer);
-        Assert.assertEquals(Optional.absent(), message);
+        Assert.assertEquals(Optional.empty(), message);
     }
 
     private static final StatisticFactory STATISTIC_FACTORY = new StatisticFactory();

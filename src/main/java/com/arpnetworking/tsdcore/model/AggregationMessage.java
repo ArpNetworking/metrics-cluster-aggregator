@@ -18,7 +18,6 @@ package com.arpnetworking.tsdcore.model;
 import akka.util.ByteIterator;
 import akka.util.ByteString;
 import com.arpnetworking.metrics.aggregation.protocol.Messages;
-import com.google.common.base.Optional;
 import com.google.protobuf.GeneratedMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -28,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import org.vertx.java.core.buffer.Buffer;
 
 import java.nio.ByteOrder;
+import java.util.Optional;
 
 /**
  * Class for building messages from the raw, on-the-wire bytes in the TCP stream.
@@ -59,7 +59,7 @@ public final class AggregationMessage {
         int position = 0;
         // Make sure we have enough data to get the size
         if (data.length() < HEADER_SIZE_IN_BYTES) {
-            return Optional.absent();
+            return Optional.empty();
         }
 
         // Deserialize and validate buffer length
@@ -70,7 +70,7 @@ public final class AggregationMessage {
             if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace(String.format("we only have %d of %d bytes.", data.length(), length));
             }
-            return Optional.absent();
+            return Optional.empty();
         }
 
         // Deserialize message type
@@ -111,16 +111,16 @@ public final class AggregationMessage {
                                             type,
                                             subType,
                                             Hex.encodeHexString(payloadBytes)));
-                            return Optional.absent();
+                            return Optional.empty();
                     }
                 default:
                     LOGGER.warn(String.format("Unsupported message type; type=%s", type));
-                    return Optional.absent();
+                    return Optional.empty();
             }
         } catch (final InvalidProtocolBufferException e) {
             LOGGER.warn(
                 String.format("Invalid protocol buffer; type=%s bytes=%s", type, Hex.encodeHexString(payloadBytes)), e);
-            return Optional.absent();
+            return Optional.empty();
         }
     }
 

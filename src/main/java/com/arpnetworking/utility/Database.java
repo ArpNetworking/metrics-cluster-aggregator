@@ -21,11 +21,11 @@ import com.avaje.ebean.EbeanServer;
 import com.avaje.ebean.EbeanServerFactory;
 import com.avaje.ebean.config.ServerConfig;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Optional;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.flywaydb.core.Flyway;
 
+import java.util.Optional;
 import java.util.Set;
 import javax.persistence.Entity;
 import javax.sql.DataSource;
@@ -131,7 +131,7 @@ public class Database implements Launchable {
             flyway.setSchemas(_configuration.getMigrationSchemas().toArray(new String[_configuration.getMigrationSchemas().size()]));
             flyway.setDataSource(_dataSource);
         }
-        return Optional.fromNullable(flyway);
+        return Optional.ofNullable(flyway);
     }
 
     private EbeanServer createEbeanServer() {

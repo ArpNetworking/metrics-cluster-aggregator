@@ -21,9 +21,9 @@ import com.arpnetworking.utility.Database;
 import com.arpnetworking.utility.partitioning.PartitionSet;
 import com.avaje.ebean.EbeanServer;
 import com.avaje.ebean.Transaction;
-import com.google.common.base.Optional;
 
 import java.io.IOException;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -57,7 +57,7 @@ public class DatabasePartitionSet implements PartitionSet {
         if (partitionEntry != null) {
             return Optional.of(partitionEntry.getPartition().getPartitionNumber());
         }
-        return Optional.absent();
+        return Optional.empty();
     }
 
     /**
@@ -71,7 +71,7 @@ public class DatabasePartitionSet implements PartitionSet {
                 return Optional.of(partitionEntry.getPartition().getPartitionNumber());
             }
             if (_partitionSetBean.getFull()) {
-                return Optional.absent();
+                return Optional.empty();
             }
 
             _partitionSetBean.lock(_database);
@@ -89,7 +89,7 @@ public class DatabasePartitionSet implements PartitionSet {
                 if (highestPartition >= _maxPartitions) {
                     _partitionSetBean.setFull(true);
                     _ebean.save(_partitionSetBean);
-                    return Optional.absent();
+                    return Optional.empty();
                 }
                 partition = new Partition();
                 partition.setPartitionNumber(highestPartition + 1);
@@ -106,7 +106,7 @@ public class DatabasePartitionSet implements PartitionSet {
             transaction.commit();
             return Optional.of(partition.getPartitionNumber());
         } catch (final IOException e) {
-            return Optional.absent();
+            return Optional.empty();
         }
     }
 

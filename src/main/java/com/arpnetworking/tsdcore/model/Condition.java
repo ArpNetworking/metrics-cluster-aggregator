@@ -18,10 +18,11 @@ package com.arpnetworking.tsdcore.model;
 import com.arpnetworking.commons.builder.OvalBuilder;
 import com.arpnetworking.logback.annotations.Loggable;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import net.sf.oval.constraint.NotEmpty;
 import net.sf.oval.constraint.NotNull;
+
+import java.util.Optional;
 
 /**
  * Describes a condition.
@@ -70,7 +71,7 @@ public final class Condition {
         _name = builder._name;
         _fqdsn = builder._fqdsn;
         _threshold = builder._threshold;
-        _triggered = Optional.fromNullable(builder._triggered);
+        _triggered = Optional.ofNullable(builder._triggered);
         _extensions = builder._extensions;
     }
 

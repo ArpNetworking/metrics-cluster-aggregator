@@ -20,12 +20,12 @@ import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.Quantity;
 import com.arpnetworking.tsdcore.model.Unit;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -42,7 +42,7 @@ public final class AggDataUnifier {
      * @return A new {@code List<AggregatedData>} with unified units.
      */
     public static List<AggregatedData> unify(final Collection<AggregatedData> aggData) {
-        Optional<Unit> smallestUnit = Optional.absent();
+        Optional<Unit> smallestUnit = Optional.empty();
         for (final AggregatedData data : aggData) {
             smallestUnit = getSmaller(smallestUnit, data.getValue().getUnit());
 
@@ -58,7 +58,7 @@ public final class AggDataUnifier {
         if (a.isPresent() && b.isPresent()) {
             return a.get().isSmallerThan(b.get()) ? a : b;
         } else {
-            return a.or(b);
+            return Optional.ofNullable(a.orElse(b.orElse(null)));
         }
     }
 

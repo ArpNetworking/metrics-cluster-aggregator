@@ -19,7 +19,6 @@ import com.arpnetworking.commons.builder.OvalBuilder;
 import com.arpnetworking.logback.annotations.Loggable;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -29,6 +28,7 @@ import org.joda.time.DateTime;
 import org.joda.time.Period;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -67,7 +67,7 @@ public final class PeriodicData {
      * @return Tbe <code>Optional</code> instance of <code>AggregatedData</code>.
      */
     public Optional<AggregatedData> getDatumByFqdsn(final FQDSN fqdsn) {
-        return Optional.fromNullable(_dataByFqdsn.get().get(fqdsn));
+        return Optional.ofNullable(_dataByFqdsn.get().get(fqdsn));
     }
 
     /**
@@ -77,7 +77,7 @@ public final class PeriodicData {
      * @return Tbe <code>Optional</code> instance of <code>Condition</code>.
      */
     public Optional<Condition> getConditionByFqdsn(final FQDSN fqdsn) {
-        return Optional.fromNullable(_conditionsByFqdsn.get().get(fqdsn));
+        return Optional.ofNullable(_conditionsByFqdsn.get().get(fqdsn));
     }
 
     /**

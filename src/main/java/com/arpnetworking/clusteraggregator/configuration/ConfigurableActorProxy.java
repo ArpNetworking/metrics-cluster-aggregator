@@ -24,7 +24,6 @@ import akka.actor.UntypedActor;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.utility.ConfiguredLaunchableFactory;
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Service;
 
@@ -32,6 +31,7 @@ import java.io.Serializable;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Serves as a router for configuration-created actors.  Handles reconfiguration messages and swaps references on reconfiguration.
@@ -101,7 +101,7 @@ public class ConfigurableActorProxy<T> extends UntypedActor {
                 .log();
         final ActorRef terminatedActor = message.actor();
         // Make sure the currentChild is the one that died
-        if (!terminatedActor.equals(_currentChild.orNull())) {
+        if (!terminatedActor.equals(_currentChild.orElse(null))) {
             LOGGER.error()
                     .setMessage("Terminated message received from unknown actor")
                     .addData("terminated", message)
@@ -109,7 +109,7 @@ public class ConfigurableActorProxy<T> extends UntypedActor {
                     .log();
             return;
         }
-        _currentChild = Optional.absent();
+        _currentChild = Optional.empty();
         self().tell(new SwapActor(), self());
     }
 
@@ -131,7 +131,7 @@ public class ConfigurableActorProxy<T> extends UntypedActor {
         _observers.forEach(o -> o.tell(actorStartedNotification, self()));
 
         _currentChild = Optional.of(newRef);
-        _pendingConfiguration = Optional.absent();
+        _pendingConfiguration = Optional.empty();
         _state = Service.State.RUNNING;
         while (!_messageBuffer.isEmpty()) {
             final BufferedMessage entry = _messageBuffer.remove();
@@ -165,8 +165,8 @@ public class ConfigurableActorProxy<T> extends UntypedActor {
         }
     }
 
-    private Optional<ActorRef> _currentChild = Optional.absent();
-    private Optional<T> _pendingConfiguration = Optional.absent();
+    private Optional<ActorRef> _currentChild = Optional.empty();
+    private Optional<T> _pendingConfiguration = Optional.empty();
     private Service.State _state = Service.State.NEW;
     private final ConfiguredLaunchableFactory<Props, T> _factory;
     private final Deque<BufferedMessage> _messageBuffer = new LinkedList<>();

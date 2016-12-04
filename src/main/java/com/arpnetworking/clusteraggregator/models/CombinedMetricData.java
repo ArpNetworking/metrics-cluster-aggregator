@@ -27,7 +27,6 @@ import com.arpnetworking.tsdcore.model.Unit;
 import com.arpnetworking.tsdcore.statistics.HistogramStatistic;
 import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.arpnetworking.tsdcore.statistics.StatisticFactory;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
@@ -36,6 +35,7 @@ import org.joda.time.DateTime;
 import org.joda.time.Period;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * A metric-based aggregation model.  Holds all of the statistics and supporting for a metric on a host.
@@ -231,7 +231,7 @@ public final class CombinedMetricData {
             final Optional<Unit> unit;
             unit = getUnitFromName(statisticRecord.getUnit());
             return new Quantity.Builder()
-                    .setUnit(unit.orNull())
+                    .setUnit(unit.orElse(null))
                     .setValue(statisticRecord.getValue())
                     .build();
         }
@@ -239,9 +239,9 @@ public final class CombinedMetricData {
         private static Optional<Unit> getUnitFromName(final String unitString) {
             final Optional<Unit> unit;
             if (Strings.isNullOrEmpty(unitString)) {
-                unit = Optional.absent();
+                unit = Optional.empty();
             } else {
-                unit = Optional.fromNullable(Unit.valueOf(unitString));
+                unit = Optional.ofNullable(Unit.valueOf(unitString));
             }
             return unit;
         }

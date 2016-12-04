@@ -19,15 +19,17 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import ch.qos.logback.classic.LoggerContext;
 import com.arpnetworking.clusteraggregator.configuration.ClusterAggregatorConfiguration;
+import com.arpnetworking.commons.builder.Builder;
 import com.arpnetworking.configuration.jackson.DynamicConfiguration;
+import com.arpnetworking.configuration.jackson.HoconFileSource;
 import com.arpnetworking.configuration.jackson.JsonNodeFileSource;
+import com.arpnetworking.configuration.jackson.JsonNodeSource;
 import com.arpnetworking.configuration.triggers.FileTrigger;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.utility.Configurator;
 import com.arpnetworking.utility.Database;
 import com.arpnetworking.utility.Launchable;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.inject.Guice;
@@ -41,6 +43,8 @@ import scala.concurrent.duration.Duration;
 
 import java.io.File;
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -88,17 +92,15 @@ public final class Main implements Launchable {
                 .addData("file", args[0])
                 .log();
 
-        Optional<DynamicConfiguration> configuration = Optional.absent();
-        Optional<Configurator<Main, ClusterAggregatorConfiguration>> configurator = Optional.absent();
+        Optional<DynamicConfiguration> configuration = Optional.empty();
+        Optional<Configurator<Main, ClusterAggregatorConfiguration>> configurator = Optional.empty();
         try {
             final File configurationFile = new File(args[0]);
             configurator = Optional.of(new Configurator<>(Main::new, ClusterAggregatorConfiguration.class));
             final ObjectMapper objectMapper = ClusterAggregatorConfiguration.createObjectMapper();
             configuration = Optional.of(new DynamicConfiguration.Builder()
                     .setObjectMapper(objectMapper)
-                    .addSourceBuilder(
-                            new JsonNodeFileSource.Builder().setObjectMapper(objectMapper)
-                                    .setFile(configurationFile))
+                    .addSourceBuilder(getFileSourceBuilder(configurationFile, objectMapper))
                     .addTrigger(new FileTrigger.Builder().setFile(configurationFile).build())
                     .addListener(configurator.get())
                     .build());
@@ -243,6 +245,19 @@ public final class Main implements Launchable {
         }
     }
 
+    private static Builder<? extends JsonNodeSource> getFileSourceBuilder(
+            final File configurationFile,
+            final ObjectMapper objectMapper) {
+        if (configurationFile.getName().toLowerCase(Locale.getDefault()).endsWith(HOCON_FILE_EXTENSION)) {
+            return new HoconFileSource.Builder()
+                .setObjectMapper(objectMapper)
+                .setFile(configurationFile);
+        }
+        return new JsonNodeFileSource.Builder()
+                .setObjectMapper(objectMapper)
+                .setFile(configurationFile);
+    }
+
     private final ClusterAggregatorConfiguration _configuration;
 
     private volatile ActorSystem _system;
@@ -254,6 +269,7 @@ public final class Main implements Launchable {
     private static final SourceTypeLiteral SOURCE_TYPE_LITERAL = new SourceTypeLiteral();
     private static final Semaphore SHUTDOWN_SEMAPHORE = new Semaphore(0);
     private static final Thread SHUTDOWN_THREAD = new ShutdownThread();
+    private static final String HOCON_FILE_EXTENSION = ".hocon";
 
     private static final class ShutdownThread extends Thread {
         private ShutdownThread() {

@@ -157,6 +157,11 @@ For example:
 }
 ```
 
+#### Hocon
+
+The daemon and pipeline configuration files may be written in [Hocon](https://github.com/typesafehub/config)
+when specified with a _.hocon_ extension. 
+
 Development
 -----------
 
