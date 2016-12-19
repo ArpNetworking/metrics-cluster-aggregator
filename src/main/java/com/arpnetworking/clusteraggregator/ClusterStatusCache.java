@@ -31,7 +31,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import scala.compat.java8.JFunction;
+import scala.compat.java8.OptionConverters;
 import scala.concurrent.duration.Duration;
 
 import java.io.Serializable;
@@ -147,10 +147,12 @@ public class ClusterStatusCache extends UntypedActor {
     }
 
     private static String hostFromActorRef(final ActorRef shardRegion) {
-        return shardRegion.path()
-                .address()
-                .host()
-                .getOrElse(JFunction.func(() -> "localhost"));
+
+        return OptionConverters.toJava(
+                shardRegion.path()
+                        .address()
+                        .host())
+                .orElse("localhost");
     }
 
     private final Cluster _cluster;

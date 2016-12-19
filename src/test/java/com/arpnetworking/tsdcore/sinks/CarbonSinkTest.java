@@ -15,11 +15,14 @@
  */
 package com.arpnetworking.tsdcore.sinks;
 
+import akka.util.ByteString;
 import com.arpnetworking.test.TestBeanFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.PeriodicData;
+import com.arpnetworking.utility.BaseActorTest;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.apache.commons.compress.utils.Charsets;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.junit.Assert;
@@ -27,8 +30,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.vertx.java.core.buffer.Buffer;
-import org.vertx.java.core.net.NetSocket;
 
 import java.util.function.Consumer;
 
@@ -37,29 +38,22 @@ import java.util.function.Consumer;
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
-public class CarbonSinkTest {
+public class CarbonSinkTest extends BaseActorTest {
 
     @Before
     public void before() {
         _carbonSinkBuilder = new CarbonSink.Builder()
                 .setName("carbon_sink_test")
                 .setServerAddress("my-carbon-server.example.com")
-                .setServerPort(9999);
-    }
-
-    @Test
-    public void testConnect() {
-        final CarbonSink carbonSink = _carbonSinkBuilder.build();
-        final NetSocket socket = Mockito.mock(NetSocket.class);
-        carbonSink.onConnect(socket);
-        Mockito.verifyZeroInteractions(socket);
+                .setServerPort(9999)
+                .setActorSystem(getSystem());
     }
 
     @Test
     public void testSerialize() {
-        final ArgumentCaptor<Buffer> recorded = ArgumentCaptor.forClass(Buffer.class);
+        final ArgumentCaptor<ByteString> recorded = ArgumentCaptor.forClass(ByteString.class);
         @SuppressWarnings("unchecked")
-        final Consumer<Buffer> recorder = (Consumer<Buffer>) Mockito.mock(Consumer.class);
+        final Consumer<ByteString> recorder = (Consumer<ByteString>) Mockito.mock(Consumer.class);
         final CarbonSink carbonSink = new CarbonTestSink(recorder, _carbonSinkBuilder);
         final AggregatedData datum = TestBeanFactory.createAggregatedData();
         final PeriodicData periodicData = new PeriodicData.Builder()
@@ -69,11 +63,11 @@ public class CarbonSinkTest {
                 .setStart(DateTime.now())
                 .build();
         carbonSink.recordAggregateData(periodicData);
-        Mockito.verify(recorder).accept(Mockito.any());
-        Mockito.verify(recorder).accept(recorded.capture());
-        final Buffer buffer = recorded.getValue();
+        Mockito.verify(recorder, Mockito.timeout(5000)).accept(Mockito.any());
+        Mockito.verify(recorder, Mockito.timeout(5000)).accept(recorded.capture());
+        final ByteString buffer = recorded.getValue();
         Assert.assertNotNull(buffer);
-        String bufferString = buffer.toString();
+        String bufferString = buffer.decodeString(Charsets.UTF_8);
         Assert.assertTrue("Buffer=" + bufferString, bufferString.endsWith("\n"));
         bufferString = bufferString.substring(0, bufferString.length() - 1);
         final String[] keyValueParts = bufferString.split(" ");
@@ -93,16 +87,18 @@ public class CarbonSinkTest {
     private CarbonSink.Builder _carbonSinkBuilder;
 
     private static final class CarbonTestSink extends CarbonSink {
-        private CarbonTestSink(final Consumer<Buffer> bufferConsumer, final Builder builder) {
+        private CarbonTestSink(final Consumer<ByteString> bufferConsumer, final Builder builder) {
             super(builder);
             _bufferConsumer = bufferConsumer;
         }
 
         @Override
-        protected void enqueueData(final Buffer data) {
-            _bufferConsumer.accept(data);
+        protected ByteString serializeData(final PeriodicData data) {
+            final ByteString serialized = super.serializeData(data);
+            _bufferConsumer.accept(serialized);
+            return serialized;
         }
 
-        private final Consumer<Buffer> _bufferConsumer;
+        private final Consumer<ByteString> _bufferConsumer;
     }
 }

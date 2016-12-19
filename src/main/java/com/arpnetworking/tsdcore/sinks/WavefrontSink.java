@@ -16,8 +16,8 @@
 package com.arpnetworking.tsdcore.sinks;
 
 import com.arpnetworking.clusteraggregator.models.CombinedMetricData;
-import com.arpnetworking.metrics.com.arpnetworking.steno.Logger;
-import com.arpnetworking.metrics.com.arpnetworking.steno.LoggerFactory;
+import com.arpnetworking.steno.Logger;
+import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.FQDSN;
 import com.arpnetworking.tsdcore.model.PeriodicData;

@@ -18,7 +18,8 @@ package com.arpnetworking.tsdcore.sinks.circonus;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
-import akka.pattern.Patterns;
+import akka.http.javadsl.model.StatusCodes;
+import akka.pattern.PatternsCS;
 import com.arpnetworking.logback.annotations.LogValue;
 import com.arpnetworking.steno.LogValueMapFactory;
 import com.arpnetworking.steno.Logger;
@@ -33,10 +34,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import io.netty.handler.codec.http.HttpResponseStatus;
 import org.joda.time.Period;
 import org.joda.time.format.ISOPeriodFormat;
-import play.libs.F;
 import play.libs.ws.WSResponse;
 import scala.concurrent.ExecutionContextExecutor;
 import scala.concurrent.duration.FiniteDuration;
@@ -54,6 +53,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -255,7 +255,7 @@ public final class CirconusSinkActor extends UntypedActor {
     private void processCompletedRequest(final PostComplete complete) {
         _inflightRequestsCount--;
         final int responseStatusCode = complete.getResponse().getStatus();
-        if (responseStatusCode == HttpResponseStatus.OK.code()) {
+        if (responseStatusCode == StatusCodes.OK.intValue()) {
             LOGGER.debug()
                     .setMessage("Data submission accepted")
                     .addData("status", responseStatusCode)
@@ -381,10 +381,10 @@ public final class CirconusSinkActor extends UntypedActor {
                     final AggregatedData aggregatedData = Iterables.get(serviceData, 0);
                     _pendingLookups.add(targetKey);
 
-                    final F.Promise<CheckBundleLookupResponse> response = createCheckBundle(targetKey, aggregatedData);
+                    final CompletionStage<CheckBundleLookupResponse> response = createCheckBundle(targetKey, aggregatedData);
 
                     // Send the completed, mapped response back to ourselves.
-                    Patterns.pipe(response.wrapped(), _dispatcher).to(self());
+                    PatternsCS.pipe(response, _dispatcher).to(self());
                 }
 
                 // We can't send the request to it right now, skip this service
@@ -444,13 +444,13 @@ public final class CirconusSinkActor extends UntypedActor {
         final RequestQueueEntry request = _pendingRequests.poll();
         _inflightRequestsCount++;
 
-        final F.Promise<Object> responsePromise = _client.sendToHttpTrap(request.getData(), request.getBinding().getSubmissionUrl())
-                .<Object>map(PostComplete::new)
-                .recover(PostFailure::new);
-        Patterns.pipe(responsePromise.wrapped(), context().dispatcher()).to(self());
+        final CompletionStage<Object> responsePromise = _client.sendToHttpTrap(request.getData(), request.getBinding().getSubmissionUrl())
+                .<Object>thenApply(PostComplete::new)
+                .exceptionally(PostFailure::new);
+        PatternsCS.pipe(responsePromise, context().dispatcher()).to(self());
     }
 
-    private F.Promise<CheckBundleLookupResponse> createCheckBundle(
+    private CompletionStage<CheckBundleLookupResponse> createCheckBundle(
             final String targetKey,
             final AggregatedData aggregatedData) {
         final Integer partition = _partitionMap.get(getMetricKey(aggregatedData));
@@ -472,16 +472,14 @@ public final class CirconusSinkActor extends UntypedActor {
 
         // Map the response to a ServiceCheckBinding
         return _client.getOrCreateCheckBundle(request)
-                .map(
+                .thenApply(
                         response -> {
                             final URI result;
                             result = response.getSubmissionUrl();
                             return CheckBundleLookupResponse.success(targetKey, response);
-                        },
-                        _dispatcher)
-                .recover(
-                        failure -> CheckBundleLookupResponse.failure(targetKey, failure, request),
-                        _dispatcher);
+                        })
+                .exceptionally(
+                        failure -> CheckBundleLookupResponse.failure(targetKey, failure, request));
     }
 
     private Optional<String> _selectedBrokerCid = Optional.empty();

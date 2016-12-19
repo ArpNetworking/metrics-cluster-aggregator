@@ -17,14 +17,14 @@ package com.arpnetworking.tsdcore.sinks.circonus;
 
 import akka.actor.Props;
 import akka.actor.UntypedActor;
-import akka.pattern.Patterns;
+import akka.pattern.PatternsCS;
 import com.arpnetworking.akka.UniformRandomTimeScheduler;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.sinks.circonus.api.BrokerListResponse;
-import play.libs.F;
 import scala.concurrent.duration.FiniteDuration;
 
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -115,10 +115,10 @@ public class BrokerRefresher extends UntypedActor {
     }
 
     private void lookupBrokers() {
-        final F.Promise<Object> promise = _client.getBrokers()
-                .<Object>map(BrokerLookupComplete::new)
-                .recover(BrokerLookupFailure::new);
-        Patterns.pipe(promise.wrapped(), context().dispatcher()).to(self());
+        final CompletionStage<Object> promise = _client.getBrokers()
+                .<Object>thenApply(BrokerLookupComplete::new)
+                .exceptionally(BrokerLookupFailure::new);
+        PatternsCS.pipe(promise, context().dispatcher()).to(self());
     }
 
     private final CirconusClient _client;

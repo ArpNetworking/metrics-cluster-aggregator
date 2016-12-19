@@ -20,7 +20,6 @@ import com.arpnetworking.steno.LogValueMapFactory;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.base.Throwables;
 import net.sf.oval.constraint.NotEmpty;
 import net.sf.oval.constraint.NotNull;
 import org.apache.http.client.utils.URIBuilder;
@@ -103,7 +102,7 @@ public final class JsonNodePaginatedUriSource extends BaseJsonNodeSource {
                 }
             }
         } catch (final URISyntaxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
 
         _mergingSource = mergingSourceBuilder.build();

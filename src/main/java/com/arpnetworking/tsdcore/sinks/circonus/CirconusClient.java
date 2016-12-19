@@ -16,6 +16,7 @@
 package com.arpnetworking.tsdcore.sinks.circonus;
 
 import akka.http.javadsl.model.HttpMethods;
+import akka.stream.Materializer;
 import com.arpnetworking.commons.builder.OvalBuilder;
 import com.arpnetworking.commons.jackson.databind.ObjectMapperFactory;
 import com.arpnetworking.logback.annotations.LogValue;
@@ -27,19 +28,17 @@ import com.arpnetworking.tsdcore.sinks.circonus.api.CheckBundle;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Throwables;
-import com.ning.http.client.AsyncHttpClientConfig;
 import net.sf.oval.constraint.NotNull;
-import play.libs.F;
+import org.asynchttpclient.DefaultAsyncHttpClientConfig;
 import play.libs.ws.WSRequest;
 import play.libs.ws.WSResponse;
-import play.libs.ws.ning.NingWSClient;
-import scala.concurrent.ExecutionContext;
+import play.libs.ws.ahc.AhcWSClient;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
+import java.util.concurrent.CompletionStage;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 import javax.xml.ws.WebServiceException;
@@ -56,7 +55,7 @@ public final class CirconusClient {
      *
      * @return Future with the results.
      */
-    public F.Promise<BrokerListResponse> getBrokers() {
+    public CompletionStage<BrokerListResponse> getBrokers() {
         final WSRequest request = _client
                 .url(_uri + BROKERS_URL)
                 .setMethod(HttpMethods.GET.value());
@@ -64,7 +63,7 @@ public final class CirconusClient {
                 .setMessage("Sending get broker request")
                 .log();
         return fireRequest(request)
-                .map(response -> handleBrokerListResponse(request, response), _executionContext);
+                .thenApply(response -> handleBrokerListResponse(request, response));
     }
 
     /**
@@ -80,7 +79,7 @@ public final class CirconusClient {
      * @param httptrapURI Url of the httptrap.
      * @return Future response.
      */
-    public F.Promise<WSResponse> sendToHttpTrap(final Map<String, Object> data, final URI httptrapURI) {
+    public CompletionStage<WSResponse> sendToHttpTrap(final Map<String, Object> data, final URI httptrapURI) {
         try {
             LOGGER.trace()
                     .setMessage("Sending data to httptrap")
@@ -91,9 +90,9 @@ public final class CirconusClient {
                     .setBody(OBJECT_MAPPER.writeValueAsString(data));
             return fireRequest(
                     request)
-                    .map(response -> handleMetricResponse(request, response), _executionContext);
+                    .thenApply(response -> handleMetricResponse(request, response));
         } catch (final JsonProcessingException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -103,12 +102,12 @@ public final class CirconusClient {
      * @param request Request details.
      * @return Future with the results.
      */
-    public F.Promise<CheckBundle> getOrCreateCheckBundle(final CheckBundle request) {
+    public CompletionStage<CheckBundle> getOrCreateCheckBundle(final CheckBundle request) {
         final String responseBody;
         try {
             responseBody = OBJECT_MAPPER.writeValueAsString(request);
         } catch (final JsonProcessingException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
 
         final WSRequest requestHolder = _client
@@ -121,7 +120,7 @@ public final class CirconusClient {
                 .addData("cid", request.getCid())
                 .log();
         return fireRequest(requestHolder)
-                .map(response -> handleCheckBundleResponse(requestHolder, response, "create"), _executionContext);
+                .thenApply(response -> handleCheckBundleResponse(requestHolder, response, "create"));
     }
 
     /**
@@ -130,7 +129,7 @@ public final class CirconusClient {
      * @param cid The check bundle's cid.
      * @return Future with the results.
      */
-    public F.Promise<CheckBundle> getCheckBundle(final String cid) {
+    public CompletionStage<CheckBundle> getCheckBundle(final String cid) {
         final WSRequest requestHolder = _client
                 .url(_uri + cid)
                 .setMethod("GET")
@@ -140,7 +139,7 @@ public final class CirconusClient {
                 .addData("cid", cid)
                 .log();
         return fireRequest(requestHolder)
-                .map(response -> handleCheckBundleResponse(requestHolder, response, "get"), _executionContext);
+                .thenApply(response -> handleCheckBundleResponse(requestHolder, response, "get"));
     }
 
 
@@ -150,12 +149,12 @@ public final class CirconusClient {
      * @param request Request details.
      * @return Future with the results.
      */
-    public F.Promise<CheckBundle> updateCheckBundle(final CheckBundle request) {
+    public CompletionStage<CheckBundle> updateCheckBundle(final CheckBundle request) {
         final String responseBody;
         try {
             responseBody = OBJECT_MAPPER.writeValueAsString(request);
         } catch (final JsonProcessingException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
 
         final WSRequest requestHolder = _client
@@ -167,7 +166,7 @@ public final class CirconusClient {
                 .addData("cid", request.getCid())
                 .log();
         return fireRequest(requestHolder)
-                .map(response -> handleCheckBundleResponse(requestHolder, response, "updating"), _executionContext);
+                .thenApply(response -> handleCheckBundleResponse(requestHolder, response, "updating"));
     }
 
     /**
@@ -194,8 +193,7 @@ public final class CirconusClient {
 
     private static BrokerListResponse handleBrokerListResponse(
             final WSRequest request,
-            final WSResponse response)
-            throws java.io.IOException {
+            final WSResponse response) {
         final String body = response.getBody();
         LOGGER.trace()
                 .setMessage("Response from get brokers")
@@ -203,9 +201,14 @@ public final class CirconusClient {
                 .addData("body", body)
                 .log();
         if (response.getStatus() / 100 == 2) {
-            final List<BrokerListResponse.Broker> brokers = OBJECT_MAPPER.readValue(
-                    body,
-                    BROKER_LIST_TYPE_REFERENCE);
+            final List<BrokerListResponse.Broker> brokers;
+            try {
+                brokers = OBJECT_MAPPER.readValue(
+                        body,
+                        BROKER_LIST_TYPE_REFERENCE);
+            } catch (final IOException e) {
+                throw new RuntimeException(e);
+            }
             return new BrokerListResponse(brokers);
         }
         throw new WebServiceException(
@@ -239,8 +242,7 @@ public final class CirconusClient {
     private static CheckBundle handleCheckBundleResponse(
             final WSRequest request,
             final WSResponse response,
-            final String operation)
-            throws java.io.IOException {
+            final String operation) {
         final String body = response.getBody();
         LOGGER.trace()
                 .setMessage("Response from " + operation + " checkbundle")
@@ -248,7 +250,11 @@ public final class CirconusClient {
                 .addData("body", body)
                 .log();
         if (response.getStatus() / 100 == 2) {
-            return OBJECT_MAPPER.readValue(body, CheckBundle.class);
+            try {
+                return OBJECT_MAPPER.readValue(body, CheckBundle.class);
+            } catch (final IOException e) {
+                throw new RuntimeException(e);
+            }
         }
         throw new WebServiceException(
                 String.format(
@@ -258,7 +264,7 @@ public final class CirconusClient {
                         response.getBody()));
     }
 
-    private F.Promise<WSResponse> fireRequest(final WSRequest request) {
+    private CompletionStage<WSResponse> fireRequest(final WSRequest request) {
         return request
                 .setHeader("X-Circonus-Auth-Token", _authToken)
                 .setHeader("X-Circonus-App-Name", _appName)
@@ -270,22 +276,20 @@ public final class CirconusClient {
         _uri = builder._uri;
         _appName = builder._appName;
         _authToken = builder._authToken;
-        _executionContext = builder._executionContext;
+        _materializer = builder._materializer;
 
-        final AsyncHttpClientConfig.Builder clientBuilder = new AsyncHttpClientConfig.Builder();
-        clientBuilder.setExecutorService(Executors.newWorkStealingPool(8));
+        final DefaultAsyncHttpClientConfig.Builder clientBuilder = new DefaultAsyncHttpClientConfig.Builder();
         if (!builder._safeHttps.booleanValue()) {
             clientBuilder.setAcceptAnyCertificate(true);
-            clientBuilder.setHostnameVerifier(HOST_NAME_VERIFIER);
         }
-        _client = new NingWSClient(clientBuilder.build());
+        _client = new AhcWSClient(clientBuilder.build(), _materializer);
     }
 
-    private final NingWSClient _client;
+    private final AhcWSClient _client;
     private final URI _uri;
     private final String _appName;
     private final String _authToken;
-    private final ExecutionContext _executionContext;
+    private final Materializer _materializer;
 
     private static final String BROKERS_URL = "/v2/broker";
     private static final String CHECK_BUNDLE_URL = "/v2/check_bundle";
@@ -340,13 +344,13 @@ public final class CirconusClient {
         }
 
         /**
-         * Sets the execution context for all callbacks.
+         * Sets the materializer for callbacks.
          *
          * @param value the execution context for callbacks
          * @return this Builder
          */
-        public Builder setExecutionContext(final ExecutionContext value) {
-            _executionContext = value;
+        public Builder setMaterializer(final Materializer value) {
+            _materializer = value;
             return this;
         }
 
@@ -371,7 +375,7 @@ public final class CirconusClient {
         @NotNull
         private String _authToken;
         @NotNull
-        private ExecutionContext _executionContext;
+        private Materializer _materializer;
         @NotNull
         private Boolean _safeHttps = true;
     }

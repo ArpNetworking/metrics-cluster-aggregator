@@ -34,7 +34,7 @@ import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.GeneratedMessageV3;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.net.InetAddress;
@@ -137,15 +137,11 @@ public class AggClientConnection extends UntypedActor {
         while (messageOptional.isPresent()) {
             final AggregationMessage message = messageOptional.get();
             current = current.drop(message.getLength());
-            final GeneratedMessage gm = message.getMessage();
+            final GeneratedMessageV3 gm = message.getMessage();
             if (gm instanceof Messages.HostIdentification) {
                 final Messages.HostIdentification hostIdent = (Messages.HostIdentification) gm;
-                if (hostIdent.hasHostName()) {
-                    _hostName = Optional.ofNullable(hostIdent.getHostName());
-                }
-                if (hostIdent.hasClusterName()) {
-                    _clusterName = Optional.ofNullable(hostIdent.getClusterName());
-                }
+                _hostName = Optional.ofNullable(hostIdent.getHostName());
+                _clusterName = Optional.ofNullable(hostIdent.getClusterName());
                 LOGGER.info()
                         .setMessage("Handshake received")
                         .addData("host", _hostName.orElse(""))
@@ -196,22 +192,12 @@ public class AggClientConnection extends UntypedActor {
     private Optional<PeriodicData> buildPeriodicData(final Messages.StatisticSetRecord setRecord) {
         final CombinedMetricData combinedMetricData = CombinedMetricData.Builder.fromStatisticSetRecord(setRecord).build();
         final ImmutableList.Builder<AggregatedData> builder = ImmutableList.builder();
-        final ImmutableMap.Builder<String, String> dimensionBuilder = ImmutableMap.builder();
+        final Map<String, String> dimensionsMap = setRecord.getDimensionsMap();
+        final ImmutableMap.Builder<String, String> dimensionBuilder = ImmutableMap.<String, String>builder().putAll(dimensionsMap);
 
-        Optional<String> host = Optional.empty();
-        Optional<String> service = Optional.empty();
-        Optional<String> cluster = Optional.empty();
-        for (final Messages.DimensionEntry dimensionEntry : setRecord.getDimensionsList()) {
-            if (CombinedMetricData.HOST_KEY.equals(dimensionEntry.getKey())) {
-                host = Optional.ofNullable(dimensionEntry.getValue());
-            } else if (CombinedMetricData.SERVICE_KEY.equals(dimensionEntry.getKey())) {
-                service = Optional.ofNullable(dimensionEntry.getValue());
-            } else if (CombinedMetricData.CLUSTER_KEY.equals(dimensionEntry.getKey())) {
-                cluster = Optional.ofNullable(dimensionEntry.getValue());
-            } else {
-                dimensionBuilder.put(dimensionEntry.getKey(), dimensionEntry.getValue());
-            }
-        }
+        Optional<String> host = Optional.ofNullable(dimensionsMap.get(CombinedMetricData.HOST_KEY));
+        Optional<String> service = Optional.ofNullable(dimensionsMap.get(CombinedMetricData.SERVICE_KEY));
+        Optional<String> cluster = Optional.ofNullable(dimensionsMap.get(CombinedMetricData.CLUSTER_KEY));
 
         if (!service.isPresent()) {
             service = Optional.ofNullable(setRecord.getService());

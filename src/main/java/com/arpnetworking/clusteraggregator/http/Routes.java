@@ -27,7 +27,7 @@ import akka.http.javadsl.model.StatusCodes;
 import akka.http.javadsl.model.headers.CacheControl;
 import akka.http.javadsl.model.headers.CacheDirectives;
 import akka.japi.function.Function;
-import akka.pattern.Patterns;
+import akka.pattern.PatternsCS;
 import akka.util.ByteString;
 import akka.util.Timeout;
 import com.arpnetworking.clusteraggregator.Status;
@@ -46,8 +46,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import scala.compat.java8.FutureConverters;
-import scala.concurrent.Future;
 
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
@@ -152,11 +150,12 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
 
     @SuppressWarnings("unchecked")
     private <T> CompletionStage<T> ask(final String actorPath, final Object request, final T defaultValue) {
-        return FutureConverters.toJava(
-                (Future<T>) Patterns.ask(
+        return
+                PatternsCS.ask(
                         _actorSystem.actorSelection(actorPath),
                         request,
-                        Timeout.apply(1, TimeUnit.SECONDS)))
+                        Timeout.apply(5, TimeUnit.SECONDS))
+                .thenApply(o -> (T) o)
                 .exceptionally(throwable -> defaultValue);
     }
 
@@ -182,7 +181,6 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
     private static final Logger LOGGER = LoggerFactory.getLogger(Routes.class);
 
     // Ping
-    private static final String STATUS_PATH = "/status";
     private static final HttpHeader PING_CACHE_CONTROL_HEADER = CacheControl.create(
             CacheDirectives.PRIVATE(),
             CacheDirectives.NO_CACHE,

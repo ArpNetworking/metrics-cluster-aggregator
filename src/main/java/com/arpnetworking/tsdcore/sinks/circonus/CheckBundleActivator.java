@@ -17,7 +17,7 @@ package com.arpnetworking.tsdcore.sinks.circonus;
 
 import akka.actor.Props;
 import akka.actor.UntypedActor;
-import akka.pattern.Patterns;
+import akka.pattern.PatternsCS;
 import com.arpnetworking.akka.UniformRandomTimeScheduler;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
@@ -26,7 +26,6 @@ import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.arpnetworking.tsdcore.statistics.StatisticFactory;
 import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
-import play.libs.F;
 import scala.concurrent.ExecutionContextExecutor;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -34,6 +33,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -148,8 +149,8 @@ public class CheckBundleActivator extends UntypedActor {
     }
 
     private void refreshCheckBundle(final String cid) {
-        final F.Promise<Object> requestPromise = _client.getCheckBundle(cid)
-                .flatMap(
+        final CompletionStage<Object> requestPromise = _client.getCheckBundle(cid)
+                .thenCompose(
                         response -> {
                             final List<Map<String, String>> metrics = response.getMetrics();
                             boolean needsUpdate = false;
@@ -165,16 +166,15 @@ public class CheckBundleActivator extends UntypedActor {
                                 }
                             }
                             if ("disabled".equals(response.getStatus())) {
-                                return F.Promise.<Object>pure(new CheckBundleDisabled(cid));
+                                return CompletableFuture.completedFuture(new CheckBundleDisabled(cid));
                             } else if (needsUpdate) {
-                                return _client.updateCheckBundle(response).map(CheckBundleRefreshComplete::new, _dispatcher);
+                                return _client.updateCheckBundle(response).thenApply(CheckBundleRefreshComplete::new);
                             } else {
-                                return F.Promise.<Object>pure(new CheckBundleRefreshComplete(response));
+                                return CompletableFuture.completedFuture(new CheckBundleRefreshComplete(response));
                             }
-                        },
-                        _dispatcher)
-                .recover(CheckBundleRefreshFailure::new);
-        Patterns.pipe(requestPromise.wrapped(), _dispatcher).to(self());
+                        })
+                .exceptionally(CheckBundleRefreshFailure::new);
+        PatternsCS.pipe(requestPromise, _dispatcher).to(self());
     }
 
     private final CirconusClient _client;

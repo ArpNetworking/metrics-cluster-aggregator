@@ -65,7 +65,6 @@ import com.arpnetworking.utility.Database;
 import com.arpnetworking.utility.ParallelLeastShardAllocationStrategy;
 import com.arpnetworking.utility.partitioning.PartitionSet;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Throwables;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
@@ -133,7 +132,7 @@ public class GuiceModule extends AbstractModule {
                     ConfigParseOptions.defaults()
                             .setSyntax(ConfigSyntax.JSON));
         } catch (final IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

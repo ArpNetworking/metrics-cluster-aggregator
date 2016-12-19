@@ -17,7 +17,8 @@ package com.arpnetworking.tsdcore.sinks;
 
 import akka.actor.Props;
 import akka.actor.UntypedActor;
-import akka.pattern.Patterns;
+import akka.http.javadsl.model.StatusCodes;
+import akka.pattern.PatternsCS;
 import com.arpnetworking.logback.annotations.LogValue;
 import com.arpnetworking.steno.LogValueMapFactory;
 import com.arpnetworking.steno.Logger;
@@ -26,22 +27,20 @@ import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.google.common.base.Charsets;
 import com.google.common.collect.EvictingQueue;
 import com.google.common.collect.Sets;
-import com.ning.http.client.AsyncCompletionHandler;
-import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.Request;
-import com.ning.http.client.Response;
-import io.netty.handler.codec.http.HttpResponseStatus;
+import org.asynchttpclient.AsyncCompletionHandler;
+import org.asynchttpclient.AsyncHttpClient;
+import org.asynchttpclient.Request;
+import org.asynchttpclient.Response;
 import org.joda.time.Period;
-import play.libs.F;
-import scala.concurrent.Promise;
 import scala.concurrent.duration.FiniteDuration;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -171,12 +170,7 @@ public class HttpSinkActor extends UntypedActor {
                     .addContext("actor", self())
                     .log();
         } else {
-            Optional<String> responseBody;
-            try {
-                responseBody = Optional.of(response.getResponseBody());
-            } catch (final IOException e) {
-                responseBody = Optional.empty();
-            }
+            final Optional<String> responseBody = Optional.ofNullable(response.getResponseBody());
 
             LOGGER.warn()
                     .setMessage("Post rejected")
@@ -260,13 +254,12 @@ public class HttpSinkActor extends UntypedActor {
         final Request request = _pendingRequests.poll();
         _inflightRequestsCount++;
 
-        final scala.concurrent.Promise<Response> scalaPromise = scala.concurrent.Promise$.MODULE$.<Response>apply();
-        _client.executeRequest(request, new ResponseAsyncCompletionHandler(scalaPromise));
-        // TODO(vkoskela): Remove Play Promise usage and Play Framework dependency. [AINT-?]
-        final F.Promise<Object> responsePromise = F.Promise.<Response>wrap(scalaPromise.future())
-                .<Object>map(response -> new PostComplete(request, response))
-                .recover(PostFailure::new);
-        Patterns.pipe(responsePromise.wrapped(), context().dispatcher()).to(self());
+        final CompletableFuture<Response> promise = new CompletableFuture<>();
+        _client.executeRequest(request, new ResponseAsyncCompletionHandler(promise));
+        final CompletionStage<Object> responsePromise = promise
+                .<Object>thenApply(response -> new PostComplete(request, response))
+                .exceptionally(PostFailure::new);
+        PatternsCS.pipe(responsePromise, context().dispatcher()).to(self());
     }
 
     /**
@@ -297,10 +290,10 @@ public class HttpSinkActor extends UntypedActor {
 
     static {
         // TODO(vkoskela): Make accepted status codes configurable [AINT-682]
-        ACCEPTED_STATUS_CODES.add(HttpResponseStatus.OK.code());
-        ACCEPTED_STATUS_CODES.add(HttpResponseStatus.CREATED.code());
-        ACCEPTED_STATUS_CODES.add(HttpResponseStatus.ACCEPTED.code());
-        ACCEPTED_STATUS_CODES.add(HttpResponseStatus.NO_CONTENT.code());
+        ACCEPTED_STATUS_CODES.add(StatusCodes.OK.intValue());
+        ACCEPTED_STATUS_CODES.add(StatusCodes.CREATED.intValue());
+        ACCEPTED_STATUS_CODES.add(StatusCodes.ACCEPTED.intValue());
+        ACCEPTED_STATUS_CODES.add(StatusCodes.NO_CONTENT.intValue());
     }
 
     /**
@@ -367,21 +360,21 @@ public class HttpSinkActor extends UntypedActor {
 
     private static final class ResponseAsyncCompletionHandler extends AsyncCompletionHandler<Response> {
 
-        ResponseAsyncCompletionHandler(final Promise<Response> scalaPromise) {
-            _scalaPromise = scalaPromise;
+        ResponseAsyncCompletionHandler(final CompletableFuture<Response> promise) {
+            _promise = promise;
         }
 
         @Override
         public Response onCompleted(final Response response) throws Exception {
-            _scalaPromise.success(response);
+            _promise.complete(response);
             return response;
         }
 
         @Override
         public void onThrowable(final Throwable throwable) {
-            _scalaPromise.failure(throwable);
+            _promise.completeExceptionally(throwable);
         }
 
-        private final Promise<Response> _scalaPromise;
+        private final CompletableFuture<Response> _promise;
     }
 }

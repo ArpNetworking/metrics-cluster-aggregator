@@ -27,17 +27,18 @@ import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.google.common.collect.Lists;
-import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.AsyncHttpClientConfig;
-import com.ning.http.client.Request;
-import com.ning.http.client.RequestBuilder;
 import net.sf.oval.constraint.Min;
 import net.sf.oval.constraint.NotNull;
+import org.asynchttpclient.AsyncHttpClient;
+import org.asynchttpclient.AsyncHttpClientConfig;
+import org.asynchttpclient.DefaultAsyncHttpClient;
+import org.asynchttpclient.DefaultAsyncHttpClientConfig;
+import org.asynchttpclient.Request;
+import org.asynchttpclient.RequestBuilder;
 import org.joda.time.Period;
 
 import java.net.URI;
 import java.util.Collection;
-import java.util.concurrent.Executors;
 import java.util.function.Function;
 
 /**
@@ -157,10 +158,10 @@ public abstract class HttpPostSink extends BaseSink {
     private static final AsyncHttpClient CLIENT;
 
     static {
-        final AsyncHttpClientConfig.Builder clientConfigBuilder = new AsyncHttpClientConfig.Builder();
-        clientConfigBuilder.setExecutorService(Executors.newCachedThreadPool((r) -> new Thread(r, "HttpPostSinkWorker")));
+        final DefaultAsyncHttpClientConfig.Builder clientConfigBuilder = new DefaultAsyncHttpClientConfig.Builder();
+        clientConfigBuilder.setThreadPoolName("HttpPostSinkWorker");
         final AsyncHttpClientConfig clientConfig = clientConfigBuilder.build();
-        CLIENT = new AsyncHttpClient(clientConfig);
+        CLIENT = new DefaultAsyncHttpClient(clientConfig);
     }
 
     /**

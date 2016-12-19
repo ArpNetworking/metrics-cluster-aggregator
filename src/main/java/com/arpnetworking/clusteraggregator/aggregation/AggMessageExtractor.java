@@ -18,8 +18,8 @@ package com.arpnetworking.clusteraggregator.aggregation;
 import akka.cluster.sharding.ShardRegion;
 import com.arpnetworking.clusteraggregator.models.CombinedMetricData;
 import com.arpnetworking.metrics.aggregation.protocol.Messages;
-import com.arpnetworking.metrics.com.arpnetworking.steno.Logger;
-import com.arpnetworking.metrics.com.arpnetworking.steno.LoggerFactory;
+import com.arpnetworking.steno.Logger;
+import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.google.common.collect.Maps;
 
@@ -89,21 +89,8 @@ public class AggMessageExtractor implements ShardRegion.MessageExtractor {
     private TreeMap<String, String> dimensionsToMap(final Messages.StatisticSetRecord metricData) {
         final TreeMap<String, String> sortedDimensionsMap = Maps.newTreeMap(Comparator.<String>naturalOrder());
 
-        for (final Messages.DimensionEntry dimensionEntry : metricData.getDimensionsList()) {
-            sortedDimensionsMap.merge(dimensionEntry.getKey(), dimensionEntry.getValue(), (existing, incoming) -> {
-                LOGGER.error()
-                        .setMessage("Duplicate key found for dimension.")
-                        .addData("statisticSetRecord", metricData)
-                        .addData("dimensionKey", dimensionEntry.getKey())
-                        .addData("firstValue", existing)
-                        .addData("secondValue", incoming)
-                        .log();
-                if (existing.compareTo(incoming) < 0) {
-                    return existing;
-                }
-                return incoming;
-            });
-        }
+        sortedDimensionsMap.putAll(metricData.getDimensionsMap());
+
         return sortedDimensionsMap;
     }
 

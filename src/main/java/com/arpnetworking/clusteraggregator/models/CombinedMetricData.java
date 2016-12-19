@@ -28,7 +28,6 @@ import com.arpnetworking.tsdcore.statistics.HistogramStatistic;
 import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.arpnetworking.tsdcore.statistics.StatisticFactory;
 import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 import net.sf.oval.constraint.NotNull;
 import org.joda.time.DateTime;
@@ -248,8 +247,8 @@ public final class CombinedMetricData {
 
         @SuppressWarnings("unchecked")
         private static <T> T deserialzeSupportingData(final Messages.StatisticRecord record) {
-            if (!record.hasSupportingData()) {
-                throw Throwables.propagate(new IllegalArgumentException("no supporting data found"));
+            if (record.getSupportingData() == null) {
+                throw new RuntimeException(new IllegalArgumentException("no supporting data found"));
             }
             return (T) AggregationMessage.deserialize(
                     ByteString.fromByteBuffer(record.getSupportingData().asReadOnlyByteBuffer())).get().getMessage();
