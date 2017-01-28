@@ -41,7 +41,7 @@ ADD lib /opt/cluster-aggregator/lib/
 # Entry point
 CMD JAVA_OPTS="${LOGBACK_CONFIG} \
     -XX:+HeapDumpOnOutOfMemoryError \
-    -XX:HeapDumpPath=/opt/mad/logs/cluster-aggregator.oom.hprof \
+    -XX:HeapDumpPath=/opt/cluster-aggregator/logs/cluster-aggregator.oom.hprof \
     -XX:+PrintGCDetails \
     -XX:+PrintGCDateStamps \
     -Xloggc:logs/cluster-aggregator.gc.log \
