@@ -268,7 +268,7 @@ public final class Main implements Launchable {
     private static final SourceTypeLiteral SOURCE_TYPE_LITERAL = new SourceTypeLiteral();
     private static final Semaphore SHUTDOWN_SEMAPHORE = new Semaphore(0);
     private static final Thread SHUTDOWN_THREAD = new ShutdownThread();
-    private static final String HOCON_FILE_EXTENSION = ".hocon";
+    private static final String HOCON_FILE_EXTENSION = ".conf";
 
     private static final class ShutdownThread extends Thread {
         private ShutdownThread() {

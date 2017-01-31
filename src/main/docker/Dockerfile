@@ -24,7 +24,7 @@ WORKDIR /opt/cluster-aggregator
 ENV JVM_XMS="64m"
 ENV JVM_XMX="1024m"
 ENV LOGBACK_CONFIG="-Dlogback.configurationFile=/opt/cluster-aggregator/config/logback.xml"
-ENV APP_PARAMS="/opt/cluster-aggregator/config/config.hocon"
+ENV APP_PARAMS="/opt/cluster-aggregator/config/config.conf"
 ENV ADDITIONAL_APP_PARAMS=""
 ENV ADDITIONAL_JAVA_OPTS=""
 

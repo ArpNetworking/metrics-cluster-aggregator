@@ -380,7 +380,7 @@ public class GuiceModule extends AbstractModule {
 
     private final ClusterAggregatorConfiguration _configuration;
 
-    private static final String HOCON_FILE_EXTENSION = ".hocon";
+    private static final String HOCON_FILE_EXTENSION = ".conf";
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.getInstance();
 
     private static final class RoundRobinEmitterFactory implements ConfiguredLaunchableFactory<Props, EmitterConfiguration> {
