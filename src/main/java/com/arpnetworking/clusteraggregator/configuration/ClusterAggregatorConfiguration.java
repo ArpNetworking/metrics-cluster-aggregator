@@ -15,7 +15,8 @@
  */
 package com.arpnetworking.clusteraggregator.configuration;
 
-import akka.actor.Props;
+import akka.actor.Actor;
+import com.arpnetworking.akka.ActorBuilder;
 import com.arpnetworking.akka.NonJoiningClusterJoiner;
 import com.arpnetworking.commons.builder.OvalBuilder;
 import com.arpnetworking.commons.jackson.databind.ObjectMapperFactory;
@@ -49,7 +50,7 @@ public final class ClusterAggregatorConfiguration {
     public static ObjectMapper createObjectMapper() {
         final ObjectMapper objectMapper = ObjectMapperFactory.createInstance();
         final SimpleModule module = new SimpleModule();
-        module.addDeserializer(Props.class, new ActorBuilderDeserializer(objectMapper));
+        module.addDeserializer(ActorBuilder.class, new ActorBuilderDeserializer(objectMapper));
         objectMapper.registerModule(module);
         return objectMapper;
     }
@@ -122,7 +123,7 @@ public final class ClusterAggregatorConfiguration {
         return _clusterHostSuffix;
     }
 
-    public Props getClusterJoinActor() {
+    public ActorBuilder<?, ? extends Actor> getClusterJoinActor() {
         return _clusterJoinActor;
     }
 
@@ -191,7 +192,7 @@ public final class ClusterAggregatorConfiguration {
     private final Period _jvmMetricsCollectionInterval;
     private final RebalanceConfiguration _rebalanceConfiguration;
     private final String _clusterHostSuffix;
-    private final Props _clusterJoinActor;
+    private final ActorBuilder<?, ? extends Actor> _clusterJoinActor;
     private final Map<String, DatabaseConfiguration> _databaseConfigurations;
 
     private static final InterfaceDatabase INTERFACE_DATABASE = ReflectionsDatabase.newInstance();
@@ -411,7 +412,7 @@ public final class ClusterAggregatorConfiguration {
          * @param value The cluster join actor configuration.
          * @return This instance of <code>Builder</code>.
          */
-        public Builder setClusterJoinActor(final Props value) {
+        public Builder setClusterJoinActor(final ActorBuilder<?, ? extends Actor> value) {
             _clusterJoinActor = value;
             return this;
         }
@@ -456,7 +457,7 @@ public final class ClusterAggregatorConfiguration {
         @NotNull
         private String _clusterHostSuffix = "";
         @NotNull
-        private Props _clusterJoinActor = new NonJoiningClusterJoiner.Builder().build();
+        private ActorBuilder<?, ? extends Actor> _clusterJoinActor = new NonJoiningClusterJoiner.Builder();
         private Map<String, DatabaseConfiguration> _databaseConfigurations;
     }
 }

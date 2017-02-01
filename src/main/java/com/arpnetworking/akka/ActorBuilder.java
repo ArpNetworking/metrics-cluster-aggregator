@@ -15,8 +15,10 @@
  */
 package com.arpnetworking.akka;
 
-import akka.actor.Props;
+import akka.actor.Actor;
+import akka.japi.Creator;
 import com.arpnetworking.commons.builder.OvalBuilder;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.util.function.Function;
 
@@ -24,16 +26,18 @@ import java.util.function.Function;
  * Builder for actors.
  *
  * @param <B> The type of the builder
+ * @param <S> type of the object to be built
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public abstract class ActorBuilder<B extends ActorBuilder<B>> extends OvalBuilder<Props> {
+@SuppressFBWarnings("SE_NO_SUITABLE_CONSTRUCTOR")
+public abstract class ActorBuilder<B extends ActorBuilder<B, S>, S extends Actor> extends OvalBuilder<S> implements Creator<S> {
     /**
-     * Protected constructor.
+     * Protected constructor for subclasses.
      *
-     * @param createProps method to create a {@link Props} from the {@link ActorBuilder}
+     * @param targetConstructor The constructor for the concrete type to be created by this builder.
      */
-    protected ActorBuilder(final Function<B, Props> createProps) {
-        super(createProps);
+    protected ActorBuilder(final Function<B, S> targetConstructor) {
+        super(targetConstructor);
     }
 
     /**
@@ -43,4 +47,14 @@ public abstract class ActorBuilder<B extends ActorBuilder<B>> extends OvalBuilde
      * @return instance with correct {@link ActorBuilder} class type.
      */
     protected abstract B self();
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public S create() throws Exception {
+        return build();
+    }
+
+    private static final long serialVersionUID = 1L;
 }

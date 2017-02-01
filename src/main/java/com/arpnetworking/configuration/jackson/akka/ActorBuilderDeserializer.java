@@ -15,7 +15,8 @@
  */
 package com.arpnetworking.configuration.jackson.akka;
 
-import akka.actor.Props;
+import akka.actor.Actor;
+import com.arpnetworking.akka.ActorBuilder;
 import com.arpnetworking.commons.builder.Builder;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.TreeNode;
@@ -32,7 +33,7 @@ import java.io.IOException;
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class ActorBuilderDeserializer extends JsonDeserializer<Props> {
+public class ActorBuilderDeserializer extends JsonDeserializer<ActorBuilder<?, ?>> {
     /**
      * Public constructor.
      *
@@ -43,23 +44,23 @@ public class ActorBuilderDeserializer extends JsonDeserializer<Props> {
     }
 
     @Override
-    public Props deserialize(final JsonParser p, final DeserializationContext ctxt) throws IOException {
+    public ActorBuilder<? extends ActorBuilder<?, ?>, ? extends Actor> deserialize(final JsonParser p, final DeserializationContext ctxt)
+            throws IOException {
         final TreeNode treeNode = p.readValueAsTree();
         final String type = ((TextNode) treeNode.get("type")).textValue();
         try {
             final Class<?> clazz = Class.forName(type);
-            final Class<? extends Builder<? extends Props>> builder = getBuilderForClass(clazz);
-            final Builder<? extends Props> value = _mapper.readValue(treeNode.traverse(), builder);
-            return value.build();
+            final Class<? extends ActorBuilder<? extends ActorBuilder<?, ?>, ? extends Actor>> builder = getBuilderForClass(clazz);
+            return _mapper.readValue(treeNode.traverse(), builder);
         } catch (final ClassNotFoundException e) {
             throw new JsonMappingException(p, String.format("Unable to find class %s referenced by Props type", type));
         }
     }
 
     @SuppressWarnings("unchecked")
-    private static Class<? extends Builder<Props>> getBuilderForClass(final Class<?> clazz)
+    private static Class<? extends ActorBuilder<? extends ActorBuilder<?, ?>, ? extends Actor>> getBuilderForClass(final Class<?> clazz)
             throws ClassNotFoundException {
-        return (Class<? extends Builder<Props>>) (Class.forName(
+        return (Class<? extends ActorBuilder<? extends ActorBuilder<?, ?>, ? extends Actor>>) (Class.forName(
                 clazz.getName() + "$Builder",
                 true, // initialize
                 clazz.getClassLoader()));

@@ -249,7 +249,7 @@ public class GuiceModule extends AbstractModule {
     @Named("cluster-joiner")
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
     private ActorRef provideClusterJoiner(final ActorSystem system, final ClusterAggregatorConfiguration config) {
-        return system.actorOf(config.getClusterJoinActor(), "cluster-joiner");
+        return system.actorOf(Props.create(config.getClusterJoinActor()), "cluster-joiner");
     }
 
     @Provides

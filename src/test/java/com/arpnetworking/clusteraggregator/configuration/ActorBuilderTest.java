@@ -15,7 +15,10 @@
  */
 package com.arpnetworking.clusteraggregator.configuration;
 
+import akka.actor.ActorRef;
+import akka.actor.PoisonPill;
 import akka.actor.Props;
+import com.arpnetworking.akka.ActorBuilder;
 import com.arpnetworking.akka.NonJoiningClusterJoiner;
 import com.arpnetworking.commons.jackson.databind.ObjectMapperFactory;
 import com.arpnetworking.configuration.jackson.akka.ActorBuilderDeserializer;
@@ -34,19 +37,23 @@ public class ActorBuilderTest extends BaseActorTest {
     @Test
     public void testBuild() {
         final NonJoiningClusterJoiner.Builder builder = new NonJoiningClusterJoiner.Builder();
-        builder.build();
+
+        final ActorRef ref = getSystem().actorOf(Props.create(builder));
+        ref.tell(PoisonPill.getInstance(), ActorRef.noSender());
     }
 
     @Test
     public void testPolyDeserialize() throws IOException {
         final ObjectMapper mapper = ObjectMapperFactory.createInstance();
         final SimpleModule module = new SimpleModule();
-        module.addDeserializer(Props.class, new ActorBuilderDeserializer(mapper));
+        module.addDeserializer(ActorBuilder.class, new ActorBuilderDeserializer(mapper));
         mapper.registerModule(module);
 
         @Language("JSON") final String data = "{\n"
                 + "  \"type\": \"com.arpnetworking.akka.NonJoiningClusterJoiner\"\n"
                 + "}";
-        final Props props = mapper.readValue(data, Props.class);
+        final ActorBuilder<?, ?> builder = mapper.readValue(data, ActorBuilder.class);
+        final ActorRef ref = getSystem().actorOf(Props.create(builder));
+        ref.tell(PoisonPill.getInstance(), ActorRef.noSender());
     }
 }
