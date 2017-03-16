@@ -93,18 +93,20 @@ public final class AggregationMessage {
         try {
             switch (type) {
                 case 0x01:
-                    return Optional.of(new AggregationMessage(Messages.HostIdentification.parseFrom(payloadBytes)));
+                    return Optional.of(new AggregationMessage(Messages.HostIdentification.parseFrom(payloadBytes), length));
                 case 0x03:
-                    return Optional.of(new AggregationMessage(Messages.HeartbeatRecord.parseFrom(payloadBytes)));
+                    return Optional.of(new AggregationMessage(Messages.HeartbeatRecord.parseFrom(payloadBytes), length));
                 case 0x04:
-                    return Optional.of(new AggregationMessage(Messages.StatisticSetRecord.parseFrom(payloadBytes)));
+                    return Optional.of(new AggregationMessage(Messages.StatisticSetRecord.parseFrom(payloadBytes), length));
                 case 0x05:
                     // 0x05 is the message type for all supporting data
                     switch (subType) {
                         case 0x01:
-                            return Optional.of(new AggregationMessage(Messages.SamplesSupportingData.parseFrom(payloadBytes)));
+                            return Optional.of(new AggregationMessage(Messages.SamplesSupportingData.parseFrom(payloadBytes), length));
                         case 0x02:
-                            return Optional.of(new AggregationMessage(Messages.SparseHistogramSupportingData.parseFrom(payloadBytes)));
+                            return Optional.of(new AggregationMessage(
+                                    Messages.SparseHistogramSupportingData.parseFrom(payloadBytes),
+                                    length));
                         default:
                             LOGGER.warn(
                                     String.format("Invalid protocol buffer, unknown subtype; type=%s, subtype=%s, bytes=%s",
@@ -134,24 +136,28 @@ public final class AggregationMessage {
      * @return <code>Buffer</code> containing serialized message.
      */
     public ByteString serialize() {
+        return AggregationMessage.serialize(_message);
+    }
+
+    private static ByteString serialize(final GeneratedMessageV3 message) {
         final ByteStringBuilder b = ByteString.createBuilder();
-        if (_message instanceof Messages.HostIdentification) {
+        if (message instanceof Messages.HostIdentification) {
             b.putByte((byte) 0x01);
-        } else if (_message instanceof Messages.HeartbeatRecord) {
+        } else if (message instanceof Messages.HeartbeatRecord) {
             b.putByte((byte) 0x03);
-        } else if (_message instanceof Messages.StatisticSetRecord) {
+        } else if (message instanceof Messages.StatisticSetRecord) {
             b.putByte((byte) 0x04);
-        } else if (_message instanceof Messages.SamplesSupportingData) {
+        } else if (message instanceof Messages.SamplesSupportingData) {
             b.putByte((byte) 0x05);
             b.putByte((byte) 0x01);
-        } else if (_message instanceof Messages.SparseHistogramSupportingData) {
+        } else if (message instanceof Messages.SparseHistogramSupportingData) {
             b.putByte((byte) 0x05);
             b.putByte((byte) 0x02);
         } else {
-            throw new IllegalArgumentException(String.format("Unsupported message; message=%s", _message));
+            throw new IllegalArgumentException(String.format("Unsupported message; message=%s", message));
         }
         try {
-            _message.writeTo(b.asOutputStream());
+            message.writeTo(b.asOutputStream());
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
@@ -165,14 +171,20 @@ public final class AggregationMessage {
     }
 
     public int getLength() {
-        return _message.getSerializedSize() + HEADER_SIZE_IN_BYTES;
+        return _length;
     }
 
     private AggregationMessage(final GeneratedMessageV3 message) {
+        this(message, serialize(message).length());
+    }
+
+    private AggregationMessage(final GeneratedMessageV3 message, final int length) {
+        _length = length;
         _message = message;
     }
 
     private final GeneratedMessageV3 _message;
+    private final int _length;
 
     private static final int BYTE_SIZE_IN_BYTES = 1;
     private static final int INTEGER_SIZE_IN_BYTES = Integer.SIZE / 8;
