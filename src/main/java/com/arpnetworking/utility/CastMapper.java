@@ -16,22 +16,21 @@
 
 package com.arpnetworking.utility;
 
-import akka.dispatch.Mapper;
+import java.util.function.Function;
 
 /**
  * Map method that just casts to another class.
  *
- * @param <T> Input type
  * @param <R> Output type
  * @author Brandon Arp (brandonarp at gmail dot com)
  */
-public class CastMapper<T, R> extends Mapper<T, R> {
+public class CastMapper<R> implements Function<Object, R> {
     /**
      * {@inheritDoc}
      */
     @Override
     @SuppressWarnings("unchecked")
-    public R apply(final T parameter) {
+    public R apply(final Object parameter) {
         return (R) parameter;
     }
 }
