@@ -41,7 +41,7 @@ import java.util.Optional;
  * These will be combined in an {@link com.arpnetworking.clusteraggregator.aggregation.AggregationRouter} to
  * produce the set of cluster statistics.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public final class CombinedMetricData {
     /**
@@ -103,7 +103,7 @@ public final class CombinedMetricData {
     /**
      * Implementation of builder pattern for {@link CombinedMetricData}.
      *
-     * @author Brandon Arp (brandonarp at gmail dot com)
+     * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
      */
     public static class Builder extends OvalBuilder<CombinedMetricData> {
         /**
@@ -274,7 +274,7 @@ public final class CombinedMetricData {
     /**
      * Representation of a computed statistic and related data.
      *
-     * @author Brandon Arp (brandonarp at gmail dot com)
+     * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
      */
     public static class StatisticValue {
         /**

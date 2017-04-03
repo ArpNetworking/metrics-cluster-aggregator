@@ -30,9 +30,6 @@ public class AkkaLoggingModule extends SimpleModule {
      */
     public AkkaLoggingModule() { }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setupModule(final SetupContext context) {
         addSerializer(ActorRef.class, new ActorRefLoggingSerializer());

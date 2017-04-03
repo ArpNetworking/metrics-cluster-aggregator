@@ -30,7 +30,7 @@ import java.util.TreeMap;
 /**
  * Handles extracting the sharding information from an aggregation message.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public class AggMessageExtractor implements ShardRegion.MessageExtractor {
     /**

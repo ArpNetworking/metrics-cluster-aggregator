@@ -47,9 +47,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Gil Markham (gil@groupon.com)
  */
 public final class WavefrontSink extends BaseSink {
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void recordAggregateData(final PeriodicData periodicData) {
         for (final AggregatedData aggregatedData : periodicData.getData()) {
@@ -94,9 +91,6 @@ public final class WavefrontSink extends BaseSink {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void close() {
     }
@@ -314,9 +308,6 @@ public final class WavefrontSink extends BaseSink {
         }
 
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         protected Builder self() {
             return this;

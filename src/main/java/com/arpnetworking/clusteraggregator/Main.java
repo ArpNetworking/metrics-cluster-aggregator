@@ -50,7 +50,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Entry point for the akka-based cluster aggregator.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public final class Main implements Launchable {
     /**

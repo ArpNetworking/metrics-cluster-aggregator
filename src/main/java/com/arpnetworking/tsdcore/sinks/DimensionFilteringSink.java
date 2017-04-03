@@ -28,9 +28,6 @@ import java.util.Collections;
  */
 public final class DimensionFilteringSink extends BaseSink {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void recordAggregateData(final PeriodicData data) {
         if (!data.getDimensions().keySet().containsAll(_excludeWithoutDimensions)) {
@@ -44,9 +41,6 @@ public final class DimensionFilteringSink extends BaseSink {
         _sink.recordAggregateData(data);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void close() {
         // Nothing to do
@@ -112,9 +106,6 @@ public final class DimensionFilteringSink extends BaseSink {
             return this;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         protected Builder self() {
             return this;

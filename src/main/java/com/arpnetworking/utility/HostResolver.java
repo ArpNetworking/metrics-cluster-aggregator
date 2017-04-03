@@ -20,7 +20,7 @@ import java.net.UnknownHostException;
 /**
  * Used to get the local hostname.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public interface HostResolver {
 

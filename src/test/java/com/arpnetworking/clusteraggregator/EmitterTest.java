@@ -47,7 +47,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Tests for the {@link Emitter} actor.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public class EmitterTest extends BaseActorTest {
 

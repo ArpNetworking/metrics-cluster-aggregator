@@ -30,17 +30,11 @@ import java.util.Optional;
  */
 public final class JsonNodeLiteralSource extends BaseJsonNodeSource {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Optional<JsonNode> getValue(final String... keys) {
         return getValue(getJsonNode(), keys);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @LogValue
     @Override
     public Object toLogValue() {
@@ -94,9 +88,6 @@ public final class JsonNodeLiteralSource extends BaseJsonNodeSource {
             return this;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         protected Builder self() {
             return this;

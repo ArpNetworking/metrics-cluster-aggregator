@@ -40,9 +40,6 @@ import java.util.regex.Pattern;
  */
 public final class MetricNameFilteringSink extends BaseSink {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void recordAggregateData(final PeriodicData periodicData) {
         final ImmutableList.Builder<AggregatedData> filteredDataBuilder = ImmutableList.builder();
@@ -73,9 +70,6 @@ public final class MetricNameFilteringSink extends BaseSink {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void close() {
         _sink.close();
@@ -197,9 +191,6 @@ public final class MetricNameFilteringSink extends BaseSink {
             return this;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         protected Builder self() {
             return this;

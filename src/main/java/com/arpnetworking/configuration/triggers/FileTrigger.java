@@ -40,9 +40,6 @@ import java.util.Arrays;
  */
 public final class FileTrigger implements Trigger {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean evaluateAndReset() {
         final boolean exists = _file.exists();
@@ -96,9 +93,6 @@ public final class FileTrigger implements Trigger {
                 .build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return toLogValue().toString();

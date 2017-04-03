@@ -18,7 +18,7 @@ package com.arpnetworking.utility.partitioning;
 /**
  * Factory for creating partition sets.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public interface PartitionSetFactory {
     /**

@@ -71,9 +71,6 @@ import java.util.Set;
  */
 public class LuaExpression implements Expression {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Optional<AggregatedData> evaluate(final PeriodicData periodicData) throws ScriptingException {
         // Check dependencies
@@ -116,17 +113,11 @@ public class LuaExpression implements Expression {
                 .build());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public FQDSN getTargetFQDSN() {
         return _fqdsn;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Set<FQDSN> getDependencies() {
         return Collections.unmodifiableSet(_dependencies);
@@ -145,9 +136,6 @@ public class LuaExpression implements Expression {
                 .build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return toLogValue().toString();

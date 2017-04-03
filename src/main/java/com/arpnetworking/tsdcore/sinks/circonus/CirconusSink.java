@@ -42,12 +42,9 @@ import java.util.stream.Collectors;
 /**
  * A traditional tsdcore single threaded sink to act as an adapter for the actor-based sink.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public final class CirconusSink extends BaseSink {
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void recordAggregateData(final PeriodicData periodicData) {
         LOGGER.debug()
@@ -68,9 +65,6 @@ public final class CirconusSink extends BaseSink {
         return data.isSpecified() || (_enableHistograms && data.getFQDSN().getStatistic() instanceof HistogramStatistic);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void close() {
         _sinkActor.tell(PoisonPill.getInstance(), ActorRef.noSender());

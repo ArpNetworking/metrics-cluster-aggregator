@@ -24,7 +24,7 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * Simple in-memory partition manager.  This class *is not* thread safe.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public class InMemoryPartitionSet implements PartitionSet {
     /**
@@ -38,17 +38,11 @@ public class InMemoryPartitionSet implements PartitionSet {
         _maxPartitions = maxPartitions;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Optional<Integer> getExistingPartition(final String key) {
         return Optional.ofNullable(_mappings.get(key));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Optional<Integer> getOrCreatePartition(final String key) {
         if (_currentPartition > _maxPartitions) {

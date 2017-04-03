@@ -34,9 +34,6 @@ public class ActorRefLoggingSerializer extends JsonSerializer<ActorRef> {
      */
     public ActorRefLoggingSerializer() { }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void serialize(
             final ActorRef value,

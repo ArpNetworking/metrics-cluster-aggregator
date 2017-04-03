@@ -28,13 +28,10 @@ import net.sf.oval.constraint.NotNull;
  * A {@link com.arpnetworking.tsdcore.sinks.Sink} that only allows a percentage of data through to the wrapped
  * {@link com.arpnetworking.tsdcore.sinks.Sink}.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public final class RandomMetricNameFilterSink extends BaseSink {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void recordAggregateData(final PeriodicData periodicData) {
         final ImmutableList.Builder<AggregatedData> filteredDataBuilder = ImmutableList.builder();
@@ -49,9 +46,6 @@ public final class RandomMetricNameFilterSink extends BaseSink {
                         .build());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void close() {
         _sink.close();
@@ -123,7 +117,9 @@ public final class RandomMetricNameFilterSink extends BaseSink {
         }
 
         /**
-         * {@inheritDoc}
+         * Return this instance of <code>Builder</code> as this sub-type.
+         *
+         * @return This instance of <code>Buidler</code>.
          */
         public Builder self() {
             return this;

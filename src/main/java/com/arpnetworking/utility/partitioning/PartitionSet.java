@@ -20,7 +20,7 @@ import java.util.Optional;
 /**
  * Represents a set of partitions and a way to register and retrieve the mappings.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public interface PartitionSet {
     /**

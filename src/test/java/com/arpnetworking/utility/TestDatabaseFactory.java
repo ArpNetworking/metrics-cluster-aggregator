@@ -23,7 +23,7 @@ import java.util.UUID;
 /**
  * Creates database instances for tests.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public class TestDatabaseFactory {
     /**

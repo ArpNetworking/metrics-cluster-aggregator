@@ -89,7 +89,7 @@ import java.util.concurrent.CompletionStage;
  * The primary Guice module used to bootstrap the cluster aggregator. NOTE: this module will be constructed whenever
  * a new configuration is loaded, and will be torn down when another configuration is loaded.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public class GuiceModule extends AbstractModule {
     /**
@@ -101,9 +101,6 @@ public class GuiceModule extends AbstractModule {
         _configuration = configuration;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void configure() {
         bind(ClusterAggregatorConfiguration.class).toInstance(_configuration);
@@ -399,9 +396,6 @@ public class GuiceModule extends AbstractModule {
             _configuration = configuration;
         }
 
-        /**
-         *{@inheritDoc}
-         */
         @Override
         public Database get() {
             return new Database(_name, _configuration);

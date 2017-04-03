@@ -37,7 +37,7 @@ import java.util.List;
 /**
  * Tests for the {@link RandomMetricNameFilterSink} class.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public class RandomMetricNameFilterSinkTest {
 

@@ -23,12 +23,9 @@ import akka.dispatch.Mapper;
  *
  * @param <T> Input type
  * @param <R> Output type
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public class CastMapper<T, R> extends Mapper<T, R> {
-    /**
-     * {@inheritDoc}
-     */
     @Override
     @SuppressWarnings("unchecked")
     public R apply(final T parameter) {

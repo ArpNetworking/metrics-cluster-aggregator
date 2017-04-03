@@ -33,7 +33,7 @@ import java.net.InetSocketAddress;
 /**
  * TCP Server that listens for aggregation client connections.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public final class AggClientServer extends UntypedActor {
     /**
@@ -49,9 +49,6 @@ public final class AggClientServer extends UntypedActor {
         _supervisorProvider = supervisorProvider;
         _clusterConfiguration = clusterConfiguration;
     }
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void preStart() throws Exception {
         final ActorRef tcp = Tcp.get(getContext().system()).manager();
@@ -69,9 +66,6 @@ public final class AggClientServer extends UntypedActor {
                 getSelf());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void onReceive(final Object message) throws Exception {
         if (message instanceof Tcp.Bound) {

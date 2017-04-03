@@ -46,7 +46,7 @@ import javax.xml.ws.WebServiceException;
 /**
  * Async Circonus API client.  Hides the implementation of the HTTP calls.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public final class CirconusClient {
 
@@ -183,9 +183,6 @@ public final class CirconusClient {
                 .build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return toLogValue().toString();

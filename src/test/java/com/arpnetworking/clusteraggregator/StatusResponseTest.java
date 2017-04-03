@@ -30,7 +30,7 @@ import java.util.Set;
 /**
  * Tests for the StatusResponse class.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public class StatusResponseTest extends BaseActorTest {
 

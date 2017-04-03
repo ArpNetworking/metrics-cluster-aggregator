@@ -32,7 +32,7 @@ import java.util.Optional;
 /**
  * Class for building messages from the raw, on-the-wire bytes in the TCP stream.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public final class AggregationMessage {
 

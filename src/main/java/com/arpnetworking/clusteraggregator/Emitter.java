@@ -32,7 +32,7 @@ import org.joda.time.Period;
 /**
  * Holds the sinks and emits to them.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public class Emitter extends UntypedActor {
     /**
@@ -61,9 +61,6 @@ public class Emitter extends UntypedActor {
                 .log();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @SuppressWarnings("deprecation")
     @Override
     public void onReceive(final Object message) throws Exception {
@@ -96,9 +93,6 @@ public class Emitter extends UntypedActor {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void postStop() throws Exception {
         super.postStop();

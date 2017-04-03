@@ -63,9 +63,6 @@ public final class DataDogSink extends HttpPostSink {
                 .build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected Collection<byte[]> serialize(final PeriodicData periodicData) {
         final String period = periodicData.getPeriod().toString(ISOPeriodFormat.standard());
@@ -114,9 +111,6 @@ public final class DataDogSink extends HttpPostSink {
         return tags;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected Request createRequest(final AsyncHttpClient client, final byte[] serializedData) {
         return new RequestBuilder()
@@ -199,9 +193,6 @@ public final class DataDogSink extends HttpPostSink {
             return self();
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         protected Builder self() {
             return this;

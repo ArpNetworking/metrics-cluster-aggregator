@@ -62,9 +62,6 @@ public final class KairosDbSink extends HttpPostSink {
                 .build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected Collection<byte[]> serialize(final PeriodicData periodicData) {
         // Initialize serialization structures
@@ -321,9 +318,6 @@ public final class KairosDbSink extends HttpPostSink {
             super(KairosDbSink::new);
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         protected Builder self() {
             return this;

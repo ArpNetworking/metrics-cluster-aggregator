@@ -64,9 +64,6 @@ public final class SignalFxSink extends HttpPostSink {
                 .build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected Collection<byte[]> serialize(final PeriodicData periodicData) {
         final String period = periodicData.getPeriod().toString(ISOPeriodFormat.standard());
@@ -101,9 +98,6 @@ public final class SignalFxSink extends HttpPostSink {
         return serializedData;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected Request createRequest(final AsyncHttpClient client, final byte[] serializedData) {
         return new RequestBuilder()
@@ -230,9 +224,6 @@ public final class SignalFxSink extends HttpPostSink {
             return this;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         protected Builder self() {
             return this;

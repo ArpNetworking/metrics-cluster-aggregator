@@ -52,9 +52,6 @@ public final class Condition {
         return _extensions;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)

@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Actual actor responsible for aggregating.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public class AggregationRouter extends UntypedActor {
 
@@ -74,9 +74,6 @@ public class AggregationRouter extends UntypedActor {
         context().setReceiveTimeout(FiniteDuration.apply(30, TimeUnit.MINUTES));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void onReceive(final Object message) throws Exception {
         if (message instanceof Messages.StatisticSetRecord) {

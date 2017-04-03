@@ -82,9 +82,6 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
         _objectMapper.registerModule(new AkkaModule(actorSystem));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public CompletionStage<HttpResponse> apply(final HttpRequest request) {
         final Metrics metrics = _metricsFactory.create();

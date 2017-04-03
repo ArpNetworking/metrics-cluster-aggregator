@@ -37,7 +37,7 @@ import java.util.Optional;
  * Serves as a router for configuration-created actors.  Handles reconfiguration messages and swaps references on reconfiguration.
  *
  * @param <T> The type of configuration
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public class ConfigurableActorProxy<T> extends UntypedActor {
     /**
@@ -60,9 +60,6 @@ public class ConfigurableActorProxy<T> extends UntypedActor {
         _factory = factory;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void onReceive(final Object message) throws Exception {
         if (message instanceof ApplyConfiguration) {

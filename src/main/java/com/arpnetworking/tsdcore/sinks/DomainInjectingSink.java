@@ -29,9 +29,6 @@ import java.util.Optional;
  */
 public final class DomainInjectingSink extends BaseSink {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void recordAggregateData(final PeriodicData data) {
         if (!data.getDimensions().containsKey(DOMAIN_DIMENSION_NAME)) {
@@ -49,9 +46,6 @@ public final class DomainInjectingSink extends BaseSink {
         _sink.recordAggregateData(data);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void close() {
         // Nothing to do
@@ -119,9 +113,6 @@ public final class DomainInjectingSink extends BaseSink {
             return this;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         protected Builder self() {
             return this;

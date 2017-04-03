@@ -41,9 +41,6 @@ import java.util.List;
  */
 public final class ReMetGuiDynamicConfigurationFactory implements DynamicConfigurationFactory {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public DynamicConfiguration create(
             final DynamicConfiguration.Builder builder,
@@ -52,9 +49,6 @@ public final class ReMetGuiDynamicConfigurationFactory implements DynamicConfigu
         return builder.build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void update(
             final DynamicConfiguration.Builder builder,
@@ -92,7 +86,9 @@ public final class ReMetGuiDynamicConfigurationFactory implements DynamicConfigu
     }
 
     /**
-     * {@inheritDoc}
+     * Generate a Steno log compatible representation.
+     *
+     * @return Steno log compatible representation.
      */
     @LogValue
     public Object toLogValue() {
@@ -103,9 +99,6 @@ public final class ReMetGuiDynamicConfigurationFactory implements DynamicConfigu
                 .build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return toLogValue().toString();

@@ -46,7 +46,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Actor that sends HTTP requests via a Ning HTTP client.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public class HttpSinkActor extends UntypedActor {
     /**
@@ -111,17 +111,11 @@ public class HttpSinkActor extends UntypedActor {
                 .build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return toLogValue().toString();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void onReceive(final Object message) throws Exception {
         if (message instanceof HttpSinkActor.EmitAggregation) {
@@ -262,9 +256,6 @@ public class HttpSinkActor extends UntypedActor {
         PatternsCS.pipe(responsePromise, context().dispatcher()).to(self());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void postStop() throws Exception {
         super.postStop();

@@ -74,9 +74,6 @@ public final class DatabaseConfiguration {
         return _modelPackages;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)

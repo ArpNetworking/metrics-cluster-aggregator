@@ -25,7 +25,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 /**
  * Jackson module for serializing and deserializing Akka objects.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public class AkkaModule extends SimpleModule {
 
@@ -38,9 +38,6 @@ public class AkkaModule extends SimpleModule {
         _system = system;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setupModule(final SetupContext context) {
         addSerializer(ActorRef.class, new ActorRefSerializer(_system));
@@ -60,9 +57,6 @@ public class AkkaModule extends SimpleModule {
                 .build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return toLogValue().toString();

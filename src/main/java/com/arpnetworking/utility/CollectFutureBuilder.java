@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Collects futures and provides them in a combined promise.
  *
  * @param <T> Return future type
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public final class CollectFutureBuilder<T> {
     /**

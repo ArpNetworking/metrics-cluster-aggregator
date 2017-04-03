@@ -58,9 +58,6 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public final class AlertSink extends BaseSink {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void recordAggregateData(final PeriodicData periodicData) {
         LOGGER.debug()
@@ -125,9 +122,6 @@ public final class AlertSink extends BaseSink {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void close() {
         final DynamicConfiguration configuration = _configuration.get();
@@ -288,9 +282,6 @@ public final class AlertSink extends BaseSink {
             return this;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         protected Builder self() {
             return this;

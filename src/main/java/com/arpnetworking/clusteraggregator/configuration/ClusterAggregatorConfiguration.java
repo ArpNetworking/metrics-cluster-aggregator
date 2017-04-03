@@ -34,7 +34,7 @@ import java.util.Map;
 /**
  * Representation of cluster aggregator configuration.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public final class ClusterAggregatorConfiguration {
     /**
@@ -114,9 +114,6 @@ public final class ClusterAggregatorConfiguration {
         return _clusterHostSuffix;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
@@ -184,7 +181,7 @@ public final class ClusterAggregatorConfiguration {
     /**
      * Implementation of builder pattern for {@link com.arpnetworking.clusteraggregator.configuration.ClusterAggregatorConfiguration}.
      *
-     * @author Brandon Arp (brandonarp at gmail dot com)
+     * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
      */
     public static final class Builder extends OvalBuilder<ClusterAggregatorConfiguration> {
         /**

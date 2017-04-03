@@ -23,7 +23,7 @@ import scala.concurrent.Future;
 /**
  * Contains methods to store bookkeeping information in a persistent store.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public interface BookkeeperPersistence {
     /**

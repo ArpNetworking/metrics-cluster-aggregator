@@ -44,21 +44,15 @@ import java.util.function.Function;
 /**
  * Publishes to an HTTP endpoint. This class is thread safe.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public abstract class HttpPostSink extends BaseSink {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void recordAggregateData(final PeriodicData data) {
         _sinkActor.tell(new HttpSinkActor.EmitAggregation(data), ActorRef.noSender());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void close() {
         LOGGER.info()

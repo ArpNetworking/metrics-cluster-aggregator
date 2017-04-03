@@ -58,9 +58,6 @@ public final class FQDSN implements Serializable {
         return _statistic;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean equals(final Object object) {
         if (this == object) {
@@ -78,9 +75,6 @@ public final class FQDSN implements Serializable {
                 && Objects.equal(_statistic, other._statistic);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int hashCode() {
         return Objects.hashCode(
@@ -90,9 +84,6 @@ public final class FQDSN implements Serializable {
                 getStatistic());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)

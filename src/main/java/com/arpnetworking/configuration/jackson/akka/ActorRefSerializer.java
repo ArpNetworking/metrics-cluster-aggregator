@@ -28,7 +28,7 @@ import java.io.IOException;
 /**
  * Serializer for an Akka ActorRef.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public class ActorRefSerializer extends JsonSerializer<ActorRef> {
     /**
@@ -40,9 +40,6 @@ public class ActorRefSerializer extends JsonSerializer<ActorRef> {
         _system = system;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void serialize(
             final ActorRef value,
@@ -63,9 +60,6 @@ public class ActorRefSerializer extends JsonSerializer<ActorRef> {
                 .build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return toLogValue().toString();

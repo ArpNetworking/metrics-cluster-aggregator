@@ -44,7 +44,7 @@ import java.util.Map;
 /**
  * Publishes aggregations to KMonD. This class is thread safe.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
 public final class KMonDSink extends HttpPostSink {
@@ -64,9 +64,6 @@ public final class KMonDSink extends HttpPostSink {
                 .build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected Collection<byte[]> serialize(final PeriodicData periodicData) {
         final Period period = periodicData.getPeriod();
@@ -135,9 +132,6 @@ public final class KMonDSink extends HttpPostSink {
         return serializedData;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected Request createRequest(final AsyncHttpClient client, final byte[] serializedData) {
         return new RequestBuilder()
@@ -255,9 +249,6 @@ public final class KMonDSink extends HttpPostSink {
             return self();
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         protected Builder self() {
             return this;

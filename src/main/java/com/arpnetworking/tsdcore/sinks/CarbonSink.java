@@ -26,14 +26,11 @@ import com.google.common.base.Charsets;
 /**
  * Publisher to send data to a Carbon server.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public class CarbonSink extends TcpSink {
 
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected ByteString serializeData(final PeriodicData periodicData) {
         final ByteStringBuilder builder = ByteString.createBuilder();
@@ -75,9 +72,6 @@ public class CarbonSink extends TcpSink {
             setServerPort(2003);
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         protected Builder self() {
             return this;

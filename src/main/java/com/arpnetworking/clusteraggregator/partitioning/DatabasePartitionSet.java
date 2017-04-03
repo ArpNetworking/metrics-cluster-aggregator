@@ -29,7 +29,7 @@ import javax.annotation.Nonnull;
 /**
  * A partition set that is backed by an eBean database.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public class DatabasePartitionSet implements PartitionSet {
     /**
@@ -48,9 +48,6 @@ public class DatabasePartitionSet implements PartitionSet {
         _ebean = _database.getEbeanServer();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Optional<Integer> getExistingPartition(final String key) {
         final PartitionEntry partitionEntry = PartitionEntry.findByKey(key, _partitionSetBean, _database);
@@ -60,9 +57,6 @@ public class DatabasePartitionSet implements PartitionSet {
         return Optional.empty();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Optional<Integer> getOrCreatePartition(final String key) {
         try (final Transaction transaction = _database.getEbeanServer().beginTransaction()) {

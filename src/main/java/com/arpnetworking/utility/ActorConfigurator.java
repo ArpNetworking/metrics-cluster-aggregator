@@ -28,7 +28,7 @@ import java.util.Optional;
  *
  * @param <T> The type representing the validated configuration.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public class ActorConfigurator<T> implements Listener {
     /**
@@ -42,17 +42,11 @@ public class ActorConfigurator<T> implements Listener {
         _configurationClass = configurationClass;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public synchronized void offerConfiguration(final Configuration configuration) throws Exception {
         _offeredConfiguration = configuration.getAs(_configurationClass);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public synchronized void applyConfiguration() {
         if (!_offeredConfiguration.isPresent()) {

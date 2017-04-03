@@ -21,12 +21,9 @@ import com.arpnetworking.utility.partitioning.PartitionSetFactory;
 /**
  * Factory to create an InMemoryPartitionSet.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public class TestInMemoryPartitionSetFactory implements PartitionSetFactory {
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public PartitionSet create(final String namespace, final int maxEntriesPerPartition, final int maxPartitions) {
         return new InMemoryPartitionSet(maxEntriesPerPartition, maxPartitions);

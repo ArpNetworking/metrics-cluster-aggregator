@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * A test helper to assist in branch coverage for close with resources uses of a {@link com.arpnetworking.metrics.Metrics}.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public class ThrowingMetrics implements Metrics {
     /**
@@ -43,9 +43,6 @@ public class ThrowingMetrics implements Metrics {
         _throwOnClose = throwOnClose;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     //CHECKSTYLE.OFF: IllegalThrows - We're gonna do a lot of runtime throwing in here
     @Override
     public Counter createCounter(final String name) {
@@ -55,9 +52,6 @@ public class ThrowingMetrics implements Metrics {
         return Mockito.mock(Counter.class);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void incrementCounter(final String name) {
         if (_throwOnRecord) {
@@ -65,9 +59,6 @@ public class ThrowingMetrics implements Metrics {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void incrementCounter(final String name, final long value) {
         if (_throwOnRecord) {
@@ -75,9 +66,6 @@ public class ThrowingMetrics implements Metrics {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void decrementCounter(final String name) {
         if (_throwOnRecord) {
@@ -85,9 +73,6 @@ public class ThrowingMetrics implements Metrics {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void decrementCounter(final String name, final long value) {
         if (_throwOnRecord) {
@@ -95,9 +80,6 @@ public class ThrowingMetrics implements Metrics {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void resetCounter(final String name) {
         if (_throwOnRecord) {
@@ -105,9 +87,6 @@ public class ThrowingMetrics implements Metrics {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Timer createTimer(final String name) {
         if (_throwOnRecord) {
@@ -116,9 +95,6 @@ public class ThrowingMetrics implements Metrics {
         return Mockito.mock(Timer.class);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void startTimer(final String name) {
         if (_throwOnRecord) {
@@ -126,9 +102,6 @@ public class ThrowingMetrics implements Metrics {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void stopTimer(final String name) {
         if (_throwOnRecord) {
@@ -136,9 +109,6 @@ public class ThrowingMetrics implements Metrics {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setTimer(final String name, final long duration, final TimeUnit unit) {
         if (_throwOnRecord) {
@@ -146,9 +116,6 @@ public class ThrowingMetrics implements Metrics {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setTimer(final String name, final long duration, final Unit unit) {
         if (_throwOnRecord) {
@@ -156,9 +123,6 @@ public class ThrowingMetrics implements Metrics {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setGauge(final String name, final double value) {
         if (_throwOnRecord) {
@@ -166,9 +130,6 @@ public class ThrowingMetrics implements Metrics {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setGauge(final String name, final double value, final Unit unit) {
         if (_throwOnRecord) {
@@ -176,9 +137,6 @@ public class ThrowingMetrics implements Metrics {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setGauge(final String name, final long value) {
         if (_throwOnRecord) {
@@ -186,9 +144,6 @@ public class ThrowingMetrics implements Metrics {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setGauge(final String name, final long value, final Unit unit) {
         if (_throwOnRecord) {
@@ -196,9 +151,6 @@ public class ThrowingMetrics implements Metrics {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void addAnnotation(final String s, final String s1) {
         if (_throwOnRecord) {
@@ -206,9 +158,6 @@ public class ThrowingMetrics implements Metrics {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void addAnnotations(final Map<String, String> map) {
         if (_throwOnRecord) {
@@ -216,33 +165,21 @@ public class ThrowingMetrics implements Metrics {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isOpen() {
         return true;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Instant getOpenTime() {
         return Clock.systemUTC().instant();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Instant getCloseTime() {
         return Clock.systemUTC().instant();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void close() {
         if (_throwOnClose) {
