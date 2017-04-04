@@ -18,7 +18,7 @@ package com.arpnetworking.clusteraggregator.client;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
-import akka.actor.UntypedActor;
+import akka.actor.UntypedAbstractActor;
 import akka.io.Tcp;
 import akka.io.TcpMessage;
 import com.arpnetworking.clusteraggregator.configuration.ClusterAggregatorConfiguration;
@@ -35,7 +35,7 @@ import java.net.InetSocketAddress;
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public final class AggClientServer extends UntypedActor {
+public final class AggClientServer extends UntypedAbstractActor {
     /**
      * Public constructor.
      *

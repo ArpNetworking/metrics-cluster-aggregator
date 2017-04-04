@@ -20,7 +20,7 @@ import akka.actor.ActorRef;
 import akka.actor.AllForOneStrategy;
 import akka.actor.SupervisorStrategy;
 import akka.actor.Terminated;
-import akka.actor.UntypedActor;
+import akka.actor.UntypedAbstractActor;
 import akka.io.Tcp;
 import akka.io.TcpMessage;
 import com.arpnetworking.clusteraggregator.configuration.ClusterAggregatorConfiguration;
@@ -44,7 +44,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class AggClientSupervisor extends UntypedActor {
+public class AggClientSupervisor extends UntypedAbstractActor {
     /**
      * Public constructor.
      *

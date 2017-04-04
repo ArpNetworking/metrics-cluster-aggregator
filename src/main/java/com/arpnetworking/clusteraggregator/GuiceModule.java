@@ -57,7 +57,7 @@ import com.arpnetworking.configuration.triggers.FileTrigger;
 import com.arpnetworking.guice.akka.GuiceActorCreator;
 import com.arpnetworking.metrics.MetricsFactory;
 import com.arpnetworking.metrics.Sink;
-import com.arpnetworking.metrics.impl.TsdLogSink;
+import com.arpnetworking.metrics.impl.ApacheHttpSink;
 import com.arpnetworking.metrics.impl.TsdMetricsFactory;
 import com.arpnetworking.utility.ActorConfigurator;
 import com.arpnetworking.utility.ConfiguredLaunchableFactory;
@@ -137,9 +137,7 @@ public class GuiceModule extends AbstractModule {
     @Singleton
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
     private MetricsFactory provideMetricsFactory() {
-        final Sink sink = new TsdLogSink.Builder()
-                .setName("cluster-aggregator-query")
-                .setDirectory(_configuration.getLogDirectory())
+        final Sink sink = new ApacheHttpSink.Builder()
                 .build();
 
         return new TsdMetricsFactory.Builder()
@@ -161,34 +159,7 @@ public class GuiceModule extends AbstractModule {
     @Named("cluster-emitter")
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
     private ActorRef provideClusterEmitter(final Injector injector, final ActorSystem system) {
-        final ActorRef emitterConfigurationProxy = system.actorOf(
-                ConfigurableActorProxy.props(new RoundRobinEmitterFactory()),
-                "cluster-emitter-configurator");
-        final ActorConfigurator<EmitterConfiguration> configurator =
-                new ActorConfigurator<>(emitterConfigurationProxy, EmitterConfiguration.class);
-        final ObjectMapper objectMapper = EmitterConfiguration.createObjectMapper(injector);
-        final File configurationFile = _configuration.getClusterPipelineConfiguration();
-        final Builder<? extends JsonNodeSource> sourceBuilder;
-        if (configurationFile.getName().toLowerCase(Locale.getDefault()).endsWith(HOCON_FILE_EXTENSION)) {
-            sourceBuilder = new HoconFileSource.Builder()
-                    .setObjectMapper(objectMapper)
-                    .setFile(configurationFile);
-        } else {
-            sourceBuilder = new JsonNodeFileSource.Builder()
-                    .setObjectMapper(objectMapper)
-                    .setFile(configurationFile);
-        }
-
-        final DynamicConfiguration configuration = new DynamicConfiguration.Builder()
-                .setObjectMapper(objectMapper)
-                .addSourceBuilder(sourceBuilder)
-                .addTrigger(new FileTrigger.Builder().setFile(_configuration.getClusterPipelineConfiguration()).build())
-                .addListener(configurator)
-                .build();
-
-        configuration.launch();
-
-        return emitterConfigurationProxy;
+        return launchEmitter(injector, system, _configuration.getClusterPipelineConfiguration(), "cluster-emitter-configurator");
     }
 
     @Provides
@@ -196,19 +167,31 @@ public class GuiceModule extends AbstractModule {
     @Named("host-emitter")
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
     private ActorRef provideHostEmitter(final Injector injector, final ActorSystem system) {
+        return launchEmitter(injector, system, _configuration.getHostPipelineConfiguration(), "host-emitter-configurator");
+    }
+
+    private ActorRef launchEmitter(final Injector injector, final ActorSystem system, final File pipelineFile, final String name) {
         final ActorRef emitterConfigurationProxy = system.actorOf(
                 ConfigurableActorProxy.props(new RoundRobinEmitterFactory()),
-                "host-emitter-configurator");
+                name);
         final ActorConfigurator<EmitterConfiguration> configurator =
                 new ActorConfigurator<>(emitterConfigurationProxy, EmitterConfiguration.class);
         final ObjectMapper objectMapper = EmitterConfiguration.createObjectMapper(injector);
+        final Builder<? extends JsonNodeSource> sourceBuilder;
+        if (pipelineFile.getName().toLowerCase(Locale.getDefault()).endsWith(HOCON_FILE_EXTENSION)) {
+            sourceBuilder = new HoconFileSource.Builder()
+                    .setObjectMapper(objectMapper)
+                    .setFile(pipelineFile);
+        } else {
+            sourceBuilder = new JsonNodeFileSource.Builder()
+                    .setObjectMapper(objectMapper)
+                    .setFile(pipelineFile);
+        }
+
         final DynamicConfiguration configuration = new DynamicConfiguration.Builder()
                 .setObjectMapper(objectMapper)
-                .addSourceBuilder(
-                        new JsonNodeFileSource.Builder()
-                                .setObjectMapper(objectMapper)
-                                .setFile(_configuration.getHostPipelineConfiguration()))
-                .addTrigger(new FileTrigger.Builder().setFile(_configuration.getHostPipelineConfiguration()).build())
+                .addSourceBuilder(sourceBuilder)
+                .addTrigger(new FileTrigger.Builder().setFile(pipelineFile).build())
                 .addListener(configurator)
                 .build();
 

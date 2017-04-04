@@ -49,7 +49,7 @@
   <logger name="org.apache.http" level="INFO" />
   <logger name="org.reflections.Reflections" level="ERROR" />
 
-  <root level="DEBUG">
+  <root level="INFO">
     <appender-ref ref="clusteragg-async"/>
   </root>
 </configuration>

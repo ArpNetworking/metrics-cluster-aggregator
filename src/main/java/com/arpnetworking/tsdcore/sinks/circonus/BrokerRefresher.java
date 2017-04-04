@@ -16,7 +16,7 @@
 package com.arpnetworking.tsdcore.sinks.circonus;
 
 import akka.actor.Props;
-import akka.actor.UntypedActor;
+import akka.actor.UntypedAbstractActor;
 import akka.pattern.PatternsCS;
 import com.arpnetworking.akka.UniformRandomTimeScheduler;
 import com.arpnetworking.steno.Logger;
@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class BrokerRefresher extends UntypedActor {
+public class BrokerRefresher extends UntypedAbstractActor {
     /**
      * Creates a {@link Props} in a type safe way.
      *

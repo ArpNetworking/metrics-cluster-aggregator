@@ -18,7 +18,7 @@ package com.arpnetworking.clusteraggregator.aggregation;
 
 import akka.actor.Cancellable;
 import akka.actor.Props;
-import akka.actor.UntypedActor;
+import akka.actor.UntypedAbstractActor;
 import akka.dispatch.OnComplete;
 import com.arpnetworking.clusteraggregator.AggregatorLifecycle;
 import com.arpnetworking.clusteraggregator.bookkeeper.persistence.BookkeeperPersistence;
@@ -43,7 +43,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class Bookkeeper extends UntypedActor {
+public class Bookkeeper extends UntypedAbstractActor {
     /**
      * Creates a <code>Props</code> for building a Bookkeeper actor in Akka.
      *

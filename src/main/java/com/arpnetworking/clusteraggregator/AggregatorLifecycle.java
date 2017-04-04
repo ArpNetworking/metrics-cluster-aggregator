@@ -18,7 +18,7 @@ package com.arpnetworking.clusteraggregator;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
-import akka.actor.UntypedActor;
+import akka.actor.UntypedAbstractActor;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.google.common.collect.Lists;
 
@@ -30,7 +30,7 @@ import java.util.List;
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public final class AggregatorLifecycle extends UntypedActor {
+public final class AggregatorLifecycle extends UntypedAbstractActor {
     /**
      * Creates a {@link Props} for an AggregatorLifecycle.
      *

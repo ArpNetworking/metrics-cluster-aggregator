@@ -57,7 +57,7 @@ public class PeriodMetrics {
                 .append("/")
                 .append(report.getPeriod())
                 .append("/")
-                .append(report.getFQDSN().getStatistic())
+                .append(report.getFQDSN().getStatistic().getName())
                 .toString();
 
         final String metricName = new StringBuilder()

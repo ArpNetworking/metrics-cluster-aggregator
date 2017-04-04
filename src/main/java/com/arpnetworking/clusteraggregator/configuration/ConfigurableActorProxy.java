@@ -20,7 +20,7 @@ import akka.actor.ActorRef;
 import akka.actor.PoisonPill;
 import akka.actor.Props;
 import akka.actor.Terminated;
-import akka.actor.UntypedActor;
+import akka.actor.UntypedAbstractActor;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.utility.ConfiguredLaunchableFactory;
@@ -39,7 +39,7 @@ import java.util.Optional;
  * @param <T> The type of configuration
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class ConfigurableActorProxy<T> extends UntypedActor {
+public class ConfigurableActorProxy<T> extends UntypedAbstractActor {
     /**
      * Creates a {@link Props}.
      *

@@ -18,7 +18,7 @@
   <parent>
     <groupId>com.arpnetworking.build</groupId>
     <artifactId>arpnetworking-parent-pom</artifactId>
-    <version>1.0.29</version>
+    <version>1.0.31</version>
     <relativePath />
   </parent>
 
@@ -101,13 +101,13 @@
 
   <properties>
     <!--Dependency versions-->
-    <akka.version>2.4.14</akka.version>
-    <akka.http.version>10.0.0</akka.http.version>
-    <akka.persistence.cassandra.version>0.23</akka.persistence.cassandra.version>
+    <akka.version>2.5.1</akka.version>
+    <akka.http.version>10.0.6</akka.http.version>
+    <akka.persistence.cassandra.version>0.53</akka.persistence.cassandra.version>
     <akka.kryo.version>0.5.0</akka.kryo.version>
     <apache.httpclient.version>4.5.2</apache.httpclient.version>
     <apache.httpcore.version>4.4.5</apache.httpcore.version>
-    <arpnetworking.commons.version>1.7.3</arpnetworking.commons.version>
+    <arpnetworking.commons.version>1.10.1</arpnetworking.commons.version>
     <aspectjrt.version>1.8.10</aspectjrt.version>
     <cglib.version>3.2.4</cglib.version>
     <commons.codec.version>1.10</commons.codec.version>
@@ -130,13 +130,14 @@
     <junitparams.version>1.0.5</junitparams.version>
     <leveldb.version>0.7</leveldb.version>
     <leveldb.jni.version>1.8</leveldb.jni.version>
-    <logback.version>1.1.8</logback.version>
-    <logback.steno.version>1.16.2</logback.steno.version>
+    <logback.version>1.2.3</logback.version>
+    <logback.steno.version>1.17.0</logback.steno.version>
     <log4j.over.slf4j.version>1.7.22</log4j.over.slf4j.version>
     <luaj.version>3.0.1</luaj.version>
     <maven.version>3.3.9</maven.version>
-    <metrics.client.version>0.5.0</metrics.client.version>
-    <metrics.jvm.extra.version>0.4.2</metrics.jvm.extra.version>
+    <metrics.client.version>0.7.0</metrics.client.version>
+    <metrics.jvm.extra.version>0.7.0</metrics.jvm.extra.version>
+    <metrics.http.extra.version>0.6.0</metrics.http.extra.version>
     <metrics.aggregator.protocol.version>1.0.4</metrics.aggregator.protocol.version>
     <mockito.version>1.10.19</mockito.version>
     <netty.version>3.10.3.Final</netty.version>
@@ -149,7 +150,7 @@
     <reflections.version>0.9.10</reflections.version>
     <scala.version>2.11</scala.version>
     <scala.java.compat.version>0.8.0</scala.java.compat.version>
-    <scala.library.version>2.11.7</scala.library.version>
+    <scala.library.version>2.11.11</scala.library.version>
     <slf4j.version>1.7.22</slf4j.version>
     <signalfx.protoc.version>0.0.23</signalfx.protoc.version>
     <typesafe.config.version>1.3.1</typesafe.config.version>
@@ -501,6 +502,11 @@
     </dependency>
     <dependency>
       <groupId>com.arpnetworking.metrics.extras</groupId>
+      <artifactId>apache-http-sink-extra</artifactId>
+      <version>${metrics.http.extra.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.arpnetworking.metrics.extras</groupId>
       <artifactId>jvm-extra</artifactId>
       <version>${metrics.jvm.extra.version}</version>
     </dependency>
@@ -509,6 +515,14 @@
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
       <version>${guava.version}</version>
+    </dependency>
+    <!-- TODO(ville): Remove me once Guava is fixed. -->
+    <!-- See: https://github.com/google/guava/issues/2721 -->
+    <dependency>
+      <groupId>com.google.errorprone</groupId>
+      <artifactId>error_prone_annotations</artifactId>
+      <version>2.0.15</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.google.inject</groupId>
@@ -602,7 +616,7 @@
     </dependency>
     <dependency>
       <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-distributed-data-experimental_${scala.version}</artifactId>
+      <artifactId>akka-distributed-data_${scala.version}</artifactId>
       <version>${akka.version}</version>
       <scope>runtime</scope>
     </dependency>
@@ -813,13 +827,6 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-  <repositories>
-    <repository>
-      <id>krasserm</id>
-      <name>Akka Cassandra Persistence</name>
-      <url>http://dl.bintray.com/krasserm/maven</url>
-    </repository>
-  </repositories>
   <profiles>
     <profile>
       <id>rpm</id>

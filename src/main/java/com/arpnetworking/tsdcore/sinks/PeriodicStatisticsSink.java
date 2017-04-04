@@ -81,7 +81,7 @@ public final class PeriodicStatisticsSink extends BaseSink {
                     .append(periodicData.getDimensions().get("host")).append(".")
                     .append(datum.getFQDSN().getService()).append(".")
                     .append(datum.getFQDSN().getMetric()).append(".")
-                    .append(datum.getFQDSN().getStatistic()).append(".")
+                    .append(datum.getFQDSN().getStatistic().getName()).append(".")
                     .append(periodicData.getPeriod())
                     .toString();
 

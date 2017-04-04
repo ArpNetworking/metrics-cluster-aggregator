@@ -109,6 +109,7 @@ public class ThrowingMetrics implements Metrics {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void setTimer(final String name, final long duration, final TimeUnit unit) {
         if (_throwOnRecord) {

@@ -16,7 +16,7 @@
 package com.arpnetworking.tsdcore.sinks;
 
 import akka.actor.Props;
-import akka.actor.UntypedActor;
+import akka.actor.UntypedAbstractActor;
 import akka.http.javadsl.model.StatusCodes;
 import akka.pattern.PatternsCS;
 import com.arpnetworking.logback.annotations.LogValue;
@@ -48,7 +48,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class HttpSinkActor extends UntypedActor {
+public class HttpSinkActor extends UntypedAbstractActor {
     /**
      * Factory method to create a Props.
      *
