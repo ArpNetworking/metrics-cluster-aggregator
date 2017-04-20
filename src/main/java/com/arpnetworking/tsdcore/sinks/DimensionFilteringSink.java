@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableSet;
 import net.sf.oval.constraint.NotNull;
 
 import java.util.Collections;
+import java.util.Optional;
 
 /**
  * Filtering sink for excluding data based on dimensions present or absent.
@@ -30,6 +31,12 @@ public final class DimensionFilteringSink extends BaseSink {
 
     @Override
     public void recordAggregateData(final PeriodicData data) {
+        if (_whitelistDimensions.isPresent()) {
+            if (!_whitelistDimensions.get().containsAll(data.getDimensions().keySet())) {
+                // Excluded data with dimensions outside the whitelist.
+                return;
+            }
+        }
         if (!data.getDimensions().keySet().containsAll(_excludeWithoutDimensions)) {
             // Excluded data missing required dimension.
             return;
@@ -50,11 +57,13 @@ public final class DimensionFilteringSink extends BaseSink {
         super(builder);
         _excludeWithoutDimensions = builder._excludeWithoutDimensions;
         _excludeWithDimensions = builder._excludeWithDimensions;
+        _whitelistDimensions = Optional.ofNullable(builder._whitelistDimensions);
         _sink = builder._sink;
     }
 
     private final ImmutableSet<String> _excludeWithoutDimensions;
     private final ImmutableSet<String> _excludeWithDimensions;
+    private final Optional<ImmutableSet<String>> _whitelistDimensions;
     private final Sink _sink;
 
     /**
@@ -96,6 +105,18 @@ public final class DimensionFilteringSink extends BaseSink {
         }
 
         /**
+         * Sets whitelist dimensions. Exclude any periodic data with any dimensions outside of this whitelist. No whitelisting is
+         * performed if no whitelist is provided. Optional.
+         *
+         * @param value The whitelisted dimensions.
+         * @return This instance of <code>Builder</code>.
+         */
+        public Builder setWhitelistDimensions(final ImmutableSet<String> value) {
+            _whitelistDimensions = value;
+            return self();
+        }
+
+        /**
          * The sink to wrap. Cannot be null.
          *
          * @param value The sink to wrap.
@@ -115,6 +136,7 @@ public final class DimensionFilteringSink extends BaseSink {
         private ImmutableSet<String> _excludeWithoutDimensions = ImmutableSet.of();
         @NotNull
         private ImmutableSet<String> _excludeWithDimensions = ImmutableSet.of();
+        private ImmutableSet<String> _whitelistDimensions = null;
         @NotNull
         private Sink _sink;
     }

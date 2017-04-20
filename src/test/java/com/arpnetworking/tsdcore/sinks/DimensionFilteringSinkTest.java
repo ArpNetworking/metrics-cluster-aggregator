@@ -86,6 +86,32 @@ public class DimensionFilteringSinkTest {
         Mockito.verify(_target).recordAggregateData(dataIncluded);
     }
 
+    @Test
+    public void testWhitelist() {
+        final DimensionFilteringSink sink = new DimensionFilteringSink.Builder()
+                .setName("testWhitelist")
+                .setSink(_target)
+                .setWhitelistDimensions(ImmutableSet.of("foo", "bar"))
+                .build();
+        final PeriodicData dataExcluded = TestBeanFactory.createPeriodicDataBuilder()
+                .setDimensions(ImmutableMap.of("foo", "fooVal", "abc", "abcVal"))
+                .build();
+        sink.recordAggregateData(dataExcluded);
+        Mockito.verify(_target, Mockito.never()).recordAggregateData(Mockito.any(PeriodicData.class));
+
+        final PeriodicData dataIncluded = TestBeanFactory.createPeriodicDataBuilder()
+                .setDimensions(ImmutableMap.of("foo", "fooVal", "bar", "barVal"))
+                .build();
+        sink.recordAggregateData(dataIncluded);
+        Mockito.verify(_target).recordAggregateData(dataIncluded);
+
+        final PeriodicData dataIncluded2 = TestBeanFactory.createPeriodicDataBuilder()
+                .setDimensions(ImmutableMap.of("bar", "barVal"))
+                .build();
+        sink.recordAggregateData(dataIncluded2);
+        Mockito.verify(_target).recordAggregateData(dataIncluded2);
+    }
+
     @Mock
     private Sink _target;
 }
