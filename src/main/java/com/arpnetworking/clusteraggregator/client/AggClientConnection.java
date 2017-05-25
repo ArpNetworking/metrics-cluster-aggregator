@@ -19,7 +19,7 @@ package com.arpnetworking.clusteraggregator.client;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.Terminated;
-import akka.actor.UntypedActor;
+import akka.actor.UntypedAbstractActor;
 import akka.io.Tcp;
 import akka.io.TcpMessage;
 import akka.util.ByteString;
@@ -37,21 +37,18 @@ import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.GeneratedMessageV3;
 import scala.concurrent.duration.FiniteDuration;
 
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 /**
  * An actor that handles the data sent from an agg client.
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class AggClientConnection extends UntypedActor {
+public class AggClientConnection extends UntypedAbstractActor {
     /**
      * Creates a <code>Props</code> for use in Akka.
      *
@@ -274,21 +271,4 @@ public class AggClientConnection extends UntypedActor {
     private static final Logger INCOMPLETE_RECORD_LOGGER = LoggerFactory.getRateLimitLogger(
             AggClientConnection.class,
             Duration.ofSeconds(30));
-    private static final boolean IS_ENABLED;
-
-
-    static {
-        // Determine the local host name
-        String localHost = "UNKNOWN";
-        try {
-            localHost = InetAddress.getLocalHost().getCanonicalHostName();
-            LOGGER.info(String.format("Determined local host name as: %s", localHost));
-        } catch (final UnknownHostException e) {
-            LOGGER.warn("Unable to determine local host name", e);
-        }
-
-        // Determine if the host name is enabled
-        IS_ENABLED = Pattern.matches(".*\\.lup1$", localHost) || Pattern.matches(".*\\.snc1$", localHost);
-        LOGGER.info(String.format("Cluster aggregator will be %s", IS_ENABLED ? "ENABLED" : "DISABLED"));
-    }
 }

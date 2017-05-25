@@ -18,7 +18,7 @@ package com.arpnetworking.clusteraggregator;
 import akka.actor.Cancellable;
 import akka.actor.Props;
 import akka.actor.Scheduler;
-import akka.actor.UntypedActor;
+import akka.actor.UntypedAbstractActor;
 import com.arpnetworking.metrics.MetricsFactory;
 import com.arpnetworking.metrics.jvm.JvmMetricsRunnable;
 import com.arpnetworking.steno.Logger;
@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Deepika Misra (deepika at groupon dot com)
  */
-public final class JvmMetricsCollector extends UntypedActor {
+public final class JvmMetricsCollector extends UntypedAbstractActor {
 
     /**
      * Creates a <code>Props</code> for construction in Akka.

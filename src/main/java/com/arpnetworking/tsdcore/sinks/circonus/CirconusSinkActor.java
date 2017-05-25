@@ -17,7 +17,7 @@ package com.arpnetworking.tsdcore.sinks.circonus;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
-import akka.actor.UntypedActor;
+import akka.actor.UntypedAbstractActor;
 import akka.http.javadsl.model.StatusCodes;
 import akka.pattern.PatternsCS;
 import com.arpnetworking.logback.annotations.LogValue;
@@ -76,7 +76,7 @@ import java.util.stream.Collectors;
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 @SuppressWarnings("deprecation")
-public final class CirconusSinkActor extends UntypedActor {
+public final class CirconusSinkActor extends UntypedAbstractActor {
     /**
      * Creates a {@link akka.actor.Props} for use in Akka.
      *

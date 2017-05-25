@@ -17,7 +17,7 @@ package com.arpnetworking.tsdcore.sinks;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
-import akka.actor.UntypedActor;
+import akka.actor.UntypedAbstractActor;
 import akka.io.Tcp;
 import akka.io.TcpExt;
 import akka.io.TcpMessage;
@@ -41,7 +41,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class TcpSinkActor extends UntypedActor {
+public class TcpSinkActor extends UntypedAbstractActor {
 
     /**
      * Factory method to create a Props.

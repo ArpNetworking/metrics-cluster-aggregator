@@ -16,7 +16,7 @@
 package com.arpnetworking.clusteraggregator;
 
 import akka.actor.Props;
-import akka.actor.UntypedActor;
+import akka.actor.UntypedAbstractActor;
 import com.arpnetworking.clusteraggregator.configuration.EmitterConfiguration;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
@@ -34,7 +34,7 @@ import org.joda.time.Period;
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class Emitter extends UntypedActor {
+public class Emitter extends UntypedAbstractActor {
     /**
      * Creates a <code>Props</code> for construction in Akka.
      *

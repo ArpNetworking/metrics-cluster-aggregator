@@ -18,7 +18,7 @@ package com.arpnetworking.clusteraggregator;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
-import akka.actor.UntypedActor;
+import akka.actor.UntypedAbstractActor;
 import akka.cluster.Cluster;
 import akka.cluster.MemberStatus;
 import akka.dispatch.OnComplete;
@@ -54,7 +54,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class Status extends UntypedActor {
+public class Status extends UntypedAbstractActor {
     /**
      * Public constructor.
      *

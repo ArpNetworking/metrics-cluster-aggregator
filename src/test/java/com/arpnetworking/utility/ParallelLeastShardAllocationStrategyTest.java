@@ -18,7 +18,7 @@ package com.arpnetworking.utility;
 import akka.actor.ActorRef;
 import akka.actor.ActorSelection;
 import akka.actor.Props;
-import akka.actor.UntypedActor;
+import akka.actor.UntypedAbstractActor;
 import akka.testkit.TestActorRef;
 import akka.testkit.TestProbe;
 import com.google.common.collect.Lists;
@@ -316,7 +316,7 @@ public class ParallelLeastShardAllocationStrategyTest extends BaseActorTest {
 
     private int _shardId = 1;
 
-    private static class DoNothingActor extends UntypedActor {
+    private static class DoNothingActor extends UntypedAbstractActor {
         @Override
         public void onReceive(final Object message) throws Exception {
         }

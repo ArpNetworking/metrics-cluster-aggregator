@@ -20,7 +20,7 @@ import akka.actor.ActorRef;
 import akka.actor.Cancellable;
 import akka.actor.Props;
 import akka.actor.Scheduler;
-import akka.actor.UntypedActor;
+import akka.actor.UntypedAbstractActor;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import com.arpnetworking.clusteraggregator.models.ShardAllocation;
@@ -50,7 +50,7 @@ import javax.annotation.Nullable;
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class ClusterStatusCache extends UntypedActor {
+public class ClusterStatusCache extends UntypedAbstractActor {
 
     /**
      * Creates a {@link akka.actor.Props} for use in Akka.
