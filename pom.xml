@@ -103,7 +103,7 @@
     <!--Dependency versions-->
     <akka.version>2.5.1</akka.version>
     <akka.http.version>10.0.6</akka.http.version>
-    <akka.persistence.cassandra.version>0.53</akka.persistence.cassandra.version>
+    <akka.persistence.cassandra.version>0.54</akka.persistence.cassandra.version>
     <akka.kryo.version>0.5.0</akka.kryo.version>
     <apache.httpclient.version>4.5.2</apache.httpclient.version>
     <apache.httpcore.version>4.4.5</apache.httpcore.version>
@@ -114,7 +114,7 @@
     <ebean.version>6.8.1</ebean.version>
     <findbugs.annotations.version>3.0.1</findbugs.annotations.version>
     <flyway.version>3.2.1</flyway.version>
-    <guava.version>17.0</guava.version>
+    <guava.version>21.0</guava.version>
     <guice.version>4.0</guice.version>
     <hamcrest.version>2.0.0.0</hamcrest.version>
     <hikari.version>2.5.1</hikari.version>
