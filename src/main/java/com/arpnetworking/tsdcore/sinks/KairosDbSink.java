@@ -22,7 +22,14 @@ import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.Condition;
+import com.arpnetworking.tsdcore.model.FQDSN;
 import com.arpnetworking.tsdcore.model.PeriodicData;
+import com.arpnetworking.tsdcore.statistics.HistogramStatistic;
+import com.arpnetworking.tsdcore.statistics.MaxStatistic;
+import com.arpnetworking.tsdcore.statistics.MeanStatistic;
+import com.arpnetworking.tsdcore.statistics.MinStatistic;
+import com.arpnetworking.tsdcore.statistics.Statistic;
+import com.arpnetworking.tsdcore.statistics.SumStatistic;
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -59,6 +66,9 @@ public final class KairosDbSink extends HttpPostSink {
         return LogValueMapFactory.builder(this)
                 .put("super", super.toLogValue())
                 .put("maxRequestSize", _maxRequestSize)
+                .put("ttlSeconds", _ttlSeconds)
+                .put("publishHistograms", _publishHistograms)
+                .put("histogramTtlSeconds", _histogramTtlSeconds)
                 .build();
     }
 
@@ -75,11 +85,30 @@ public final class KairosDbSink extends HttpPostSink {
         final ImmutableMap<String, String> dimensions = periodicData.getDimensions();
         final Serializer serializer = new Serializer(timestamp, serializedPeriod, dimensions);
 
+        final KairosHistogramAdditionalData histogramAdditionalData = new KairosHistogramAdditionalData();
+        AggregatedData histogram = null;
+
         // Initialize the chunk buffer
         currentChunk.put(HEADER);
 
         // Add aggregated data
         for (final AggregatedData datum : periodicData.getData()) {
+            if (_publishHistograms) {
+                // We need to collect the min, max, mean, and sum
+                final Statistic statistic = datum.getFQDSN().getStatistic();
+                if (statistic instanceof MeanStatistic) {
+                    histogramAdditionalData.setMean(datum.getValue().getValue());
+                } else if (statistic instanceof SumStatistic) {
+                    histogramAdditionalData.setSum(datum.getValue().getValue());
+                } else if (statistic instanceof MaxStatistic) {
+                    histogramAdditionalData.setMax(datum.getValue().getValue());
+                } else if (statistic instanceof MinStatistic) {
+                    histogramAdditionalData.setMin(datum.getValue().getValue());
+                } else if (statistic instanceof HistogramStatistic) {
+                    histogram = datum;
+                }
+            }
+
             if (!datum.isSpecified()) {
                 LOGGER.trace()
                         .setMessage("Skipping unspecified datum")
@@ -88,7 +117,18 @@ public final class KairosDbSink extends HttpPostSink {
                 continue;
             }
 
-            serializer.serializeDatum(completeChunks, currentChunk, chunkStream, datum);
+            if (_publishStandardMetrics) {
+                serializer.serializeDatum(completeChunks, currentChunk, chunkStream, datum);
+            }
+        }
+
+        if (_publishHistograms && histogram != null) {
+            serializer.serializeHistogram(completeChunks, currentChunk, chunkStream, histogram, histogramAdditionalData);
+        } else if (_publishHistograms) {
+            NO_HISTOGRAM_LOGGER.warn()
+                    .setMessage("Expected to publish histogram, but none found")
+                    .addData("periodicData", periodicData)
+                    .log();
         }
 
         // Add conditions
@@ -141,9 +181,17 @@ public final class KairosDbSink extends HttpPostSink {
     private KairosDbSink(final Builder builder) {
         super(builder);
         _maxRequestSize = builder._maxRequestSize;
+        _ttlSeconds = (int) builder._ttl.getSeconds();
+        _publishStandardMetrics = builder._publishStandardMetrics;
+        _publishHistograms = builder._publishHistograms;
+        _histogramTtlSeconds = (int) builder._histogramTtl.getSeconds();
     }
 
     private final int _maxRequestSize;
+    private final int _ttlSeconds;
+    private final boolean _publishHistograms;
+    private final boolean _publishStandardMetrics;
+    private final int _histogramTtlSeconds;
 
     private static final byte HEADER = '[';
     private static final byte FOOTER = ']';
@@ -152,8 +200,49 @@ public final class KairosDbSink extends HttpPostSink {
     // TODO(vkoskela): Switch to ImmutableObjectMapper. [https://github.com/ArpNetworking/commons/issues/7]
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createInstance();
     private static final Logger LOGGER = LoggerFactory.getLogger(KairosDbSink.class);
+    private static final Logger NO_HISTOGRAM_LOGGER = LoggerFactory.getRateLimitLogger(KairosDbSink.class, Duration.ofSeconds(30));
     private static final Logger SERIALIZATION_FAILURE_LOGGER = LoggerFactory.getRateLimitLogger(KairosDbSink.class, Duration.ofSeconds(30));
     private static final Logger CHUNK_TOO_BIG_LOGGER = LoggerFactory.getRateLimitLogger(KairosDbSink.class, Duration.ofSeconds(30));
+
+
+    private static final class KairosHistogramAdditionalData {
+        public double getMin() {
+            return _min;
+        }
+
+        public void setMin(final double min) {
+            _min = min;
+        }
+
+        public double getMax() {
+            return _max;
+        }
+
+        public void setMax(final double max) {
+            _max = max;
+        }
+
+        public double getMean() {
+            return _mean;
+        }
+
+        public void setMean(final double mean) {
+            _mean = mean;
+        }
+
+        public double getSum() {
+            return _sum;
+        }
+
+        public void setSum(final double sum) {
+            _sum = sum;
+        }
+
+        private double _min;
+        private double _max;
+        private double _mean;
+        private double _sum;
+    }
 
     private class Serializer {
 
@@ -180,6 +269,9 @@ public final class KairosDbSink extends HttpPostSink {
                 chunkGenerator.writeStartObject();
                 chunkGenerator.writeStringField("name", name);
                 chunkGenerator.writeNumberField("timestamp", _timestamp);
+                if (_ttlSeconds > 0) {
+                    chunkGenerator.writeNumberField("ttl", _ttlSeconds);
+                }
                 chunkGenerator.writeNumberField("value", datum.getValue().getValue());
                 chunkGenerator.writeObjectFieldStart("tags");
                 for (Map.Entry<String, String> entry : _dimensions.entrySet()) {
@@ -201,6 +293,65 @@ public final class KairosDbSink extends HttpPostSink {
                 SERIALIZATION_FAILURE_LOGGER.error()
                         .setMessage("Serialization failure")
                         .addData("datum", datum)
+                        .setThrowable(e)
+                        .log();
+            }
+        }
+
+       public void serializeHistogram(
+               final List<byte[]> completeChunks,
+               final ByteBuffer currentChunk,
+               final ByteArrayOutputStream chunkStream,
+               final AggregatedData data,
+               final KairosHistogramAdditionalData additionalData) {
+           final FQDSN fqdsn = data.getFQDSN();
+
+           try {
+                final HistogramStatistic.HistogramSnapshot bins = ((HistogramStatistic.HistogramSupportingData) data.getSupportingData())
+                        .getHistogramSnapshot();
+                final JsonGenerator chunkGenerator = OBJECT_MAPPER.getFactory().createGenerator(chunkStream, JsonEncoding.UTF8);
+
+                chunkGenerator.writeStartObject();
+                chunkGenerator.writeStringField("name", fqdsn.getMetric());
+                chunkGenerator.writeNumberField("timestamp", _timestamp);
+                chunkGenerator.writeStringField("type", "histogram");
+
+                chunkGenerator.writeObjectFieldStart("value");
+                chunkGenerator.writeNumberField("min", additionalData.getMin());
+                chunkGenerator.writeNumberField("max", additionalData.getMax());
+                chunkGenerator.writeNumberField("mean", additionalData.getMean());
+                chunkGenerator.writeNumberField("sum", additionalData.getSum());
+                chunkGenerator.writeObjectFieldStart("bins");
+                for (Map.Entry<Double, Integer> bin : bins.getValues()) {
+                    chunkGenerator.writeNumberField(bin.getKey().toString(), bin.getValue());
+                }
+
+                chunkGenerator.writeEndObject();  //close bins
+                chunkGenerator.writeEndObject();  //close value
+
+                if (_histogramTtlSeconds > 0) {
+                    chunkGenerator.writeNumberField("ttl", _histogramTtlSeconds);
+                }
+                chunkGenerator.writeObjectFieldStart("tags");
+                for (Map.Entry<String, String> entry : _dimensions.entrySet()) {
+                    chunkGenerator.writeStringField(entry.getKey(), entry.getValue());
+                }
+                if (!_dimensions.containsKey("service")) {
+                    chunkGenerator.writeStringField("service", fqdsn.getService());
+                }
+                if (!_dimensions.containsKey("cluster")) {
+                    chunkGenerator.writeStringField("cluster", fqdsn.getCluster());
+                }
+                chunkGenerator.writeEndObject();
+                chunkGenerator.writeEndObject();
+
+                chunkGenerator.close();
+
+                addChunk(chunkStream, currentChunk, completeChunks);
+            } catch (final IOException e) {
+                SERIALIZATION_FAILURE_LOGGER.error()
+                        .setMessage("Serialization failure")
+                        .addData("data", data)
                         .setThrowable(e)
                         .log();
             }
@@ -249,6 +400,9 @@ public final class KairosDbSink extends HttpPostSink {
             chunkGenerator.writeStartObject();
             chunkGenerator.writeStringField("name", conditionStatusName);
             chunkGenerator.writeNumberField("timestamp", _timestamp);
+            if (_ttlSeconds > 0) {
+                chunkGenerator.writeNumberField("ttl", _ttlSeconds);
+            }
             chunkGenerator.writeNumberField("value", condition.isTriggered().get() ? 1 : 0);
             chunkGenerator.writeObjectFieldStart("tags");
             for (Map.Entry<String, String> entry : _dimensions.entrySet()) {
@@ -335,8 +489,66 @@ public final class KairosDbSink extends HttpPostSink {
             return this;
         }
 
+        /**
+         * Sets whether or not to publish non-histogram metrics.
+         * Optional.  Defaults to true.
+         *
+         * @param value true to publish standard metrics
+         * @return This instance of {@link Builder}.
+         */
+        public Builder setStandardMetrics(final Boolean value) {
+            _publishStandardMetrics = value;
+            return this;
+        }
+
+        /**
+         * Sets whether or not to publish full histograms.
+         * Optional.  Defaults to false.
+         *
+         * @param value true to publish histograms
+         * @return This instance of {@link Builder}.
+         */
+        public Builder setPublishHistograms(final Boolean value) {
+            _publishHistograms = value;
+            return this;
+        }
+
+        /**
+         * Sets the TTL of non-histogram metrics.
+         * NOTE: A value of 0 represents permanent.
+         * Optional.  Defaults to permanent.
+         *
+         * @param value the time to retain histograms
+         * @return This instance of {@link Builder}.
+         */
+        public Builder setTtl(final Duration value) {
+            _ttl = value;
+            return this;
+        }
+
+        /**
+         * Sets the TTL of histograms.
+         * NOTE: A value of 0 represents permanent.
+         * Optional.  Defaults to permanent.
+         *
+         * @param value the time to retain histograms
+         * @return This instance of {@link Builder}.
+         */
+        public Builder setHistogramTtl(final Duration value) {
+            _histogramTtl = value;
+            return this;
+        }
+
         @NotNull
         @Min(value = 0)
         private Integer _maxRequestSize = 100 * 1024;
+        @NotNull
+        private Boolean _publishStandardMetrics = true;
+        @NotNull
+        private Boolean _publishHistograms = false;
+        @NotNull
+        private Duration _histogramTtl = Duration.ofSeconds(0);
+        @NotNull
+        private Duration _ttl = Duration.ofSeconds(0);
     }
 }

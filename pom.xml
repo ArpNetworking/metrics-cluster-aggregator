@@ -107,7 +107,7 @@
     <akka.kryo.version>0.5.0</akka.kryo.version>
     <apache.httpclient.version>4.5.2</apache.httpclient.version>
     <apache.httpcore.version>4.4.5</apache.httpcore.version>
-    <arpnetworking.commons.version>1.10.1</arpnetworking.commons.version>
+    <arpnetworking.commons.version>1.11.0</arpnetworking.commons.version>
     <aspectjrt.version>1.8.10</aspectjrt.version>
     <cglib.version>3.2.4</cglib.version>
     <commons.codec.version>1.10</commons.codec.version>
