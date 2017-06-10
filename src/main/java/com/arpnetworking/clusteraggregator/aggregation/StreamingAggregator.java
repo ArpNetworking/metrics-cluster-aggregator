@@ -127,6 +127,9 @@ public class StreamingAggregator extends UntypedAbstractActor {
                 while (_aggBuckets.size() > 0) {
                     final StreamingAggregationBucket bucket = _aggBuckets.getFirst();
                     if (bucket.getPeriodStart().plus(_period).plus(AGG_TIMEOUT).isBeforeNow()) {
+                        if (_latestClosedBucket.isBefore(bucket.getPeriodStart())) {
+                            _latestClosedBucket = bucket.getPeriodStart();
+                        }
                         _aggBuckets.removeFirst();
 
                         // Walk over every statistic in the bucket
@@ -238,7 +241,7 @@ public class StreamingAggregator extends UntypedAbstractActor {
         }
         //Find the time bucket to dump this in
         final DateTime periodStart = DateTime.parse(data.getPeriodStart());
-        if (_aggBuckets.size() > 0 && _aggBuckets.getFirst().getPeriodStart().isAfter(periodStart)) {
+        if (_latestClosedBucket.isAfter(periodStart)) {
             //We got a bit of data that is too old for us to aggregate.
             LOGGER.warn()
                     .setMessage("Received a work item that is too old to aggregate")
@@ -306,6 +309,7 @@ public class StreamingAggregator extends UntypedAbstractActor {
     private String _metric;
     private String _service;
     private AggregatedData.Builder _resultBuilder;
+    private DateTime _latestClosedBucket = DateTime.now().minusHours(1);
     private static final Duration AGG_TIMEOUT = Duration.standardMinutes(1);
     private static final Logger LOGGER = LoggerFactory.getLogger(StreamingAggregator.class);
 
