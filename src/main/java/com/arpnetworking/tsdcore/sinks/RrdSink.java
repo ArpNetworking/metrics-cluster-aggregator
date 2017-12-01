@@ -200,7 +200,7 @@ public final class RrdSink extends BaseSink {
                 final ProcessBuilder proecssBuilder = new ProcessBuilder(args);
                 proecssBuilder.redirectErrorStream(true);
                 final Process process = proecssBuilder.start();
-                try (final BufferedReader processStandardOut = new BufferedReader(
+                try (BufferedReader processStandardOut = new BufferedReader(
                         new InputStreamReader(process.getInputStream(), Charsets.UTF_8))) {
                     String line;
                     final StringBuilder processOutput = new StringBuilder();

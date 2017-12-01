@@ -21,7 +21,6 @@ import com.arpnetworking.tsdcore.model.Quantity;
 import com.arpnetworking.tsdcore.model.Unit;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Before;

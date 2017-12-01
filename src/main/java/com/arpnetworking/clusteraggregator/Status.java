@@ -16,14 +16,12 @@
 
 package com.arpnetworking.clusteraggregator;
 
+import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
-import akka.actor.UntypedAbstractActor;
 import akka.cluster.Cluster;
 import akka.cluster.MemberStatus;
-import akka.dispatch.OnComplete;
-import akka.dispatch.Recover;
-import akka.pattern.Patterns;
+import akka.pattern.PatternsCS;
 import akka.remote.AssociationErrorEvent;
 import akka.util.Timeout;
 import com.arpnetworking.clusteraggregator.models.BookkeeperData;
@@ -31,15 +29,13 @@ import com.arpnetworking.clusteraggregator.models.MetricsRequest;
 import com.arpnetworking.clusteraggregator.models.PeriodMetrics;
 import com.arpnetworking.clusteraggregator.models.StatusResponse;
 import com.arpnetworking.utility.CastMapper;
-import com.arpnetworking.utility.CollectFutureBuilder;
 import org.joda.time.Period;
-import scala.concurrent.ExecutionContextExecutor;
-import scala.concurrent.Future;
-import scala.runtime.AbstractFunction0;
-import scala.util.Failure;
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 /**
  * Periodically polls the cluster status and caches the result.
@@ -54,7 +50,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class Status extends UntypedAbstractActor {
+public class Status extends AbstractActor {
     /**
      * Public constructor.
      *
@@ -95,90 +91,70 @@ public class Status extends UntypedAbstractActor {
     }
 
     @Override
-    public void onReceive(final Object message) throws Exception {
-        final ActorRef sender = getSender();
-        if (message instanceof StatusRequest) {
-            processStatusRequest(sender);
-        } else if (message instanceof AssociationErrorEvent) {
-            final AssociationErrorEvent error = (AssociationErrorEvent) message;
-            if (error.cause().getMessage().contains("quarantined this system")) {
-                _quarantined = true;
-            }
-        } else if (message instanceof HealthRequest) {
-            final ExecutionContextExecutor executor = getContext().dispatcher();
-            final Future<ClusterStatusCache.StatusResponse> stateFuture = Patterns
-                    .ask(
-                            _clusterStatusCache,
-                            new ClusterStatusCache.GetRequest(),
-                            Timeout.apply(3, TimeUnit.SECONDS))
-                    .map(CAST_MAPPER, executor);
-            stateFuture.onComplete(
-                    new OnComplete<ClusterStatusCache.StatusResponse>() {
-                        @Override
-                        public void onComplete(final Throwable failure, final ClusterStatusCache.StatusResponse success) {
-                            final boolean healthy = _cluster.readView().self().status() == MemberStatus.up() && !_quarantined;
-                            sender.tell(healthy, getSelf());
-                        }
-                    },
-                    executor);
-        } else {
-            unhandled(message);
-        }
+    public Receive createReceive() {
+        return receiveBuilder()
+                .match(StatusRequest.class, message -> processStatusRequest())
+                .match(AssociationErrorEvent.class, error -> {
+                    if (error.cause().getMessage().contains("quarantined this system")) {
+                        _quarantined = true;
+                    }
+                })
+                .match(HealthRequest.class, message -> {
+                    final CompletionStage<ClusterStatusCache.StatusResponse> stateFuture = PatternsCS
+                            .ask(
+                                    _clusterStatusCache,
+                                    new ClusterStatusCache.GetRequest(),
+                                    Timeout.apply(3, TimeUnit.SECONDS))
+                            .thenApply(CAST_MAPPER);
+                    PatternsCS.pipe(stateFuture, context().dispatcher()).to(self(), sender());
+                })
+                .match(ClusterStatusCache.StatusResponse.class, response -> {
+                    final boolean healthy = _cluster.readView().self().status() == MemberStatus.up() && !_quarantined;
+                    sender().tell(healthy, getSelf());
+                })
+                .build();
     }
 
-    private void processStatusRequest(final ActorRef sender) {
-        final ExecutionContextExecutor executor = getContext().dispatcher();
+    private void processStatusRequest() {
         // Call the bookkeeper
-        final Future<BookkeeperData> bookkeeperFuture = Patterns.ask(
+        final CompletableFuture<BookkeeperData> bookkeeperFuture = PatternsCS.ask(
                 _metricsBookkeeper,
                 new MetricsRequest(),
                 Timeout.apply(3, TimeUnit.SECONDS))
-                .map(new CastMapper<>(), executor)
-                .recover(new AsNullRecovery<>(), executor);
-        final Future<ClusterStatusCache.StatusResponse> clusterStateFuture =
-                Patterns.ask(
+                .<BookkeeperData>thenApply(new CastMapper<>())
+                .exceptionally(new AsNullRecovery<>())
+                .toCompletableFuture();
+        final CompletableFuture<ClusterStatusCache.StatusResponse> clusterStateFuture =
+                PatternsCS.ask(
                         _clusterStatusCache,
                         new ClusterStatusCache.GetRequest(),
                         Timeout.apply(3, TimeUnit.SECONDS))
-                .map(CAST_MAPPER, executor)
-                .recover(new AsNullRecovery<>(), executor);
+                .thenApply(CAST_MAPPER)
+                .exceptionally(new AsNullRecovery<>())
+                .toCompletableFuture();
 
-        final Future<Map<Period, PeriodMetrics>> localMetricsFuture =
-                Patterns.ask(
+        final CompletableFuture<Map<Period, PeriodMetrics>> localMetricsFuture =
+                PatternsCS.ask(
                         _localMetrics,
                         new MetricsRequest(),
                         Timeout.apply(3, TimeUnit.SECONDS))
-                .map(new CastMapper<>(), executor)
-                .recover(new AsNullRecovery<>(), executor);
+                .<Map<Period, PeriodMetrics>>thenApply(new CastMapper<>())
+                .exceptionally(new AsNullRecovery<>())
+                .toCompletableFuture();
 
-        final Future<StatusResponse> future = new CollectFutureBuilder<StatusResponse>()
-                .addFuture(bookkeeperFuture)
-                .addFuture(clusterStateFuture)
-                .addFuture(localMetricsFuture)
-                .map(new AbstractFunction0<StatusResponse>() {
-                    @Override
-                    public StatusResponse apply() {
-                        return new StatusResponse.Builder()
-                                .setClusterMetrics(bookkeeperFuture.value().get().get())
-                                .setClusterState(clusterStateFuture.value().get().get())
-                                .setLocalMetrics(localMetricsFuture.value().get().get())
+        PatternsCS.pipe(
+                CompletableFuture.allOf(
+                        bookkeeperFuture.toCompletableFuture(),
+                        clusterStateFuture.toCompletableFuture(),
+                        localMetricsFuture.toCompletableFuture())
+                        .thenApply(aVoid -> new StatusResponse.Builder()
+                                .setClusterMetrics(bookkeeperFuture.getNow(null))
+                                .setClusterState(clusterStateFuture.getNow(null))
+                                .setLocalMetrics(localMetricsFuture.getNow(null))
                                 .setLocalAddress(_cluster.selfAddress())
-                                .build();
-                    }
-                })
-                .build(executor);
-        future.onComplete(
-                new OnComplete<StatusResponse>() {
-                    @Override
-                    public void onComplete(final Throwable failure, final StatusResponse success) {
-                        if (failure != null) {
-                            sender.tell(new Failure<StatusResponse>(failure), getSelf());
-                        } else {
-                            sender.tell(success, getSelf());
-                        }
-                    }
-                },
-                executor);
+                                .build()),
+                context().dispatcher())
+                .to(sender(), self());
     }
 
     private boolean _quarantined = false;
@@ -190,9 +166,9 @@ public class Status extends UntypedAbstractActor {
 
     private static final CastMapper<Object, ClusterStatusCache.StatusResponse> CAST_MAPPER = new CastMapper<>();
 
-    private static class AsNullRecovery<T> extends Recover<T> {
+    private static class AsNullRecovery<T> implements Function<Throwable, T> {
         @Override
-        public T recover(final Throwable failure) {
+        public T apply(final Throwable failure) {
             return null;
         }
     }

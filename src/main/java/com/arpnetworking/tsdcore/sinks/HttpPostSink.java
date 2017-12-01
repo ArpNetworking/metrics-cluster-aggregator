@@ -130,7 +130,7 @@ public abstract class HttpPostSink extends BaseSink {
      * @param periodicData The <code>PeriodicData</code> to be serialized.
      * @return The serialized representation of <code>PeriodicData</code>.
      */
-    protected abstract Collection<byte[]> serialize(final PeriodicData periodicData);
+    protected abstract Collection<byte[]> serialize(PeriodicData periodicData);
 
     /**
      * Protected constructor.

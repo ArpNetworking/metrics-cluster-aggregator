@@ -16,8 +16,8 @@
 
 package com.arpnetworking.clusteraggregator;
 
+import akka.actor.AbstractActor;
 import akka.actor.Props;
-import akka.actor.UntypedAbstractActor;
 import com.arpnetworking.clusteraggregator.models.MetricsRequest;
 import com.arpnetworking.clusteraggregator.models.PeriodMetrics;
 import com.arpnetworking.metrics.MetricsFactory;
@@ -32,7 +32,7 @@ import java.util.Map;
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class PeriodicStatisticsActor extends UntypedAbstractActor {
+public class PeriodicStatisticsActor extends AbstractActor {
     /**
      * Creates a <code>Props</code> for construction in Akka.
      *
@@ -54,22 +54,20 @@ public class PeriodicStatisticsActor extends UntypedAbstractActor {
 
     @SuppressWarnings("deprecation")
     @Override
-    public void onReceive(final Object message) throws Exception {
-        if (message instanceof AggregatedData) {
-            final AggregatedData report = (AggregatedData) message;
-            final Period period = report.getPeriod();
-            PeriodMetrics metrics = _periodMetrics.get(period);
-            if (metrics == null) {
-                metrics = new PeriodMetrics(_metricsFactory);
-                _periodMetrics.put(period, metrics);
-            }
+    public Receive createReceive() {
+        return receiveBuilder()
+                .match(AggregatedData.class, report -> {
+                    final Period period = report.getPeriod();
+                    PeriodMetrics metrics = _periodMetrics.get(period);
+                    if (metrics == null) {
+                        metrics = new PeriodMetrics(_metricsFactory);
+                        _periodMetrics.put(period, metrics);
+                    }
 
-            metrics.recordAggregation(report);
-        } else if (message instanceof MetricsRequest) {
-            getSender().tell(_periodMetrics, getSelf());
-        } else {
-            unhandled(message);
-        }
+                    metrics.recordAggregation(report);
+                })
+                .match(MetricsRequest.class, message -> getSender().tell(_periodMetrics, getSelf()))
+                .build();
     }
 
     private final Map<Period, PeriodMetrics> _periodMetrics = Maps.newHashMap();

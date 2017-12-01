@@ -38,7 +38,7 @@ public interface Expression {
      * @return The resulting <code>AggregatedData</code> or <code>Optional.absent</code>.
      * @throws ScriptingException if evaluation fails for any reason.
      */
-    Optional<AggregatedData> evaluate(final PeriodicData periodicData) throws ScriptingException;
+    Optional<AggregatedData> evaluate(PeriodicData periodicData) throws ScriptingException;
 
     /**
      * Accessor for instance of <code>FQDSN</code> representing the data

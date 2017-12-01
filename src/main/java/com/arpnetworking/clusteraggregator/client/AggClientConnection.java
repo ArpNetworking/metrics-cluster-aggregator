@@ -16,10 +16,10 @@
 
 package com.arpnetworking.clusteraggregator.client;
 
+import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.Terminated;
-import akka.actor.UntypedAbstractActor;
 import akka.io.Tcp;
 import akka.io.TcpMessage;
 import akka.util.ByteString;
@@ -48,7 +48,7 @@ import java.util.Optional;
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class AggClientConnection extends UntypedAbstractActor {
+public class AggClientConnection extends AbstractActor {
     /**
      * Creates a <code>Props</code> for use in Akka.
      *
@@ -86,43 +86,44 @@ public class AggClientConnection extends UntypedAbstractActor {
     }
 
     @Override
-    public void onReceive(final Object message) throws Exception {
-        if (message instanceof Tcp.Received) {
-            final Tcp.Received received = (Tcp.Received) message;
-            final ByteString data = received.data();
-            LOGGER.trace()
-                    .setMessage("Received a tcp message")
-                    .addData("length", data.length())
-                    .addContext("actor", self())
-                    .log();
-            _buffer = _buffer.concat(data);
-            processMessages();
-        } else if (message instanceof Tcp.CloseCommand) {
-            LOGGER.debug()
-                    .setMessage("Connection timeout hit, cycling connection")
-                    .addData("remote", _remoteAddress)
-                    .addContext("actor", self())
-                    .log();
-            if (_connection != null) {
-                _connection.tell(message, self());
-            }
-        } else if (message instanceof Tcp.ConnectionClosed) {
-            getContext().stop(getSelf());
-        } else if (message instanceof Terminated) {
-            final Terminated terminated = (Terminated) message;
-            LOGGER.info()
-                    .setMessage("Connection actor terminated")
-                    .addData("terminated", terminated.actor())
-                    .addContext("actor", self())
-                    .log();
-            if (terminated.actor().equals(_connection)) {
-                getContext().stop(getSelf());
-            } else {
-                unhandled(message);
-            }
-        } else {
-            unhandled(message);
-        }
+    public Receive createReceive() {
+        return receiveBuilder()
+                .match(Tcp.Received.class, received -> {
+                    final ByteString data = received.data();
+                    LOGGER.trace()
+                            .setMessage("Received a tcp message")
+                            .addData("length", data.length())
+                            .addContext("actor", self())
+                            .log();
+                    _buffer = _buffer.concat(data);
+                    processMessages();
+                })
+                .match(Tcp.CloseCommand.class, message -> {
+                    LOGGER.debug()
+                            .setMessage("Connection timeout hit, cycling connection")
+                            .addData("remote", _remoteAddress)
+                            .addContext("actor", self())
+                            .log();
+                    if (_connection != null) {
+                        _connection.tell(message, self());
+                    }
+                })
+                .match(Tcp.ConnectionClosed.class, closed -> {
+                    getContext().stop(getSelf());
+                })
+                .match(Terminated.class, terminated -> {
+                    LOGGER.info()
+                            .setMessage("Connection actor terminated")
+                            .addData("terminated", terminated.actor())
+                            .addContext("actor", self())
+                            .log();
+                    if (terminated.actor().equals(_connection)) {
+                        getContext().stop(getSelf());
+                    } else {
+                        unhandled(terminated);
+                    }
+                })
+                .build();
     }
 
     private void processMessages() {

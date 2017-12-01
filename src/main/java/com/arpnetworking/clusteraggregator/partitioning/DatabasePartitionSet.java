@@ -59,7 +59,7 @@ public class DatabasePartitionSet implements PartitionSet {
 
     @Override
     public Optional<Integer> getOrCreatePartition(final String key) {
-        try (final Transaction transaction = _database.getEbeanServer().beginTransaction()) {
+        try (Transaction transaction = _database.getEbeanServer().beginTransaction()) {
             PartitionEntry partitionEntry = PartitionEntry.findByKey(key, _partitionSetBean, _database);
             if (partitionEntry != null) {
                 return Optional.of(partitionEntry.getPartition().getPartitionNumber());

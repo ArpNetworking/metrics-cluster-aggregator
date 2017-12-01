@@ -18,6 +18,7 @@ package com.arpnetworking.tsdcore.model;
 import com.arpnetworking.commons.builder.OvalBuilder;
 import com.arpnetworking.logback.annotations.Loggable;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -278,7 +279,7 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
             if (unit.isPresent()) {
                 return new SampleConverter(unit.get());
             }
-            return (q) -> q;
+            return Functions.identity();
         }
 
         @Override

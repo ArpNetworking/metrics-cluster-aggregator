@@ -16,9 +16,9 @@
 
 package com.arpnetworking.clusteraggregator;
 
+import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
-import akka.actor.UntypedAbstractActor;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.google.common.collect.Lists;
 
@@ -30,7 +30,7 @@ import java.util.List;
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public final class AggregatorLifecycle extends UntypedAbstractActor {
+public final class AggregatorLifecycle extends AbstractActor {
     /**
      * Creates a {@link Props} for an AggregatorLifecycle.
      *
@@ -39,18 +39,18 @@ public final class AggregatorLifecycle extends UntypedAbstractActor {
     public static Props props() {
         return Props.create(AggregatorLifecycle.class);
     }
+
     @Override
-    public void onReceive(final Object message) throws Exception {
+    public Receive createReceive() {
         //TODO(barp): handle actor shutdown/timeout messages [MAI-442]
-        if (message instanceof Subscribe) {
-            _subscribers.add(((Subscribe) message).getSubscriber());
-        } else if (message instanceof NotifyAggregatorStarted) {
-            for (final ActorRef subscriber : _subscribers) {
-                subscriber.tell(message, getSelf());
-            }
-        } else {
-            unhandled(message);
-        }
+        return receiveBuilder()
+                .match(Subscribe.class, subscribe -> _subscribers.add(subscribe.getSubscriber()))
+                .match(NotifyAggregatorStarted.class, notify -> {
+                    for (final ActorRef subscriber : _subscribers) {
+                        subscriber.tell(notify, getSelf());
+                    }
+                })
+                .build();
     }
 
     private final List<ActorRef> _subscribers = Lists.newArrayList();

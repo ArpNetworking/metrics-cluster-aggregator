@@ -70,7 +70,7 @@ public final class ExpressionSink extends BaseSink {
 
         final Collection<AggregatedData> newData;
 
-        try (final Metrics metrics = _metricsFactory.create()) {
+        try (Metrics metrics = _metricsFactory.create()) {
             // Check for new clusters or services
             boolean newClusterServices = false;
             for (final AggregatedData datum : periodicData.getData()) {

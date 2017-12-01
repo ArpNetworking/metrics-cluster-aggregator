@@ -16,10 +16,10 @@
 
 package com.arpnetworking.clusteraggregator.aggregation;
 
+import akka.actor.AbstractActor;
 import akka.actor.Cancellable;
 import akka.actor.Props;
-import akka.actor.UntypedAbstractActor;
-import akka.dispatch.OnComplete;
+import akka.pattern.PatternsCS;
 import com.arpnetworking.clusteraggregator.AggregatorLifecycle;
 import com.arpnetworking.clusteraggregator.bookkeeper.persistence.BookkeeperPersistence;
 import com.arpnetworking.clusteraggregator.models.BookkeeperData;
@@ -43,7 +43,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class Bookkeeper extends UntypedAbstractActor {
+public class Bookkeeper extends AbstractActor {
     /**
      * Creates a <code>Props</code> for building a Bookkeeper actor in Akka.
      *
@@ -82,30 +82,34 @@ public class Bookkeeper extends UntypedAbstractActor {
     }
 
     @Override
-    public void onReceive(final Object message) throws Exception {
-        if (message instanceof MetricsRequest) {
-            getSender().tell(_data, getSelf());
-        } else if (message instanceof Update && getSelf().equals(getSender())) {
-            _persistence.getBookkeeperData().onComplete(new OnComplete<BookkeeperData>() {
-                @Override
-                public void onComplete(final Throwable failure, final BookkeeperData success) {
-                    if (failure != null) {
-                        LOGGER.error()
-                                .setMessage("Error getting bookkeeper data")
-                                .setThrowable(failure)
-                                .addContext("actor", self())
-                                .log();
+    public Receive createReceive() {
+        return receiveBuilder()
+                .match(MetricsRequest.class, message -> {
+                    getSender().tell(_data, getSelf());
+                })
+                .match(Update.class, update -> {
+                    if (self().equals(sender())) {
+                        PatternsCS.pipe(
+                                _persistence.getBookkeeperData().exceptionally(failure -> {
+                                    LOGGER.error()
+                                            .setMessage("Error getting bookkeeper data")
+                                            .setThrowable(failure)
+                                            .addContext("actor", self())
+                                            .log();
+                                    return null;
+                                }), context().dispatcher())
+                                .to(self());
                     } else {
-                        _data = success;
+                        unhandled(update);
                     }
-                }
-            }, getContext().dispatcher());
-        } else if (message instanceof AggregatorLifecycle.NotifyAggregatorStarted) {
-            final AggregatorLifecycle.NotifyAggregatorStarted started = (AggregatorLifecycle.NotifyAggregatorStarted) message;
-            _persistence.insertMetric(started.getAggregatedData());
-        } else {
-            unhandled(message);
-        }
+                })
+                .match(BookkeeperData.class, data -> {
+                    _data = data;
+                })
+                .match(AggregatorLifecycle.NotifyAggregatorStarted.class, started -> {
+                    _persistence.insertMetric(started.getAggregatedData());
+                })
+                .build();
     }
 
     private BookkeeperData _data = null;

@@ -15,8 +15,8 @@
  */
 package com.arpnetworking.tsdcore.sinks;
 
+import akka.actor.AbstractActor;
 import akka.actor.Props;
-import akka.actor.UntypedAbstractActor;
 import akka.http.javadsl.model.StatusCodes;
 import akka.pattern.PatternsCS;
 import com.arpnetworking.logback.annotations.LogValue;
@@ -48,7 +48,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class HttpSinkActor extends UntypedAbstractActor {
+public class HttpSinkActor extends AbstractActor {
     /**
      * Factory method to create a Props.
      *
@@ -117,28 +117,26 @@ public class HttpSinkActor extends UntypedAbstractActor {
     }
 
     @Override
-    public void onReceive(final Object message) throws Exception {
-        if (message instanceof HttpSinkActor.EmitAggregation) {
-            final EmitAggregation aggregation = (EmitAggregation) message;
-            processEmitAggregation(aggregation);
-        } else if (message instanceof PostComplete) {
-            final PostComplete complete = (PostComplete) message;
-            processCompletedRequest(complete);
-            dispatchPending();
-        } else if (message instanceof PostFailure) {
-            final PostFailure failure = (PostFailure) message;
-            processFailedRequest(failure);
-            dispatchPending();
-        } else if (message instanceof WaitTimeExpired) {
-            LOGGER.debug()
-                    .setMessage("Received WaitTimeExpired message")
-                    .addContext("actor", self())
-                    .log();
-            _waiting = false;
-            dispatchPending();
-        } else {
-            unhandled(message);
-        }
+    public Receive createReceive() {
+        return receiveBuilder()
+                .match(EmitAggregation.class, this::processEmitAggregation)
+                .match(PostComplete.class, complete -> {
+                    processCompletedRequest(complete);
+                    dispatchPending();
+                })
+                .match(PostFailure.class, failure -> {
+                    processFailedRequest(failure);
+                    dispatchPending();
+                })
+                .match(WaitTimeExpired.class, message -> {
+                    LOGGER.debug()
+                            .setMessage("Received WaitTimeExpired message")
+                            .addContext("actor", self())
+                            .log();
+                    _waiting = false;
+                    dispatchPending();
+                })
+                .build();
     }
 
     private void processFailedRequest(final PostFailure failure) {

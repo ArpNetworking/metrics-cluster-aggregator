@@ -22,6 +22,7 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.google.common.collect.Iterators;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.net.MalformedURLException;
@@ -33,6 +34,7 @@ import java.util.Optional;
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
+@Ignore
 public class JsonNodeUriSourceTest {
 
     @Test

@@ -16,13 +16,13 @@
 
 package com.arpnetworking.clusteraggregator.bookkeeper.persistence;
 
-import akka.dispatch.Futures;
 import com.arpnetworking.clusteraggregator.models.BookkeeperData;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.google.common.collect.Sets;
-import scala.concurrent.Future;
 
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 /**
  * Keeps the bookkeeper data in memory.
@@ -39,8 +39,8 @@ public class InMemoryBookkeeper implements BookkeeperPersistence {
     }
 
     @Override
-    public Future<BookkeeperData> getBookkeeperData() {
-        return Futures.successful(
+    public CompletionStage<BookkeeperData> getBookkeeperData() {
+        return CompletableFuture.completedFuture(
                 new BookkeeperData.Builder()
                         .setClusters((long) _clusters.size())
                         .setMetrics((long) _metrics.size())

@@ -29,7 +29,7 @@ public interface PartitionSet {
      * @param key the key to be partitioned
      * @return a partition number
      */
-    Optional<Integer> getExistingPartition(final String key);
+    Optional<Integer> getExistingPartition(String key);
 
     /**
      * Will return the partition mapping, creating one if possible.  Will return Optional.absent()
@@ -38,5 +38,5 @@ public interface PartitionSet {
      * @param key the key to be partitioned
      * @return optionally, a partition number
      */
-    Optional<Integer> getOrCreatePartition(final String key);
+    Optional<Integer> getOrCreatePartition(String key);
 }

@@ -15,11 +15,11 @@
  */
 package com.arpnetworking.configuration.jackson.akka;
 
+import akka.actor.AbstractActor;
 import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
-import akka.actor.UntypedAbstractActor;
 import akka.testkit.TestActorRef;
 import akka.testkit.TestProbe;
 import com.arpnetworking.commons.jackson.databind.ObjectMapperFactory;
@@ -74,8 +74,12 @@ public class ActorRefSerializerTest extends BaseActorTest {
 
     private ObjectMapper _mapper;
 
-    private static class DoNothingActor extends UntypedAbstractActor {
+    private static class DoNothingActor extends AbstractActor {
         @Override
-        public void onReceive(final Object o) throws Exception {  }
+        public Receive createReceive() {
+            return receiveBuilder()
+                    .matchAny(any -> { })
+                    .build();
+        }
     }
 }

@@ -20,7 +20,6 @@ import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.arpnetworking.tsdcore.statistics.StatisticFactory;
 import com.arpnetworking.utility.test.BuildableEqualsAndHashCodeTester;
 import com.google.common.collect.Lists;
-
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.junit.Assert;
