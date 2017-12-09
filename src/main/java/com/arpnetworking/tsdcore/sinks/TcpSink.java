@@ -85,7 +85,7 @@ public abstract class TcpSink extends BaseSink {
      * @param periodicData Data to serialize.
      * @return {@link ByteString} representing the periodicData.
      */
-    protected abstract ByteString serializeData(final PeriodicData periodicData);
+    protected abstract ByteString serializeData(PeriodicData periodicData);
 
     /**
      * Protected constructor.

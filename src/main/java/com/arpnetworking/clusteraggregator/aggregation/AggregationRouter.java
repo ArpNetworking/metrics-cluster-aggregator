@@ -15,10 +15,10 @@
  */
 package com.arpnetworking.clusteraggregator.aggregation;
 
+import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedAbstractActor;
 import akka.cluster.sharding.ShardRegion;
 import com.arpnetworking.metrics.aggregation.protocol.Messages;
 import com.arpnetworking.steno.Logger;
@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class AggregationRouter extends UntypedAbstractActor {
+public class AggregationRouter extends AbstractActor {
 
     /**
      * Creates a <code>Props</code> for use in Akka.
@@ -75,18 +75,20 @@ public class AggregationRouter extends UntypedAbstractActor {
     }
 
     @Override
-    public void onReceive(final Object message) throws Exception {
-        if (message instanceof Messages.StatisticSetRecord) {
-            _streamingChild.forward(message, context());
-        } else if (message instanceof ShutdownAggregator) {
-            // TODO(barp): review the implications of shutting down (do the children process all of the messages properly?) [AINT-?]
-            _streamingChild.forward(message, context());
-            context().stop(self());
-        } else if (message.equals(ReceiveTimeout.getInstance())) {
-            getContext().parent().tell(new ShardRegion.Passivate(new ShutdownAggregator()), getSelf());
-        } else {
-            unhandled(message);
-        }
+    public Receive createReceive() {
+        return receiveBuilder()
+                .match(Messages.StatisticSetRecord.class, message -> {
+                    _streamingChild.forward(message, context());
+                })
+                .match(ShutdownAggregator.class, message -> {
+                    // TODO(barp): review the implications of shutting down (do the children process all of the messages properly?) [AINT-?]
+                    _streamingChild.forward(message, context());
+                    context().stop(self());
+                })
+                .match(ReceiveTimeout.class, message -> {
+                    getContext().parent().tell(new ShardRegion.Passivate(new ShutdownAggregator()), getSelf());
+                })
+                .build();
     }
 
     @Override

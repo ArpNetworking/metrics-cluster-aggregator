@@ -77,8 +77,7 @@ public final class ParallelLeastShardAllocationStrategy extends ShardCoordinator
         return Futures.successful(currentShardAllocations
                 .entrySet()
                 .stream()
-                .sorted(Comparator.comparingInt(e -> e.getValue().size()))
-                .findFirst()
+                .min(Comparator.comparingInt(e -> e.getValue().size()))
                 .get()
                 .getKey());
     }
@@ -115,7 +114,7 @@ public final class ParallelLeastShardAllocationStrategy extends ShardCoordinator
 
 
             // Make sure that we have more than 1 region
-            if (mostShards == null) {
+            if (leastShards == null || mostShards == null) {
                 LOGGER.debug()
                         .setMessage("Cannot rebalance shards, less than 2 shard regions found.")
                         .log();

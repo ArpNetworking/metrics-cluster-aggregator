@@ -24,7 +24,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
-
 import org.joda.time.Period;
 import org.junit.Assert;
 import org.junit.Before;
@@ -46,7 +45,7 @@ public class RrdSinkTest {
         _path = Files.createTempDir();
         final File rrdToolFile = getRrdToolFile();
         final File outFile = getOutFile();
-        Files.write("#!/bin/bash\necho \"$@\" >> " + outFile.getAbsolutePath(), rrdToolFile, Charsets.UTF_8);
+        Files.asCharSink(rrdToolFile, Charsets.UTF_8).write("#!/bin/bash\necho \"$@\" >> " + outFile.getAbsolutePath());
         rrdToolFile.setExecutable(true);
         _rrdSinkBuilder = new RrdSink.Builder()
                 .setName("rrd_sink_test")

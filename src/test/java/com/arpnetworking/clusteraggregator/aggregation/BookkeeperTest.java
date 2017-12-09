@@ -19,7 +19,6 @@ package com.arpnetworking.clusteraggregator.aggregation;
 import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.actor.UnhandledMessage;
-import akka.dispatch.Futures;
 import akka.testkit.TestActorRef;
 import akka.testkit.TestProbe;
 import com.arpnetworking.clusteraggregator.bookkeeper.persistence.BookkeeperPersistence;
@@ -31,6 +30,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import scala.concurrent.duration.FiniteDuration;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -46,7 +46,7 @@ public class BookkeeperTest extends BaseActorTest {
         super.setUp();
         Mockito.when(_persistence.getBookkeeperData())
                 .thenReturn(
-                        Futures.successful(
+                        CompletableFuture.completedFuture(
                                 new BookkeeperData.Builder()
                                         .setClusters(0L)
                                         .setMetrics(0L)

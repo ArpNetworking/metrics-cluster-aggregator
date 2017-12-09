@@ -17,6 +17,7 @@ package com.arpnetworking.tsdcore.sinks.circonus;
 
 import akka.http.javadsl.model.HttpMethods;
 import akka.stream.Materializer;
+import akka.util.ByteString;
 import com.arpnetworking.commons.builder.OvalBuilder;
 import com.arpnetworking.commons.jackson.databind.ObjectMapperFactory;
 import com.arpnetworking.logback.annotations.LogValue;
@@ -28,11 +29,18 @@ import com.arpnetworking.tsdcore.sinks.circonus.api.CheckBundle;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Charsets;
+import com.typesafe.config.ConfigFactory;
+import com.typesafe.sslconfig.ssl.SSLConfigSettings;
 import net.sf.oval.constraint.NotNull;
-import org.asynchttpclient.DefaultAsyncHttpClientConfig;
-import play.libs.ws.WSRequest;
-import play.libs.ws.WSResponse;
-import play.libs.ws.ahc.AhcWSClient;
+import play.api.libs.ws.WSClientConfig;
+import play.api.libs.ws.ahc.AhcWSClientConfig;
+import play.libs.ws.InMemoryBodyWritable;
+import play.libs.ws.StandaloneWSClient;
+import play.libs.ws.StandaloneWSRequest;
+import play.libs.ws.StandaloneWSResponse;
+import play.libs.ws.ahc.AhcWSClientConfigFactory;
+import play.libs.ws.ahc.StandaloneAhcWSClient;
 
 import java.io.IOException;
 import java.net.URI;
@@ -56,7 +64,7 @@ public final class CirconusClient {
      * @return Future with the results.
      */
     public CompletionStage<BrokerListResponse> getBrokers() {
-        final WSRequest request = _client
+        final StandaloneWSRequest request = _client
                 .url(_uri + BROKERS_URL)
                 .setMethod(HttpMethods.GET.value());
         LOGGER.trace()
@@ -79,15 +87,16 @@ public final class CirconusClient {
      * @param httptrapURI Url of the httptrap.
      * @return Future response.
      */
-    public CompletionStage<WSResponse> sendToHttpTrap(final Map<String, Object> data, final URI httptrapURI) {
+    public CompletionStage<StandaloneWSResponse> sendToHttpTrap(final Map<String, Object> data, final URI httptrapURI) {
         try {
             LOGGER.trace()
                     .setMessage("Sending data to httptrap")
                     .log();
-            final WSRequest request = _client
+            final String bodyString = OBJECT_MAPPER.writeValueAsString(data);
+            final StandaloneWSRequest request = _client
                     .url(httptrapURI.toString())
                     .setMethod("POST")
-                    .setBody(OBJECT_MAPPER.writeValueAsString(data));
+                    .setBody(createBody(bodyString));
             return fireRequest(
                     request)
                     .thenApply(response -> handleMetricResponse(request, response));
@@ -110,11 +119,11 @@ public final class CirconusClient {
             throw new RuntimeException(e);
         }
 
-        final WSRequest requestHolder = _client
+        final StandaloneWSRequest requestHolder = _client
                 .url(_uri + CHECK_BUNDLE_URL)
-                .setQueryParameter("dedupe_params", "display_name,target")
+                .addQueryParameter("dedupe_params", "display_name,target")
                 .setMethod("POST")
-                .setBody(responseBody);
+                .setBody(createBody(responseBody));
         LOGGER.trace()
                 .setMessage("Looking up check bundle")
                 .addData("cid", request.getCid())
@@ -130,10 +139,10 @@ public final class CirconusClient {
      * @return Future with the results.
      */
     public CompletionStage<CheckBundle> getCheckBundle(final String cid) {
-        final WSRequest requestHolder = _client
+        final StandaloneWSRequest requestHolder = _client
                 .url(_uri + cid)
                 .setMethod("GET")
-                .setQueryParameter("query_broker", "1");
+                .addQueryParameter("query_broker", "1");
         LOGGER.trace()
                 .setMessage("Getting check bundle")
                 .addData("cid", cid)
@@ -157,10 +166,10 @@ public final class CirconusClient {
             throw new RuntimeException(e);
         }
 
-        final WSRequest requestHolder = _client
+        final StandaloneWSRequest requestHolder = _client
                 .url(_uri + request.getCid())
                 .setMethod("PUT")
-                .setBody(responseBody);
+                .setBody(createBody(responseBody));
         LOGGER.trace()
                 .setMessage("Updating check bundle")
                 .addData("cid", request.getCid())
@@ -189,8 +198,8 @@ public final class CirconusClient {
     }
 
     private static BrokerListResponse handleBrokerListResponse(
-            final WSRequest request,
-            final WSResponse response) {
+            final StandaloneWSRequest request,
+            final StandaloneWSResponse response) {
         final String body = response.getBody();
         LOGGER.trace()
                 .setMessage("Response from get brokers")
@@ -216,9 +225,9 @@ public final class CirconusClient {
                         response.getBody()));
     }
 
-    private static WSResponse handleMetricResponse(
-            final WSRequest request,
-            final WSResponse response) {
+    private static StandaloneWSResponse handleMetricResponse(
+            final StandaloneWSRequest request,
+            final StandaloneWSResponse response) {
         final String body = response.getBody();
         LOGGER.trace()
                 .setMessage("Response from posting metric data")
@@ -237,8 +246,8 @@ public final class CirconusClient {
     }
 
     private static CheckBundle handleCheckBundleResponse(
-            final WSRequest request,
-            final WSResponse response,
+            final StandaloneWSRequest request,
+            final StandaloneWSResponse response,
             final String operation) {
         final String body = response.getBody();
         LOGGER.trace()
@@ -261,12 +270,16 @@ public final class CirconusClient {
                         response.getBody()));
     }
 
-    private CompletionStage<WSResponse> fireRequest(final WSRequest request) {
+    private CompletionStage<? extends StandaloneWSResponse> fireRequest(final StandaloneWSRequest request) {
         return request
-                .setHeader("X-Circonus-Auth-Token", _authToken)
-                .setHeader("X-Circonus-App-Name", _appName)
-                .setHeader("Accept", "application/json")
+                .addHeader("X-Circonus-Auth-Token", _authToken)
+                .addHeader("X-Circonus-App-Name", _appName)
+                .addHeader("Accept", "application/json")
                 .execute();
+    }
+
+    private InMemoryBodyWritable createBody(final String bodyString) {
+        return new InMemoryBodyWritable(ByteString.fromString(bodyString, Charsets.UTF_8), "application/json");
     }
 
     private CirconusClient(final Builder builder) {
@@ -275,14 +288,38 @@ public final class CirconusClient {
         _authToken = builder._authToken;
         _materializer = builder._materializer;
 
-        final DefaultAsyncHttpClientConfig.Builder clientBuilder = new DefaultAsyncHttpClientConfig.Builder();
-        if (!builder._safeHttps.booleanValue()) {
-            clientBuilder.setAcceptAnyCertificate(true);
+        AhcWSClientConfig config = AhcWSClientConfigFactory.forConfig(ConfigFactory.load(), getClass().getClassLoader());
+        WSClientConfig wsClientConfig = config.wsClientConfig();
+
+        if (!builder._safeHttps) {
+            SSLConfigSettings sslConfigSettings = wsClientConfig.ssl();
+            sslConfigSettings = sslConfigSettings.withLoose(sslConfigSettings.loose().withAcceptAnyCertificate(true));
+            wsClientConfig = wsClientConfig.copy(
+                    wsClientConfig.connectionTimeout(),
+                    wsClientConfig.idleTimeout(),
+                    wsClientConfig.requestTimeout(),
+                    wsClientConfig.followRedirects(),
+                    wsClientConfig.useProxyProperties(),
+                    wsClientConfig.userAgent(),
+                    wsClientConfig.compressionEnabled(),
+                    sslConfigSettings);
         }
-        _client = new AhcWSClient(clientBuilder.build(), _materializer);
+
+        config = config.copy(
+                wsClientConfig,
+                config.maxConnectionsPerHost(),
+                config.maxConnectionsTotal(),
+                config.maxConnectionLifetime(),
+                config.idleConnectionInPoolTimeout(),
+                config.maxNumberOfRedirects(),
+                config.maxRequestRetry(),
+                config.disableUrlEncoding(),
+                config.keepAlive());
+
+        _client = StandaloneAhcWSClient.create(config, _materializer);
     }
 
-    private final AhcWSClient _client;
+    private final StandaloneWSClient _client;
     private final URI _uri;
     private final String _appName;
     private final String _authToken;

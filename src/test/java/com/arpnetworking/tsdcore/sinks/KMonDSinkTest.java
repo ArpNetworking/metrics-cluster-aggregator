@@ -24,6 +24,7 @@ import org.joda.time.Period;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.net.URI;
@@ -35,6 +36,7 @@ import java.util.Collection;
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
+@Ignore
 public class KMonDSinkTest {
 
     @AfterClass

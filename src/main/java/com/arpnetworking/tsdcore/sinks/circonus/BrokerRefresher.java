@@ -15,8 +15,8 @@
  */
 package com.arpnetworking.tsdcore.sinks.circonus;
 
+import akka.actor.AbstractActor;
 import akka.actor.Props;
-import akka.actor.UntypedAbstractActor;
 import akka.pattern.PatternsCS;
 import com.arpnetworking.akka.UniformRandomTimeScheduler;
 import com.arpnetworking.steno.Logger;
@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class BrokerRefresher extends UntypedAbstractActor {
+public class BrokerRefresher extends AbstractActor {
     /**
      * Creates a {@link Props} in a type safe way.
      *
@@ -70,42 +70,41 @@ public class BrokerRefresher extends UntypedAbstractActor {
     }
 
     @Override
-    public void onReceive(final Object message) throws Exception {
-        if (message instanceof LookupBrokers) {
-            LOGGER.debug()
-                    .setMessage("Starting broker lookup")
-                    .addContext("actor", self())
-                    .log();
-            lookupBrokers();
-        } else if (message instanceof BrokerLookupComplete) {
-            final BrokerLookupComplete complete = (BrokerLookupComplete) message;
-            LOGGER.debug()
-                    .setMessage("Broker lookup complete")
-                    .addData("brokers", complete.getResponse().getBrokers())
-                    .addContext("actor", self())
-                    .log();
+    public Receive createReceive() {
+        return receiveBuilder()
+                .match(LookupBrokers.class, message -> {
+                    LOGGER.debug()
+                            .setMessage("Starting broker lookup")
+                            .addContext("actor", self())
+                            .log();
+                    lookupBrokers();
+                })
+                .match(BrokerLookupComplete.class, complete -> {
+                    LOGGER.debug()
+                            .setMessage("Broker lookup complete")
+                            .addData("brokers", complete.getResponse().getBrokers())
+                            .addContext("actor", self())
+                            .log();
 
-            context().parent().tell(message, self());
-            _brokerLookup.resume();
-        } else if (message instanceof BrokerLookupFailure) {
-            final BrokerLookupFailure failure = (BrokerLookupFailure) message;
+                    context().parent().tell(complete, self());
+                    _brokerLookup.resume();
+                })
+                .match(BrokerLookupFailure.class, failure -> {
+                    LOGGER.error()
+                            .setMessage("Failed to lookup broker, trying again in 60 seconds")
+                            .setThrowable(failure.getCause())
+                            .addContext("actor", self())
+                            .log();
 
-            LOGGER.error()
-                    .setMessage("Failed to lookup broker, trying again in 60 seconds")
-                    .setThrowable(failure.getCause())
-                    .addContext("actor", self())
-                    .log();
-
-            context().system().scheduler().scheduleOnce(
-                    FiniteDuration.apply(60, TimeUnit.SECONDS),
-                    self(),
-                    new LookupBrokers(),
-                    context().dispatcher(),
-                    self());
-            _brokerLookup.pause();
-        } else {
-            unhandled(message);
-        }
+                    context().system().scheduler().scheduleOnce(
+                            FiniteDuration.apply(60, TimeUnit.SECONDS),
+                            self(),
+                            new LookupBrokers(),
+                            context().dispatcher(),
+                            self());
+                    _brokerLookup.pause();
+                })
+                .build();
     }
 
     private void lookupBrokers() {

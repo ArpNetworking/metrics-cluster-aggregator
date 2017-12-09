@@ -37,5 +37,5 @@ public interface Alert {
      * @return Evaluated <code>Condition</code> or <code>Optional.absent</code>.
      * @throws ScriptingException if evaluation fails for any reason.
      */
-    Condition evaluate(final PeriodicData periodicData) throws ScriptingException;
+    Condition evaluate(PeriodicData periodicData) throws ScriptingException;
 }

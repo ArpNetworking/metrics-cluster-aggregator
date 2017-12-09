@@ -18,7 +18,8 @@ package com.arpnetworking.clusteraggregator.bookkeeper.persistence;
 
 import com.arpnetworking.clusteraggregator.models.BookkeeperData;
 import com.arpnetworking.tsdcore.model.AggregatedData;
-import scala.concurrent.Future;
+
+import java.util.concurrent.CompletionStage;
 
 /**
  * Contains methods to store bookkeeping information in a persistent store.
@@ -31,12 +32,12 @@ public interface BookkeeperPersistence {
      *
      * @param data The metric to store.
      */
-    void insertMetric(final AggregatedData data);
+    void insertMetric(AggregatedData data);
 
     /**
      * Gets the reporting relevant statistics about metrics metadata from the store.
      *
      * @return The bookkeeping data for the metrics cluster.
      */
-    Future<BookkeeperData> getBookkeeperData();
+    CompletionStage<BookkeeperData> getBookkeeperData();
 }

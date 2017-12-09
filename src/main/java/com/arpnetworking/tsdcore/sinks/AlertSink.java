@@ -70,7 +70,7 @@ public final class AlertSink extends BaseSink {
         final ImmutableList.Builder<Condition> newConditions = ImmutableList.builder();
         boolean haveNewConditions = false;
 
-        try (final Metrics metrics = _metricsFactory.create()) {
+        try (Metrics metrics = _metricsFactory.create()) {
             // Check for new clusters or services
             boolean newClusterServices = false;
             for (final AggregatedData datum : periodicData.getData()) {

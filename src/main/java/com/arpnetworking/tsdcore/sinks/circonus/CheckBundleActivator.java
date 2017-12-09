@@ -15,8 +15,8 @@
  */
 package com.arpnetworking.tsdcore.sinks.circonus;
 
+import akka.actor.AbstractActor;
 import akka.actor.Props;
-import akka.actor.UntypedAbstractActor;
 import akka.pattern.PatternsCS;
 import com.arpnetworking.akka.UniformRandomTimeScheduler;
 import com.arpnetworking.steno.Logger;
@@ -46,7 +46,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class CheckBundleActivator extends UntypedAbstractActor {
+public class CheckBundleActivator extends AbstractActor {
     /**
      * Creates a {@link Props} in a type safe way.
      *
@@ -84,41 +84,37 @@ public class CheckBundleActivator extends UntypedAbstractActor {
     }
 
     @Override
-    public void onReceive(final Object message) throws Exception {
-        if (message instanceof NotifyCheckBundle) {
-            final NotifyCheckBundle notification = (NotifyCheckBundle) message;
-            _checkBundleCids.add(notification.getCheckBundle().getCid());
-        } else if (message instanceof RefreshBundles) {
-            startCheckBundleRefresh();
-        } else if (message instanceof CheckBundleRefreshComplete) {
-            final CheckBundleRefreshComplete bundle = (CheckBundleRefreshComplete) message;
-            LOGGER.debug()
-                    .setMessage("Check bundle updated")
-                    .addData("cid", bundle.getCheckBundle().getCid())
-                    .addData("bundle", bundle.getCheckBundle())
-                    .addContext("actor", self())
-                    .log();
-            context().parent().tell(message, self());
-            refreshNextBundle();
-        } else if (message instanceof CheckBundleRefreshFailure) {
-            final CheckBundleRefreshFailure failure = (CheckBundleRefreshFailure) message;
-            LOGGER.error()
-                    .setMessage("Failed to update check bundle")
-                    .setThrowable(failure.getCause())
-                    .addContext("actor", self())
-                    .log();
-            refreshNextBundle();
-        } else if (message instanceof CheckBundleDisabled) {
-            final CheckBundleDisabled disabled = (CheckBundleDisabled) message;
-            LOGGER.debug()
-                    .setMessage("Found disabled check bundle. Removing from the update list")
-                    .addData("cid", disabled.getCid())
-                    .addContext("actor", self())
-                    .log();
-            _checkBundleCids.remove(disabled.getCid());
-        } else {
-            unhandled(message);
-        }
+    public Receive createReceive() {
+        return receiveBuilder()
+                .match(NotifyCheckBundle.class, notification -> _checkBundleCids.add(notification.getCheckBundle().getCid()))
+                .match(RefreshBundles.class, message -> startCheckBundleRefresh())
+                .match(CheckBundleRefreshComplete.class, bundle -> {
+                    LOGGER.debug()
+                            .setMessage("Check bundle updated")
+                            .addData("cid", bundle.getCheckBundle().getCid())
+                            .addData("bundle", bundle.getCheckBundle())
+                            .addContext("actor", self())
+                            .log();
+                    context().parent().tell(bundle, self());
+                    refreshNextBundle();
+                })
+                .match(CheckBundleRefreshFailure.class, failure -> {
+                    LOGGER.error()
+                            .setMessage("Failed to update check bundle")
+                            .setThrowable(failure.getCause())
+                            .addContext("actor", self())
+                            .log();
+                    refreshNextBundle();
+                })
+                .match(CheckBundleDisabled.class, disabled -> {
+                    LOGGER.debug()
+                            .setMessage("Found disabled check bundle. Removing from the update list")
+                            .addData("cid", disabled.getCid())
+                            .addContext("actor", self())
+                            .log();
+                    _checkBundleCids.remove(disabled.getCid());
+                })
+                .build();
     }
 
     private void startCheckBundleRefresh() {

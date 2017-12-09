@@ -15,9 +15,9 @@
  */
 package com.arpnetworking.tsdcore.sinks.circonus;
 
+import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
-import akka.actor.UntypedAbstractActor;
 import akka.http.javadsl.model.StatusCodes;
 import akka.pattern.PatternsCS;
 import com.arpnetworking.logback.annotations.LogValue;
@@ -36,7 +36,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.joda.time.Period;
 import org.joda.time.format.ISOPeriodFormat;
-import play.libs.ws.WSResponse;
+import play.libs.ws.StandaloneWSResponse;
 import scala.concurrent.ExecutionContextExecutor;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -76,7 +76,7 @@ import java.util.stream.Collectors;
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 @SuppressWarnings("deprecation")
-public final class CirconusSinkActor extends UntypedAbstractActor {
+public final class CirconusSinkActor extends AbstractActor {
     /**
      * Creates a {@link akka.actor.Props} for use in Akka.
      *
@@ -162,59 +162,58 @@ public final class CirconusSinkActor extends UntypedAbstractActor {
     }
 
     @Override
-    public void onReceive(final Object message) throws Exception {
-        if (message instanceof EmitAggregation) {
-            if (_selectedBrokerCid.isPresent()) {
-                final EmitAggregation aggregation = (EmitAggregation) message;
-                final Collection<AggregatedData> data = aggregation.getData();
-                publish(data);
-            } else {
-                NO_BROKER_LOGGER.warn()
-                        .setMessage("Unable to push data to Circonus")
-                        .addData("reason", "desired broker not yet discovered")
-                        .addData("actor", self())
-                        .log();
-            }
-        } else if (message instanceof CheckBundleLookupResponse) {
-            final CheckBundleLookupResponse response = (CheckBundleLookupResponse) message;
-            if (response.isSuccess()) {
-                _bundleMap.put(response.getKey(), response.getCheckBundle().getCid());
-                _checkBundles.put(response.getCheckBundle().getCid(), response.getCheckBundle());
-                _checkBundleRefresher.tell(
-                        new CheckBundleActivator.NotifyCheckBundle(response.getCheckBundle()),
-                        self());
-            } else {
-                LOGGER.error()
-                        .setMessage("Error creating check bundle")
-                        .addData("request", response.getCheckBundle())
-                        .addData("actor", self())
-                        .setThrowable(response.getCause().get())
-                        .log();
-                _pendingLookups.remove(response.getKey());
-            }
-        } else if (message instanceof CheckBundleActivator.CheckBundleRefreshComplete) {
-            final CheckBundleActivator.CheckBundleRefreshComplete update = (CheckBundleActivator.CheckBundleRefreshComplete) message;
-            _checkBundles.put(update.getCheckBundle().getCid(), update.getCheckBundle());
-        } else if (message instanceof BrokerRefresher.BrokerLookupComplete) {
-            handleBrokerLookupComplete((BrokerRefresher.BrokerLookupComplete) message);
-        } else if (message instanceof PostComplete) {
-            final PostComplete complete = (PostComplete) message;
-            processCompletedRequest(complete);
-            dispatchPending();
-        } else if (message instanceof PostFailure) {
-            final PostFailure failure = (PostFailure) message;
-            processFailedRequest(failure);
-            dispatchPending();
-        } else if (message instanceof WaitTimeExpired) {
-            LOGGER.debug()
-                    .setMessage("Received WaitTimeExpired message")
-                    .addContext("actor", self())
-                    .log();
-            _waiting = false;
-            dispatchPending();
-        } else {
-            unhandled(message);
-        }
+    public Receive createReceive() {
+        return receiveBuilder()
+                .match(EmitAggregation.class, aggregation -> {
+                    if (_selectedBrokerCid.isPresent()) {
+                        final Collection<AggregatedData> data = aggregation.getData();
+                        publish(data);
+                    } else {
+                        NO_BROKER_LOGGER.warn()
+                                .setMessage("Unable to push data to Circonus")
+                                .addData("reason", "desired broker not yet discovered")
+                                .addData("actor", self())
+                                .log();
+                    }
+                })
+                .match(CheckBundleLookupResponse.class, response -> {
+                    if (response.isSuccess()) {
+                        _bundleMap.put(response.getKey(), response.getCheckBundle().getCid());
+                        _checkBundles.put(response.getCheckBundle().getCid(), response.getCheckBundle());
+                        _checkBundleRefresher.tell(
+                                new CheckBundleActivator.NotifyCheckBundle(response.getCheckBundle()),
+                                self());
+                    } else {
+                        LOGGER.error()
+                                .setMessage("Error creating check bundle")
+                                .addData("request", response.getCheckBundle())
+                                .addData("actor", self())
+                                .setThrowable(response.getCause().get())
+                                .log();
+                        _pendingLookups.remove(response.getKey());
+                    }
+                })
+                .match(CheckBundleActivator.CheckBundleRefreshComplete.class, update -> {
+                    _checkBundles.put(update.getCheckBundle().getCid(), update.getCheckBundle());
+                })
+                .match(BrokerRefresher.BrokerLookupComplete.class, this::handleBrokerLookupComplete)
+                .match(PostComplete.class, complete -> {
+                    processCompletedRequest(complete);
+                    dispatchPending();
+                })
+                .match(PostFailure.class, failure -> {
+                    processFailedRequest(failure);
+                    dispatchPending();
+                })
+                .match(WaitTimeExpired.class, message -> {
+                    LOGGER.debug()
+                            .setMessage("Received WaitTimeExpired message")
+                            .addContext("actor", self())
+                            .log();
+                    _waiting = false;
+                    dispatchPending();
+                })
+                .build();
     }
 
     private void handleBrokerLookupComplete(final BrokerRefresher.BrokerLookupComplete message) {
@@ -603,15 +602,15 @@ public final class CirconusSinkActor extends UntypedAbstractActor {
      * Message class to wrap an errored HTTP request.
      */
     private static final class PostComplete {
-        private PostComplete(final WSResponse response) {
+        private PostComplete(final StandaloneWSResponse response) {
             _response = response;
         }
 
-        public WSResponse getResponse() {
+        public StandaloneWSResponse getResponse() {
             return _response;
         }
 
-        private final WSResponse _response;
+        private final StandaloneWSResponse _response;
     }
 
     private static final class WaitTimeExpired {}

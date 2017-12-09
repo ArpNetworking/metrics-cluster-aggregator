@@ -97,7 +97,7 @@ public class PeriodMetrics {
 
     private void dumpMetrics() {
         if (_latestPeriod != null) {
-            try (final Metrics metrics = _metricsFactory.create()) {
+            try (Metrics metrics = _metricsFactory.create()) {
                 long totalSamples = 0L;
                 metrics.incrementCounter("cluster/period/metrics_seen", _metricsLatestPeriod);
                 metrics.incrementCounter("cluster/period/statistics_seen", _statisticsLatestPeriod);

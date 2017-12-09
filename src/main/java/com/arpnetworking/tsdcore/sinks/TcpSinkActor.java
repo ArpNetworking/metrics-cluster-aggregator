@@ -15,9 +15,9 @@
  */
 package com.arpnetworking.tsdcore.sinks;
 
+import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
-import akka.actor.UntypedAbstractActor;
 import akka.io.Tcp;
 import akka.io.TcpExt;
 import akka.io.TcpMessage;
@@ -41,7 +41,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class TcpSinkActor extends UntypedAbstractActor {
+public class TcpSinkActor extends AbstractActor {
 
     /**
      * Factory method to create a Props.
@@ -109,70 +109,70 @@ public class TcpSinkActor extends UntypedAbstractActor {
         return toLogValue().toString();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public void onReceive(final Object message) throws Throwable {
-        if (message instanceof EmitAggregation) {
-            processEmitAggregation((EmitAggregation) message);
-        } else if (message instanceof Ack) {
-            _waitingForAck = false;
-            dispatchPending();
-        } else if (message instanceof Tcp.Connected) {
-            _client = sender();
-            _client.tell(TcpMessage.register(self(), true, true), self());
-            _connectionAttempt = 1;
-        } else if (message instanceof Tcp.CommandFailed) {
-            final Tcp.CommandFailed failed = (Tcp.CommandFailed) message;
-            if (failed.cmd() instanceof Tcp.Connect) {
-                LOGGER.warn()
-                        .setMessage("Failed to connect")
-                        .addData("serverAddress", _serverAddress)
-                        .addData("serverPort", _serverPort)
-                        .log();
-                final long backoffMillis = (((int) (Math.random()  //randomize
-                        * Math.pow(
+    public Receive createReceive() {
+        return receiveBuilder()
+                .match(EmitAggregation.class, this::processEmitAggregation)
+                .match(Ack.class, ack -> {
+                    _waitingForAck = false;
+                    dispatchPending();
+                })
+                .match(Tcp.Connected.class, connected -> {
+                    _client = sender();
+                    _client.tell(TcpMessage.register(self(), true, true), self());
+                    _connectionAttempt = 1;
+                })
+                .match(Tcp.CommandFailed.class, failed -> {
+                    if (failed.cmd() instanceof Tcp.Connect) {
+                        LOGGER.warn()
+                                .setMessage("Failed to connect")
+                                .addData("serverAddress", _serverAddress)
+                                .addData("serverPort", _serverPort)
+                                .log();
+                        final long backoffMillis = (((int) (Math.random()  //randomize
+                                * Math.pow(
                                 EXPONENTIAL_BACKOFF_MULTIPLIER,
                                 Math.min(_connectionAttempt, EXPONENTIAL_BACKOFF_MAX_EXPONENT)))) //1.3^x where x = min(attempt, 20)
-                        + 1) //make sure we don't wait 0
-                        * _exponentialBackoffBase.toMillis(); //the milliseconds base
-                _connectionAttempt++;
-                LOGGER.info()
-                        .setMessage("Waiting to reconnect")
-                        .addData("serverAddress", _serverAddress)
-                        .addData("serverPort", _serverPort)
-                        .addData("currentReconnectWait", backoffMillis)
-                        .log();
-                context().system().scheduler().scheduleOnce(
-                        FiniteDuration.apply(backoffMillis, TimeUnit.MILLISECONDS),
-                        self(),
-                        new Connect(),
-                        context().dispatcher(),
-                        self());
-            } else if (failed.cmd() instanceof Tcp.Write) {
-                final Tcp.Write write = (Tcp.Write) failed.cmd();
-                final Ack ack = (Ack) write.ack();
-                // Put the message back on the front of the queue and signal that we
-                // want to start writing again
-                _pendingRequests.offerFirst(ack._data);
+                                + 1) //make sure we don't wait 0
+                                * _exponentialBackoffBase.toMillis(); //the milliseconds base
+                        _connectionAttempt++;
+                        LOGGER.info()
+                                .setMessage("Waiting to reconnect")
+                                .addData("serverAddress", _serverAddress)
+                                .addData("serverPort", _serverPort)
+                                .addData("currentReconnectWait", backoffMillis)
+                                .log();
+                        context().system().scheduler().scheduleOnce(
+                                FiniteDuration.apply(backoffMillis, TimeUnit.MILLISECONDS),
+                                self(),
+                                new Connect(),
+                                context().dispatcher(),
+                                self());
+                    } else if (failed.cmd() instanceof Tcp.Write) {
+                        final Tcp.Write write = (Tcp.Write) failed.cmd();
+                        final Ack ack = (Ack) write.ack();
+                        // Put the message back on the front of the queue and signal that we
+                        // want to start writing again
+                        _pendingRequests.offerFirst(ack._data);
 
-                // Potential race where a new connection could be created
-                // before the error of a previous client was surfaced, so
-                // only call resumeWriting if we haven't swapped out a new client
-                if (sender().equals(_client)) {
-                    _client.tell(TcpMessage.resumeWriting(), self());
-                }
-            }
-        } else if (message instanceof Tcp.WritingResumed) {
-            _waitingForAck = false;
-            dispatchPending();
-        } else if (message instanceof Tcp.ConnectionClosed) {
-            _client = null;
-            connect();
-        } else if (message instanceof Connect) {
-            connect();
-        }
+                        // Potential race where a new connection could be created
+                        // before the error of a previous client was surfaced, so
+                        // only call resumeWriting if we haven't swapped out a new client
+                        if (sender().equals(_client)) {
+                            _client.tell(TcpMessage.resumeWriting(), self());
+                        }
+                    }
+                })
+                .match(Tcp.WritingResumed.class, message -> {
+                    _waitingForAck = false;
+                    dispatchPending();
+                })
+                .match(Tcp.ConnectionClosed.class, closed -> {
+                    _client = null;
+                    connect();
+                })
+                .match(Connect.class, connect -> connect())
+                .build();
     }
 
     /**

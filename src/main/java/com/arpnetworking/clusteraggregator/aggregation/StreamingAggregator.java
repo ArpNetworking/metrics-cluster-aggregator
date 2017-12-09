@@ -15,11 +15,11 @@
  */
 package com.arpnetworking.clusteraggregator.aggregation;
 
+import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.ReceiveTimeout;
 import akka.actor.Scheduler;
-import akka.actor.UntypedAbstractActor;
 import akka.cluster.sharding.ShardRegion;
 import com.arpnetworking.clusteraggregator.AggregatorLifecycle;
 import com.arpnetworking.clusteraggregator.models.CombinedMetricData;
@@ -57,7 +57,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class StreamingAggregator extends UntypedAbstractActor {
+public class StreamingAggregator extends AbstractActor {
 
     /**
      * Creates a <code>Props</code> for use in Akka.
@@ -114,83 +114,85 @@ public class StreamingAggregator extends UntypedAbstractActor {
     }
 
     @Override
-    public void onReceive(final Object message) throws Exception {
-        if (message instanceof Messages.StatisticSetRecord) {
-            LOGGER.debug()
-                    .setMessage("Processing a StatisticSetRecord")
-                    .addData("workItem", message)
-                    .addContext("actor", self())
-                    .log();
-            processAggregationMessage((Messages.StatisticSetRecord) message);
-        } else if (message instanceof BucketCheck) {
-            if (_initialized) {
-                while (_aggBuckets.size() > 0) {
-                    final StreamingAggregationBucket bucket = _aggBuckets.getFirst();
-                    if (bucket.getPeriodStart().plus(_period).plus(AGG_TIMEOUT).isBeforeNow()) {
-                        _aggBuckets.removeFirst();
+    public Receive createReceive() {
+        return receiveBuilder()
+                .match(Messages.StatisticSetRecord.class, record -> {
+                    LOGGER.debug()
+                            .setMessage("Processing a StatisticSetRecord")
+                            .addData("workItem", record)
+                            .addContext("actor", self())
+                            .log();
+                    processAggregationMessage(record);
+                })
+                .match(BucketCheck.class, message -> {
+                    if (_initialized) {
+                        while (_aggBuckets.size() > 0) {
+                            final StreamingAggregationBucket bucket = _aggBuckets.getFirst();
+                            if (bucket.getPeriodStart().plus(_period).plus(AGG_TIMEOUT).isBeforeNow()) {
+                                _aggBuckets.removeFirst();
 
-                        // Walk over every statistic in the bucket
-                        final Map<Statistic, CalculatedValue<?>> values = bucket.compute();
-                        final ImmutableList.Builder<AggregatedData> builder = ImmutableList.builder();
-                        for (final Map.Entry<Statistic, CalculatedValue<?>> entry : values.entrySet()) {
-                            _statistics.add(entry.getKey());
-                            final AggregatedData result = _resultBuilder
-                                    .setFQDSN(
-                                            new FQDSN.Builder()
-                                                    .setCluster(_cluster)
-                                                    .setMetric(_metric)
-                                                    .setService(_service)
-                                                    .setStatistic(entry.getKey())
-                                                    .build())
-                                    .setStart(bucket.getPeriodStart())
-                                    .setValue(entry.getValue().getValue())
-                                    .setSupportingData(entry.getValue().getData())
-                                    .setPopulationSize(0L)
-                                    .setIsSpecified(bucket.isSpecified(entry.getKey()))
-                                    .build();
-                            LOGGER.debug()
-                                    .setMessage("Computed result")
-                                    .addData("result", result)
-                                    .addContext("actor", self())
-                                    .log();
-                            builder.add(result);
+                                // Walk over every statistic in the bucket
+                                final Map<Statistic, CalculatedValue<?>> values = bucket.compute();
+                                final ImmutableList.Builder<AggregatedData> builder = ImmutableList.builder();
+                                for (final Map.Entry<Statistic, CalculatedValue<?>> entry : values.entrySet()) {
+                                    _statistics.add(entry.getKey());
+                                    final AggregatedData result = _resultBuilder
+                                            .setFQDSN(
+                                                    new FQDSN.Builder()
+                                                            .setCluster(_cluster)
+                                                            .setMetric(_metric)
+                                                            .setService(_service)
+                                                            .setStatistic(entry.getKey())
+                                                            .build())
+                                            .setStart(bucket.getPeriodStart())
+                                            .setValue(entry.getValue().getValue())
+                                            .setSupportingData(entry.getValue().getData())
+                                            .setPopulationSize(0L)
+                                            .setIsSpecified(bucket.isSpecified(entry.getKey()))
+                                            .build();
+                                    LOGGER.debug()
+                                            .setMessage("Computed result")
+                                            .addData("result", result)
+                                            .addContext("actor", self())
+                                            .log();
+                                    builder.add(result);
 
-                            _periodicStatistics.tell(result, getSelf());
+                                    _periodicStatistics.tell(result, getSelf());
+                                }
+                                final PeriodicData periodicData = new PeriodicData.Builder()
+                                        .setData(builder.build())
+                                        .setDimensions(ImmutableMap.of("host", createHost()))
+                                        .setConditions(ImmutableList.of())
+                                        .setPeriod(_period)
+                                        .setStart(bucket.getPeriodStart())
+                                        .build();
+                                _emitter.tell(periodicData, getSelf());
+                            } else {
+                                //Walk of the list is complete
+                                break;
+                            }
                         }
-                        final PeriodicData periodicData = new PeriodicData.Builder()
-                                .setData(builder.build())
-                                .setDimensions(ImmutableMap.of("host", createHost()))
-                                .setConditions(ImmutableList.of())
-                                .setPeriod(_period)
-                                .setStart(bucket.getPeriodStart())
-                                .build();
-                        _emitter.tell(periodicData, getSelf());
-                    } else {
-                        //Walk of the list is complete
-                        break;
                     }
-                }
-            }
-        } else if (message instanceof UpdateBookkeeper) {
-            if (_resultBuilder != null) {
-                for (final Statistic statistic : _statistics) {
-                    _resultBuilder.setFQDSN(new FQDSN.Builder()
+                })
+                .match(UpdateBookkeeper.class, message -> {
+                    if (_resultBuilder != null) {
+                        for (final Statistic statistic : _statistics) {
+                            _resultBuilder.setFQDSN(new FQDSN.Builder()
                                     .setCluster(_cluster)
                                     .setMetric(_metric)
                                     .setService(_service)
                                     .setStatistic(statistic)
                                     .build());
-                    _lifecycleTracker.tell(new AggregatorLifecycle.NotifyAggregatorStarted(_resultBuilder.build()), getSelf());
-                }
-                _statistics.clear();
-            }
-        } else if (message instanceof ShutdownAggregator) {
-            context().stop(self());
-        } else if (message.equals(ReceiveTimeout.getInstance())) {
-            getContext().parent().tell(new ShardRegion.Passivate(new ShutdownAggregator()), getSelf());
-        } else {
-            unhandled(message);
-        }
+                            _lifecycleTracker.tell(new AggregatorLifecycle.NotifyAggregatorStarted(_resultBuilder.build()), getSelf());
+                        }
+                        _statistics.clear();
+                    }
+                })
+                .match(ShutdownAggregator.class, message -> context().stop(self()))
+                .match(ReceiveTimeout.class, message -> {
+                    getContext().parent().tell(new ShardRegion.Passivate(new ShutdownAggregator()), getSelf());
+                })
+                .build();
     }
 
     @Override

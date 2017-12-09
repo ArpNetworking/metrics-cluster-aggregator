@@ -29,5 +29,5 @@ public interface PartitionSetFactory {
      * @param maxPartitions the maximum number of partitions in the partition set
      * @return a new {@link PartitionSet}
      */
-    PartitionSet create(final String namespace, final int maxEntriesPerPartition, final int maxPartitions);
+    PartitionSet create(String namespace, int maxEntriesPerPartition, int maxPartitions);
 }

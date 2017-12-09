@@ -15,10 +15,10 @@
  */
 package com.arpnetworking.clusteraggregator.configuration;
 
+import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.Terminated;
-import akka.actor.UntypedAbstractActor;
 import akka.testkit.CallingThreadDispatcher;
 import akka.testkit.TestActorRef;
 import akka.testkit.TestProbe;
@@ -49,7 +49,7 @@ public class ConfigurableActorProxyTest extends BaseActorTest {
 
     @Test
     public void propsCreation() {
-        final Props props = ConfigurableActorProxy.props((t) -> null);
+        final Props props = ConfigurableActorProxy.props(t -> null);
         Assert.assertNotNull(props);
     }
 
@@ -108,9 +108,12 @@ public class ConfigurableActorProxyTest extends BaseActorTest {
     @Mock
     private ConfiguredLaunchableFactory<Props, Object> _factoryMock;
 
-    private static class NullActor extends UntypedAbstractActor {
+    private static class NullActor extends AbstractActor {
         @Override
-        public void onReceive(final Object message) throws Exception {
+        public Receive createReceive() {
+            return receiveBuilder()
+                    .matchAny(message -> { })
+                    .build();
         }
     }
 }

@@ -16,11 +16,11 @@
 
 package com.arpnetworking.clusteraggregator.configuration;
 
+import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.PoisonPill;
 import akka.actor.Props;
 import akka.actor.Terminated;
-import akka.actor.UntypedAbstractActor;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.utility.ConfiguredLaunchableFactory;
@@ -39,7 +39,7 @@ import java.util.Optional;
  * @param <T> The type of configuration
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class ConfigurableActorProxy<T> extends UntypedAbstractActor {
+public class ConfigurableActorProxy<T> extends AbstractActor {
     /**
      * Creates a {@link Props}.
      *
@@ -61,33 +61,35 @@ public class ConfigurableActorProxy<T> extends UntypedAbstractActor {
     }
 
     @Override
-    public void onReceive(final Object message) throws Exception {
-        if (message instanceof ApplyConfiguration) {
-            @SuppressWarnings("unchecked")
-            final ApplyConfiguration<T> applyConfiguration = (ApplyConfiguration<T>) message;
-            applyConfiguration(applyConfiguration);
-        } else if (message instanceof SwapActor) {
-            swapActor();
-        } else if (message instanceof Terminated) {
-            actorTerminated((Terminated) message);
-        } else if (message instanceof SubscribeToNotifications) {
-            _observers.add(sender());
-        } else {
-            if (_state.equals(Service.State.RUNNING)) {
-                _currentChild.get().forward(message, context());
-            } else {
-                if (_messageBuffer.size() >= MAX_BUFFERED_MESSAGES) {
-                    final BufferedMessage dropped = _messageBuffer.remove();
-                    LOGGER.error()
-                            .setMessage("Message buffer full, dropping oldest message")
-                            .addData("dropped", dropped.getMessage())
-                            .addContext("actor", self())
-                            .log();
-                }
-                // TODO(barp): record the buffer size as a metric [MAI-472]
-                _messageBuffer.add(new BufferedMessage(sender(), message));
-            }
-        }
+    public Receive createReceive() {
+        return receiveBuilder()
+                .matchUnchecked(ApplyConfiguration.class, (ApplyConfiguration<T> applyConfiguration) -> {
+                    applyConfiguration(applyConfiguration);
+                })
+                .match(SwapActor.class, message -> {
+                    swapActor();
+                })
+                .match(Terminated.class, this::actorTerminated)
+                .match(SubscribeToNotifications.class, subscribe -> {
+                    _observers.add(sender());
+                })
+                .matchAny(message -> {
+                    if (_state.equals(Service.State.RUNNING)) {
+                        _currentChild.get().forward(message, context());
+                    } else {
+                        if (_messageBuffer.size() >= MAX_BUFFERED_MESSAGES) {
+                            final BufferedMessage dropped = _messageBuffer.remove();
+                            LOGGER.error()
+                                    .setMessage("Message buffer full, dropping oldest message")
+                                    .addData("dropped", dropped.getMessage())
+                                    .addContext("actor", self())
+                                    .log();
+                        }
+                        // TODO(barp): record the buffer size as a metric [MAI-472]
+                        _messageBuffer.add(new BufferedMessage(sender(), message));
+                    }
+                })
+                .build();
     }
 
     private void actorTerminated(final Terminated message) {
