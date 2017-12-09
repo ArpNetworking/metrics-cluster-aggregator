@@ -15,9 +15,9 @@
  */
 package com.arpnetworking.tsdcore.sinks.circonus;
 
+import akka.actor.AbstractActor;
 import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.pattern.Patterns;
+import akka.pattern.PatternsCS;
 import com.arpnetworking.akka.UniformRandomTimeScheduler;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
@@ -26,7 +26,6 @@ import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.arpnetworking.tsdcore.statistics.StatisticFactory;
 import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
-import play.libs.F;
 import scala.concurrent.ExecutionContextExecutor;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -34,6 +33,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -43,9 +44,9 @@ import java.util.concurrent.TimeUnit;
  * Circonus API to continually lookup the check bundle and set any metrics to
  * the active state.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class CheckBundleActivator extends UntypedActor {
+public class CheckBundleActivator extends AbstractActor {
     /**
      * Creates a {@link Props} in a type safe way.
      *
@@ -76,54 +77,44 @@ public class CheckBundleActivator extends UntypedActor {
 
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void postStop() throws Exception {
         super.postStop();
         _refresher.stop();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public void onReceive(final Object message) throws Exception {
-        if (message instanceof NotifyCheckBundle) {
-            final NotifyCheckBundle notification = (NotifyCheckBundle) message;
-            _checkBundleCids.add(notification.getCheckBundle().getCid());
-        } else if (message instanceof RefreshBundles) {
-            startCheckBundleRefresh();
-        } else if (message instanceof CheckBundleRefreshComplete) {
-            final CheckBundleRefreshComplete bundle = (CheckBundleRefreshComplete) message;
-            LOGGER.debug()
-                    .setMessage("Check bundle updated")
-                    .addData("cid", bundle.getCheckBundle().getCid())
-                    .addData("bundle", bundle.getCheckBundle())
-                    .addContext("actor", self())
-                    .log();
-            context().parent().tell(message, self());
-            refreshNextBundle();
-        } else if (message instanceof CheckBundleRefreshFailure) {
-            final CheckBundleRefreshFailure failure = (CheckBundleRefreshFailure) message;
-            LOGGER.error()
-                    .setMessage("Failed to update check bundle")
-                    .setThrowable(failure.getCause())
-                    .addContext("actor", self())
-                    .log();
-            refreshNextBundle();
-        } else if (message instanceof CheckBundleDisabled) {
-            final CheckBundleDisabled disabled = (CheckBundleDisabled) message;
-            LOGGER.debug()
-                    .setMessage("Found disabled check bundle. Removing from the update list")
-                    .addData("cid", disabled.getCid())
-                    .addContext("actor", self())
-                    .log();
-            _checkBundleCids.remove(disabled.getCid());
-        } else {
-            unhandled(message);
-        }
+    public Receive createReceive() {
+        return receiveBuilder()
+                .match(NotifyCheckBundle.class, notification -> _checkBundleCids.add(notification.getCheckBundle().getCid()))
+                .match(RefreshBundles.class, message -> startCheckBundleRefresh())
+                .match(CheckBundleRefreshComplete.class, bundle -> {
+                    LOGGER.debug()
+                            .setMessage("Check bundle updated")
+                            .addData("cid", bundle.getCheckBundle().getCid())
+                            .addData("bundle", bundle.getCheckBundle())
+                            .addContext("actor", self())
+                            .log();
+                    context().parent().tell(bundle, self());
+                    refreshNextBundle();
+                })
+                .match(CheckBundleRefreshFailure.class, failure -> {
+                    LOGGER.error()
+                            .setMessage("Failed to update check bundle")
+                            .setThrowable(failure.getCause())
+                            .addContext("actor", self())
+                            .log();
+                    refreshNextBundle();
+                })
+                .match(CheckBundleDisabled.class, disabled -> {
+                    LOGGER.debug()
+                            .setMessage("Found disabled check bundle. Removing from the update list")
+                            .addData("cid", disabled.getCid())
+                            .addContext("actor", self())
+                            .log();
+                    _checkBundleCids.remove(disabled.getCid());
+                })
+                .build();
     }
 
     private void startCheckBundleRefresh() {
@@ -148,8 +139,8 @@ public class CheckBundleActivator extends UntypedActor {
     }
 
     private void refreshCheckBundle(final String cid) {
-        final F.Promise<Object> requestPromise = _client.getCheckBundle(cid)
-                .flatMap(
+        final CompletionStage<Object> requestPromise = _client.getCheckBundle(cid)
+                .thenCompose(
                         response -> {
                             final List<Map<String, String>> metrics = response.getMetrics();
                             boolean needsUpdate = false;
@@ -165,16 +156,15 @@ public class CheckBundleActivator extends UntypedActor {
                                 }
                             }
                             if ("disabled".equals(response.getStatus())) {
-                                return F.Promise.<Object>pure(new CheckBundleDisabled(cid));
+                                return CompletableFuture.completedFuture(new CheckBundleDisabled(cid));
                             } else if (needsUpdate) {
-                                return _client.updateCheckBundle(response).map(CheckBundleRefreshComplete::new, _dispatcher);
+                                return _client.updateCheckBundle(response).thenApply(CheckBundleRefreshComplete::new);
                             } else {
-                                return F.Promise.<Object>pure(new CheckBundleRefreshComplete(response));
+                                return CompletableFuture.completedFuture(new CheckBundleRefreshComplete(response));
                             }
-                        },
-                        _dispatcher)
-                .recover(CheckBundleRefreshFailure::new);
-        Patterns.pipe(requestPromise.wrapped(), _dispatcher).to(self());
+                        })
+                .exceptionally(CheckBundleRefreshFailure::new);
+        PatternsCS.pipe(requestPromise, _dispatcher).to(self());
     }
 
     private final CirconusClient _client;

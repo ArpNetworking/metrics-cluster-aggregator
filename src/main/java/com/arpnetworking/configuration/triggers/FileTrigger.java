@@ -21,7 +21,6 @@ import com.arpnetworking.logback.annotations.LogValue;
 import com.arpnetworking.steno.LogValueMapFactory;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
-import com.google.common.base.Throwables;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import net.sf.oval.constraint.NotNull;
 
@@ -41,9 +40,6 @@ import java.util.Arrays;
  */
 public final class FileTrigger implements Trigger {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean evaluateAndReset() {
         final boolean exists = _file.exists();
@@ -97,9 +93,6 @@ public final class FileTrigger implements Trigger {
                 .build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return toLogValue().toString();
@@ -107,7 +100,7 @@ public final class FileTrigger implements Trigger {
 
     @SuppressFBWarnings("PZLA_PREFER_ZERO_LENGTH_ARRAYS")
     private byte[] createHash(final File file) {
-        try (final FileInputStream inputStream = new FileInputStream(file)) {
+        try (FileInputStream inputStream = new FileInputStream(file)) {
             final byte[] bytesBuffer = new byte[1024];
             int bytesRead = -1;
             _md5.reset();
@@ -134,7 +127,7 @@ public final class FileTrigger implements Trigger {
         try {
             _md5 = MessageDigest.getInstance("MD5");
         } catch (final NoSuchAlgorithmException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

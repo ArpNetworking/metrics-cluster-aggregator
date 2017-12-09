@@ -58,8 +58,8 @@ public interface DynamicConfigurationFactory {
      * @return New instance of <code>DynamicConfiguration</code>.
      */
     DynamicConfiguration create(
-            final DynamicConfiguration.Builder builder,
-            final Collection<Key> keys);
+            DynamicConfiguration.Builder builder,
+            Collection<Key> keys);
 
     /**
      * Update a <code>DynamicConfiguration$Builder</code> with the specified keys using
@@ -69,8 +69,8 @@ public interface DynamicConfigurationFactory {
      * @param keys The <code>Collection</code> of <code>Key</code> instances.
      */
     void update(
-            final DynamicConfiguration.Builder builder,
-            final Collection<Key> keys);
+            DynamicConfiguration.Builder builder,
+            Collection<Key> keys);
 
     /**
      * Key descriptor.
@@ -118,9 +118,6 @@ public interface DynamicConfigurationFactory {
             return _parts;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public boolean equals(final Object other) {
             if (this == other) {
@@ -133,17 +130,11 @@ public interface DynamicConfigurationFactory {
             return this.getParts().equals(otherKey.getParts());
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public int hashCode() {
             return Objects.hashCode(getParts());
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(Key.class)

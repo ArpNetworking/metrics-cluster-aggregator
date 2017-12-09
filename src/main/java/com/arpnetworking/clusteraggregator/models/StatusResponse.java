@@ -44,7 +44,7 @@ import java.util.Optional;
 /**
  * Response model for the status http endpoint.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public final class StatusResponse {
     public String getClusterLeader() {
@@ -291,9 +291,6 @@ public final class StatusResponse {
     }
 
     private static final class MemberSerializer extends JsonSerializer<Member> {
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public void serialize(
                 final Member value,

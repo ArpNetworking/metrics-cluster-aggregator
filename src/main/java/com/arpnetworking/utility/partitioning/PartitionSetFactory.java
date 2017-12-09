@@ -18,7 +18,7 @@ package com.arpnetworking.utility.partitioning;
 /**
  * Factory for creating partition sets.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public interface PartitionSetFactory {
     /**
@@ -29,5 +29,5 @@ public interface PartitionSetFactory {
      * @param maxPartitions the maximum number of partitions in the partition set
      * @return a new {@link PartitionSet}
      */
-    PartitionSet create(final String namespace, final int maxEntriesPerPartition, final int maxPartitions);
+    PartitionSet create(String namespace, int maxEntriesPerPartition, int maxPartitions);
 }

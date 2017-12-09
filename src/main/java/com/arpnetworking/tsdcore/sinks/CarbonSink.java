@@ -15,38 +15,27 @@
  */
 package com.arpnetworking.tsdcore.sinks;
 
+import akka.util.ByteString;
+import akka.util.ByteStringBuilder;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.PeriodicData;
-import org.vertx.java.core.buffer.Buffer;
-import org.vertx.java.core.net.NetSocket;
+import com.google.common.base.Charsets;
 
 /**
  * Publisher to send data to a Carbon server.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class CarbonSink extends VertxSink {
+public class CarbonSink extends TcpSink {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void onConnect(final NetSocket socket) {
-        // Nothing to be done.
-    }
 
     @Override
-    public void recordAggregateData(final PeriodicData periodicData) {
-        LOGGER.debug()
-                .setMessage("Writing aggregated data")
-                .addData("sink", getName())
-                .addData("dataSize", periodicData.getData().size())
-                .addData("conditionsSize", periodicData.getConditions().size())
-                .log();
+    protected ByteString serializeData(final PeriodicData periodicData) {
+        final ByteStringBuilder builder = ByteString.createBuilder();
         for (final AggregatedData datum : periodicData.getData()) {
-            final Buffer buffer = new Buffer(
+            builder.putBytes(
                     String.format(
                             "%s.%s.%s.%s.%s.%s %f %d%n",
                             datum.getFQDSN().getCluster(),
@@ -56,9 +45,10 @@ public class CarbonSink extends VertxSink {
                             periodicData.getPeriod().toString(),
                             datum.getFQDSN().getStatistic().getName(),
                             datum.getValue().getValue(),
-                            periodicData.getStart().toInstant().getMillis() / 1000));
-            enqueueData(buffer);
+                            periodicData.getStart().toInstant().getMillis() / 1000)
+                    .getBytes(Charsets.UTF_8));
         }
+        return builder.result();
     }
 
     /* package private */ CarbonSink(final Builder builder) {
@@ -72,7 +62,7 @@ public class CarbonSink extends VertxSink {
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
-    public static final class Builder extends VertxSink.Builder<Builder, CarbonSink> {
+    public static final class Builder extends TcpSink.Builder<Builder, CarbonSink> {
 
         /**
          * Public constructor.
@@ -82,9 +72,6 @@ public class CarbonSink extends VertxSink {
             setServerPort(2003);
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         protected Builder self() {
             return this;

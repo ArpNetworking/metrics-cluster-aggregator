@@ -36,7 +36,7 @@ import javax.persistence.Version;
 /**
  * Model that holds the count of entries in a partition.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 // CHECKSTYLE.OFF: MemberNameCheck
 @Entity

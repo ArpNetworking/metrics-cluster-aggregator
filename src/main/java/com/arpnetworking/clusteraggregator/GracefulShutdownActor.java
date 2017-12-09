@@ -15,10 +15,10 @@
  */
 package com.arpnetworking.clusteraggregator;
 
+import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Terminated;
-import akka.actor.UntypedActor;
 import akka.cluster.Cluster;
 import akka.cluster.sharding.ShardRegion;
 import com.arpnetworking.steno.Logger;
@@ -29,9 +29,9 @@ import com.google.inject.name.Named;
 /**
  * Shuts down the Akka cluster gracefully.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class GracefulShutdownActor extends UntypedActor {
+public class GracefulShutdownActor extends AbstractActor {
     /**
      * Public constructor.
      *
@@ -44,22 +44,22 @@ public class GracefulShutdownActor extends UntypedActor {
         _system = context().system();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public void onReceive(final Object message) throws Exception {
-        if (message instanceof Shutdown) {
-            LOGGER.info()
-                    .setMessage("Initiating graceful shutdown")
-                    .addData("actor", self())
-                    .log();
-            context().watch(_shardRegion);
-            _shardRegion.tell(ShardRegion.gracefulShutdownInstance(), self());
-        } else if (message instanceof Terminated) {
-            _cluster.registerOnMemberRemoved(_system::terminate);
-            _cluster.leave(_cluster.selfAddress());
-        }
+    public Receive createReceive() {
+        return receiveBuilder()
+                .match(Shutdown.class, message -> {
+                    LOGGER.info()
+                            .setMessage("Initiating graceful shutdown")
+                            .addData("actor", self())
+                            .log();
+                    context().watch(_shardRegion);
+                    _shardRegion.tell(ShardRegion.gracefulShutdownInstance(), self());
+                })
+                .match(Terminated.class, terminated -> {
+                    _cluster.registerOnMemberRemoved(_system::terminate);
+                    _cluster.leave(_cluster.selfAddress());
+                })
+                .build();
     }
 
     private ActorRef _shardRegion;

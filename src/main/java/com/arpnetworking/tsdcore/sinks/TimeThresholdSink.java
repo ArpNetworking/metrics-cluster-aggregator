@@ -34,14 +34,11 @@ import java.util.function.Consumer;
 /**
  * A sink to filter old data.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
 public final class TimeThresholdSink extends BaseSink {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void recordAggregateData(final PeriodicData periodicData) {
         LOGGER.debug()
@@ -67,9 +64,6 @@ public final class TimeThresholdSink extends BaseSink {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void close() {
         _sink.close();
@@ -157,7 +151,7 @@ public final class TimeThresholdSink extends BaseSink {
     /**
      * Base <code>Builder</code> implementation.
      *
-     * @author Brandon Arp (brandonarp at gmail dot com)
+     * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
      */
     public static final class Builder extends BaseSink.Builder<Builder, TimeThresholdSink> {
         /**
@@ -212,9 +206,6 @@ public final class TimeThresholdSink extends BaseSink {
             return self();
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         protected Builder self() {
             return this;

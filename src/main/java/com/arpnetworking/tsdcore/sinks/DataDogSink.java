@@ -27,11 +27,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
-import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.Request;
-import com.ning.http.client.RequestBuilder;
 import net.sf.oval.constraint.NotEmpty;
 import net.sf.oval.constraint.NotNull;
+import org.asynchttpclient.AsyncHttpClient;
+import org.asynchttpclient.Request;
+import org.asynchttpclient.RequestBuilder;
 import org.joda.time.format.ISOPeriodFormat;
 
 import java.util.Arrays;
@@ -63,9 +63,6 @@ public final class DataDogSink extends HttpPostSink {
                 .build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected Collection<byte[]> serialize(final PeriodicData periodicData) {
         final String period = periodicData.getPeriod().toString(ISOPeriodFormat.standard());
@@ -114,9 +111,6 @@ public final class DataDogSink extends HttpPostSink {
         return tags;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected Request createRequest(final AsyncHttpClient client, final byte[] serializedData) {
         return new RequestBuilder()
@@ -199,9 +193,6 @@ public final class DataDogSink extends HttpPostSink {
             return self();
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         protected Builder self() {
             return this;

@@ -80,9 +80,6 @@ public final class PeriodicData {
         return Optional.ofNullable(_conditionsByFqdsn.get().get(fqdsn));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean equals(final Object object) {
         if (this == object) {
@@ -101,9 +98,6 @@ public final class PeriodicData {
                 && Objects.equal(_start, other._start);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int hashCode() {
         return Objects.hashCode(
@@ -114,9 +108,6 @@ public final class PeriodicData {
                 _start);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)

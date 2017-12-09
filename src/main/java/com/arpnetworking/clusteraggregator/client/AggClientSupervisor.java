@@ -16,11 +16,11 @@
 
 package com.arpnetworking.clusteraggregator.client;
 
+import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.AllForOneStrategy;
 import akka.actor.SupervisorStrategy;
 import akka.actor.Terminated;
-import akka.actor.UntypedActor;
 import akka.io.Tcp;
 import akka.io.TcpMessage;
 import com.arpnetworking.clusteraggregator.configuration.ClusterAggregatorConfiguration;
@@ -42,9 +42,9 @@ import java.util.concurrent.TimeUnit;
 /**
  * Supervises the connection's actors.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class AggClientSupervisor extends UntypedActor {
+public class AggClientSupervisor extends AbstractActor {
     /**
      * Public constructor.
      *
@@ -63,35 +63,31 @@ public class AggClientSupervisor extends UntypedActor {
         _maxConnectionTimeout = configuration.getMaxConnectionTimeout();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public void onReceive(final Object message) throws Exception {
-        if (message instanceof AggregatedData || message instanceof PeriodicData) {
-            // Route the host data to the emitter
-            _emitter.forward(message, context());
-        } else if (message instanceof Messages.StatisticSetRecord) {
-            // Route the message to the sharding region
-            _shardRegion.forward(message, context());
-        } else if (message instanceof Tcp.Connected) {
-            final Tcp.Connected conn = (Tcp.Connected) message;
-            final ActorRef connection = getSender();
+    public Receive createReceive() {
+        return receiveBuilder()
+                // Route the host data to the emitter
+                .match(AggregatedData.class, message -> _emitter.forward(message, context()))
+                .match(PeriodicData.class, message -> _emitter.forward(message, context()))
+                // Route the message to the sharding region
+                .match(Messages.StatisticSetRecord.class, message -> _shardRegion.forward(message, context()))
+                .match(Tcp.Connected.class, connected -> {
+                    final ActorRef connection = getSender();
 
-            final ActorRef handler = getContext().actorOf(
-                    AggClientConnection.props(connection, conn.remoteAddress(), getRandomConnectionTime()),
-                    "dataHandler");
-            connection.tell(TcpMessage.register(handler, true, true), getSelf());
-            getContext().watch(handler);
-        } else if (message instanceof Terminated) {
-            LOGGER.debug()
-                    .setMessage("Handler shutdown., shutting down supervisor")
-                    .addContext("actor", self())
-                    .log();
-            getContext().stop(getSelf());
-        } else {
-            unhandled(message);
-        }
+                    final ActorRef handler = getContext().actorOf(
+                            AggClientConnection.props(connection, connected.remoteAddress(), getRandomConnectionTime()),
+                            "dataHandler");
+                    connection.tell(TcpMessage.register(handler, true, true), getSelf());
+                    getContext().watch(handler);
+                })
+                .match(Terminated.class, message -> {
+                    LOGGER.debug()
+                            .setMessage("Handler shutdown., shutting down supervisor")
+                            .addContext("actor", self())
+                            .log();
+                    getContext().stop(getSelf());
+                })
+                .build();
     }
 
     private FiniteDuration getRandomConnectionTime() {
@@ -101,9 +97,6 @@ public class AggClientSupervisor extends UntypedActor {
         return FiniteDuration.apply(randomMillis, TimeUnit.MILLISECONDS);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public SupervisorStrategy supervisorStrategy() {
         // The important part of AllForOneStrategy is the decider lambda.  The number of retries and the timeframe

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM openjdk:8u111-jre-alpine
+FROM openjdk:8u131-jre-alpine
 
 MAINTAINER arpnetworking
 
@@ -24,7 +24,7 @@ WORKDIR /opt/cluster-aggregator
 ENV JVM_XMS="64m"
 ENV JVM_XMX="1024m"
 ENV LOGBACK_CONFIG="-Dlogback.configurationFile=/opt/cluster-aggregator/config/logback.xml"
-ENV APP_PARAMS="/opt/cluster-aggregator/config/config.hocon"
+ENV APP_PARAMS="/opt/cluster-aggregator/config/config.conf"
 ENV ADDITIONAL_APP_PARAMS=""
 ENV ADDITIONAL_JAVA_OPTS=""
 
@@ -41,7 +41,7 @@ ADD lib /opt/cluster-aggregator/lib/
 # Entry point
 CMD JAVA_OPTS="${LOGBACK_CONFIG} \
     -XX:+HeapDumpOnOutOfMemoryError \
-    -XX:HeapDumpPath=/opt/mad/logs/cluster-aggregator.oom.hprof \
+    -XX:HeapDumpPath=/opt/cluster-aggregator/logs/cluster-aggregator.oom.hprof \
     -XX:+PrintGCDetails \
     -XX:+PrintGCDateStamps \
     -Xloggc:logs/cluster-aggregator.gc.log \

@@ -16,11 +16,11 @@
 
 package com.arpnetworking.clusteraggregator;
 
+import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.Cancellable;
 import akka.actor.Props;
 import akka.actor.Scheduler;
-import akka.actor.UntypedActor;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import com.arpnetworking.clusteraggregator.models.ShardAllocation;
@@ -31,7 +31,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import scala.compat.java8.JFunction;
+import scala.compat.java8.OptionConverters;
 import scala.concurrent.duration.Duration;
 
 import java.io.Serializable;
@@ -48,9 +48,9 @@ import javax.annotation.Nullable;
 /**
  * Caches the cluster state.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class ClusterStatusCache extends UntypedActor {
+public class ClusterStatusCache extends AbstractActor {
 
     /**
      * Creates a {@link akka.actor.Props} for use in Akka.
@@ -74,9 +74,6 @@ public class ClusterStatusCache extends UntypedActor {
         _metricsFactory = metricsFactory;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void preStart() {
         final Scheduler scheduler = getContext()
@@ -91,9 +88,6 @@ public class ClusterStatusCache extends UntypedActor {
                 getSelf());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void postStop() throws Exception {
         if (_pollTimer != null) {
@@ -101,42 +95,32 @@ public class ClusterStatusCache extends UntypedActor {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public void onReceive(final Object message) throws Exception {
-        if (!getSender().equals(getSelf())) {
-            // Public messages
-            if (message instanceof ClusterEvent.CurrentClusterState) {
-                final ClusterEvent.CurrentClusterState clusterState = (ClusterEvent.CurrentClusterState) message;
-                _clusterState = Optional.of(clusterState);
-
-                try (final Metrics metrics = _metricsFactory.create()) {
-                    metrics.setGauge("akka/members_count", clusterState.members().size());
-                    if (_cluster.selfAddress().equals(clusterState.getLeader())) {
-                        metrics.setGauge("akka/is_leader", 1);
-                    } else {
-                        metrics.setGauge("akka/is_leader", 0);
+    public Receive createReceive() {
+        return receiveBuilder()
+                .match(ClusterEvent.CurrentClusterState.class, clusterState -> {
+                    _clusterState = Optional.of(clusterState);
+                    try (Metrics metrics = _metricsFactory.create()) {
+                        metrics.setGauge("akka/members_count", clusterState.members().size());
+                        if (_cluster.selfAddress().equals(clusterState.getLeader())) {
+                            metrics.setGauge("akka/is_leader", 1);
+                        } else {
+                            metrics.setGauge("akka/is_leader", 0);
+                        }
                     }
-                }
-            } else if (message instanceof GetRequest) {
-                sendResponse(getSender());
-            } else if (message instanceof ParallelLeastShardAllocationStrategy.RebalanceNotification) {
-                final ParallelLeastShardAllocationStrategy.RebalanceNotification rebalanceNotification =
-                        (ParallelLeastShardAllocationStrategy.RebalanceNotification) message;
-                _rebalanceState = Optional.of(rebalanceNotification);
-            } else {
-                unhandled(message);
-            }
-        } else {
-            // Private messages
-            if (message.equals(POLL)) {
-                _cluster.sendCurrentClusterState(getSelf());
-            } else {
-                unhandled(message);
-            }
-        }
+                })
+                .match(GetRequest.class, message -> sendResponse(getSender()))
+                .match(ParallelLeastShardAllocationStrategy.RebalanceNotification.class, rebalanceNotification -> {
+                    _rebalanceState = Optional.of(rebalanceNotification);
+                })
+                .matchEquals(POLL, message -> {
+                    if (self().equals(sender())) {
+                        _cluster.sendCurrentClusterState(getSelf());
+                    } else {
+                        unhandled(message);
+                    }
+                })
+                .build();
     }
 
     private void sendResponse(final ActorRef sender) {
@@ -147,10 +131,12 @@ public class ClusterStatusCache extends UntypedActor {
     }
 
     private static String hostFromActorRef(final ActorRef shardRegion) {
-        return shardRegion.path()
-                .address()
-                .host()
-                .getOrElse(JFunction.func(() -> "localhost"));
+
+        return OptionConverters.toJava(
+                shardRegion.path()
+                        .address()
+                        .host())
+                .orElse("localhost");
     }
 
     private final Cluster _cluster;

@@ -15,28 +15,28 @@
  */
 package com.arpnetworking.clusteraggregator.aggregation;
 
+import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActor;
 import akka.cluster.sharding.ShardRegion;
 import com.arpnetworking.metrics.aggregation.protocol.Messages;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import scala.Option;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.io.Serializable;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
  * Actual actor responsible for aggregating.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class AggregationRouter extends UntypedActor {
+public class AggregationRouter extends AbstractActor {
 
     /**
      * Creates a <code>Props</code> for use in Akka.
@@ -74,26 +74,25 @@ public class AggregationRouter extends UntypedActor {
         context().setReceiveTimeout(FiniteDuration.apply(30, TimeUnit.MINUTES));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public void onReceive(final Object message) throws Exception {
-        if (message instanceof Messages.StatisticSetRecord) {
-            _streamingChild.forward(message, context());
-        } else if (message instanceof ShutdownAggregator) {
-            // TODO(barp): review the implications of shutting down (do the children process all of the messages properly?) [AINT-?]
-            _streamingChild.forward(message, context());
-            context().stop(self());
-        } else if (message.equals(ReceiveTimeout.getInstance())) {
-            getContext().parent().tell(new ShardRegion.Passivate(new ShutdownAggregator()), getSelf());
-        } else {
-            unhandled(message);
-        }
+    public Receive createReceive() {
+        return receiveBuilder()
+                .match(Messages.StatisticSetRecord.class, message -> {
+                    _streamingChild.forward(message, context());
+                })
+                .match(ShutdownAggregator.class, message -> {
+                    // TODO(barp): review the implications of shutting down (do the children process all of the messages properly?) [AINT-?]
+                    _streamingChild.forward(message, context());
+                    context().stop(self());
+                })
+                .match(ReceiveTimeout.class, message -> {
+                    getContext().parent().tell(new ShardRegion.Passivate(new ShutdownAggregator()), getSelf());
+                })
+                .build();
     }
 
     @Override
-    public void preRestart(final Throwable reason, final Option<Object> message) throws Exception {
+    public void preRestart(final Throwable reason, final Optional<Object> message) throws Exception {
         LOGGER.error()
                 .setMessage("Aggregator crashing")
                 .setThrowable(reason)

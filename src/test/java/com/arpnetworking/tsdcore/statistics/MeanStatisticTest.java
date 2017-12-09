@@ -21,7 +21,6 @@ import com.arpnetworking.tsdcore.model.Quantity;
 import com.arpnetworking.tsdcore.model.Unit;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Before;
@@ -36,7 +35,7 @@ import java.util.List;
 /**
  * Tests for the MeanStatistic class.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public class MeanStatisticTest {
 

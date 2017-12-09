@@ -20,7 +20,6 @@ import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.google.common.collect.ImmutableList;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Matchers;
 import org.mockito.Mockito;
 
 import java.util.Collections;
@@ -28,7 +27,7 @@ import java.util.Collections;
 /**
  * Tests for the <code>FilteringSink</code> class.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public class ServiceNameFilteringSinkTest {
 
@@ -45,7 +44,7 @@ public class ServiceNameFilteringSinkTest {
         final Sink sink = _sinkBuilder.build();
         final PeriodicData data = TestBeanFactory.createPeriodicData();
         sink.recordAggregateData(data);
-        Mockito.verify(_mockSink).recordAggregateData(Matchers.eq(data));
+        Mockito.verify(_mockSink).recordAggregateData(Mockito.eq(data));
     }
 
     @Test
@@ -64,7 +63,7 @@ public class ServiceNameFilteringSinkTest {
                                         .build()))
                 .build();
         sink.recordAggregateData(data);
-        Mockito.verify(_mockSink, Mockito.never()).recordAggregateData(Matchers.any(PeriodicData.class));
+        Mockito.verify(_mockSink, Mockito.never()).recordAggregateData(Mockito.any(PeriodicData.class));
     }
 
     @Test
@@ -84,7 +83,7 @@ public class ServiceNameFilteringSinkTest {
                                         .build()))
                 .build();
         sink.recordAggregateData(data);
-        Mockito.verify(_mockSink).recordAggregateData(Matchers.eq(data));
+        Mockito.verify(_mockSink).recordAggregateData(Mockito.eq(data));
     }
 
     private ServiceNameFilteringSink.Builder _sinkBuilder;

@@ -36,9 +36,6 @@ import java.util.Map;
  */
 public final class UnitMappingSink extends BaseSink {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void recordAggregateData(final PeriodicData periodicData) {
         final ImmutableList.Builder<AggregatedData> dataBuilder = ImmutableList.builder();
@@ -80,9 +77,6 @@ public final class UnitMappingSink extends BaseSink {
                         .build());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void close() {
         _sink.close();
@@ -175,9 +169,6 @@ public final class UnitMappingSink extends BaseSink {
             return this;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         protected Builder self() {
             return this;

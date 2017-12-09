@@ -58,9 +58,6 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public final class AlertSink extends BaseSink {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void recordAggregateData(final PeriodicData periodicData) {
         LOGGER.debug()
@@ -73,7 +70,7 @@ public final class AlertSink extends BaseSink {
         final ImmutableList.Builder<Condition> newConditions = ImmutableList.builder();
         boolean haveNewConditions = false;
 
-        try (final Metrics metrics = _metricsFactory.create()) {
+        try (Metrics metrics = _metricsFactory.create()) {
             // Check for new clusters or services
             boolean newClusterServices = false;
             for (final AggregatedData datum : periodicData.getData()) {
@@ -125,9 +122,6 @@ public final class AlertSink extends BaseSink {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void close() {
         final DynamicConfiguration configuration = _configuration.get();
@@ -288,9 +282,6 @@ public final class AlertSink extends BaseSink {
             return this;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         protected Builder self() {
             return this;

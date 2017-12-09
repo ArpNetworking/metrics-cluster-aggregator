@@ -29,9 +29,6 @@ import java.util.Map;
  */
 public final class DimensionInjectingSink extends BaseSink {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void recordAggregateData(final PeriodicData data) {
         final Map<String, String> mergedDimensions = Maps.newHashMap(data.getDimensions());
@@ -41,9 +38,6 @@ public final class DimensionInjectingSink extends BaseSink {
         _sink.recordAggregateData(dataBuilder.build());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void close() {
         // Nothing to do
@@ -94,9 +88,6 @@ public final class DimensionInjectingSink extends BaseSink {
             return this;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         protected Builder self() {
             return this;

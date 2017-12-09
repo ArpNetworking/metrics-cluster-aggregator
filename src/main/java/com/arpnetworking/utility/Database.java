@@ -56,9 +56,6 @@ public class Database implements Launchable {
         _configuration = configuration;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void launch() {
         _dataSource = createDataSource();
@@ -70,9 +67,6 @@ public class Database implements Launchable {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void shutdown() {
         _ebeanServer.shutdown(false, false);
@@ -95,9 +89,6 @@ public class Database implements Launchable {
         return _flyway;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)

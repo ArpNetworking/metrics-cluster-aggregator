@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Tests for the Aggregator actor.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public class AggregatorTest extends BaseActorTest {
 

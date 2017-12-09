@@ -16,10 +16,10 @@
 
 package com.arpnetworking.clusteraggregator.client;
 
+import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.Terminated;
-import akka.actor.UntypedActor;
 import akka.io.Tcp;
 import akka.io.TcpMessage;
 import akka.util.ByteString;
@@ -34,24 +34,21 @@ import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.GeneratedMessageV3;
 import scala.concurrent.duration.FiniteDuration;
 
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 /**
  * An actor that handles the data sent from an agg client.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class AggClientConnection extends UntypedActor {
+public class AggClientConnection extends AbstractActor {
     /**
      * Creates a <code>Props</code> for use in Akka.
      *
@@ -88,47 +85,45 @@ public class AggClientConnection extends UntypedActor {
                 self());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public void onReceive(final Object message) throws Exception {
-        if (message instanceof Tcp.Received) {
-            final Tcp.Received received = (Tcp.Received) message;
-            final ByteString data = received.data();
-            LOGGER.trace()
-                    .setMessage("Received a tcp message")
-                    .addData("length", data.length())
-                    .addContext("actor", self())
-                    .log();
-            _buffer = _buffer.concat(data);
-            processMessages();
-        } else if (message instanceof Tcp.CloseCommand) {
-            LOGGER.debug()
-                    .setMessage("Connection timeout hit, cycling connection")
-                    .addData("remote", _remoteAddress)
-                    .addContext("actor", self())
-                    .log();
-            if (_connection != null) {
-                _connection.tell(message, self());
-            }
-        } else if (message instanceof Tcp.ConnectionClosed) {
-            getContext().stop(getSelf());
-        } else if (message instanceof Terminated) {
-            final Terminated terminated = (Terminated) message;
-            LOGGER.info()
-                    .setMessage("Connection actor terminated")
-                    .addData("terminated", terminated.actor())
-                    .addContext("actor", self())
-                    .log();
-            if (terminated.actor().equals(_connection)) {
-                getContext().stop(getSelf());
-            } else {
-                unhandled(message);
-            }
-        } else {
-            unhandled(message);
-        }
+    public Receive createReceive() {
+        return receiveBuilder()
+                .match(Tcp.Received.class, received -> {
+                    final ByteString data = received.data();
+                    LOGGER.trace()
+                            .setMessage("Received a tcp message")
+                            .addData("length", data.length())
+                            .addContext("actor", self())
+                            .log();
+                    _buffer = _buffer.concat(data);
+                    processMessages();
+                })
+                .match(Tcp.CloseCommand.class, message -> {
+                    LOGGER.debug()
+                            .setMessage("Connection timeout hit, cycling connection")
+                            .addData("remote", _remoteAddress)
+                            .addContext("actor", self())
+                            .log();
+                    if (_connection != null) {
+                        _connection.tell(message, self());
+                    }
+                })
+                .match(Tcp.ConnectionClosed.class, closed -> {
+                    getContext().stop(getSelf());
+                })
+                .match(Terminated.class, terminated -> {
+                    LOGGER.info()
+                            .setMessage("Connection actor terminated")
+                            .addData("terminated", terminated.actor())
+                            .addContext("actor", self())
+                            .log();
+                    if (terminated.actor().equals(_connection)) {
+                        getContext().stop(getSelf());
+                    } else {
+                        unhandled(terminated);
+                    }
+                })
+                .build();
     }
 
     private void processMessages() {
@@ -137,15 +132,11 @@ public class AggClientConnection extends UntypedActor {
         while (messageOptional.isPresent()) {
             final AggregationMessage message = messageOptional.get();
             current = current.drop(message.getLength());
-            final GeneratedMessage gm = message.getMessage();
+            final GeneratedMessageV3 gm = message.getMessage();
             if (gm instanceof Messages.HostIdentification) {
                 final Messages.HostIdentification hostIdent = (Messages.HostIdentification) gm;
-                if (hostIdent.hasHostName()) {
-                    _hostName = Optional.ofNullable(hostIdent.getHostName());
-                }
-                if (hostIdent.hasClusterName()) {
-                    _clusterName = Optional.ofNullable(hostIdent.getClusterName());
-                }
+                _hostName = Optional.ofNullable(hostIdent.getHostName());
+                _clusterName = Optional.ofNullable(hostIdent.getClusterName());
                 LOGGER.info()
                         .setMessage("Handshake received")
                         .addData("host", _hostName.orElse(""))
@@ -196,22 +187,21 @@ public class AggClientConnection extends UntypedActor {
     private Optional<PeriodicData> buildPeriodicData(final Messages.StatisticSetRecord setRecord) {
         final CombinedMetricData combinedMetricData = CombinedMetricData.Builder.fromStatisticSetRecord(setRecord).build();
         final ImmutableList.Builder<AggregatedData> builder = ImmutableList.builder();
+        final Map<String, String> dimensionsMap = setRecord.getDimensionsMap();
         final ImmutableMap.Builder<String, String> dimensionBuilder = ImmutableMap.builder();
 
-        Optional<String> host = Optional.empty();
-        Optional<String> service = Optional.empty();
-        Optional<String> cluster = Optional.empty();
-        for (final Messages.DimensionEntry dimensionEntry : setRecord.getDimensionsList()) {
-            if (CombinedMetricData.HOST_KEY.equals(dimensionEntry.getKey())) {
-                host = Optional.ofNullable(dimensionEntry.getValue());
-            } else if (CombinedMetricData.SERVICE_KEY.equals(dimensionEntry.getKey())) {
-                service = Optional.ofNullable(dimensionEntry.getValue());
-            } else if (CombinedMetricData.CLUSTER_KEY.equals(dimensionEntry.getKey())) {
-                cluster = Optional.ofNullable(dimensionEntry.getValue());
-            } else {
-                dimensionBuilder.put(dimensionEntry.getKey(), dimensionEntry.getValue());
-            }
-        }
+        dimensionsMap.entrySet().stream()
+                .filter(entry ->
+                        !CombinedMetricData.HOST_KEY.equals(entry.getKey())
+                        && !CombinedMetricData.SERVICE_KEY.equals(entry.getKey())
+                        && !CombinedMetricData.CLUSTER_KEY.equals(entry.getKey()))
+                .forEach(dim ->
+                        dimensionBuilder.put(dim.getKey(), dim.getValue()
+                ));
+
+        Optional<String> host = Optional.ofNullable(dimensionsMap.get(CombinedMetricData.HOST_KEY));
+        Optional<String> service = Optional.ofNullable(dimensionsMap.get(CombinedMetricData.SERVICE_KEY));
+        Optional<String> cluster = Optional.ofNullable(dimensionsMap.get(CombinedMetricData.CLUSTER_KEY));
 
         if (!service.isPresent()) {
             service = Optional.ofNullable(setRecord.getService());
@@ -282,21 +272,4 @@ public class AggClientConnection extends UntypedActor {
     private static final Logger INCOMPLETE_RECORD_LOGGER = LoggerFactory.getRateLimitLogger(
             AggClientConnection.class,
             Duration.ofSeconds(30));
-    private static final boolean IS_ENABLED;
-
-
-    static {
-        // Determine the local host name
-        String localHost = "UNKNOWN";
-        try {
-            localHost = InetAddress.getLocalHost().getCanonicalHostName();
-            LOGGER.info(String.format("Determined local host name as: %s", localHost));
-        } catch (final UnknownHostException e) {
-            LOGGER.warn("Unable to determine local host name", e);
-        }
-
-        // Determine if the host name is enabled
-        IS_ENABLED = Pattern.matches(".*\\.lup1$", localHost) || Pattern.matches(".*\\.snc1$", localHost);
-        LOGGER.info(String.format("Cluster aggregator will be %s", IS_ENABLED ? "ENABLED" : "DISABLED"));
-    }
 }

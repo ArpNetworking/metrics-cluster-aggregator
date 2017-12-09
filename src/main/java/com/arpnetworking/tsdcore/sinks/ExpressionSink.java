@@ -59,9 +59,6 @@ import java.util.stream.Collectors;
  */
 public final class ExpressionSink extends BaseSink {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void recordAggregateData(final PeriodicData periodicData) {
         LOGGER.debug()
@@ -73,7 +70,7 @@ public final class ExpressionSink extends BaseSink {
 
         final Collection<AggregatedData> newData;
 
-        try (final Metrics metrics = _metricsFactory.create()) {
+        try (Metrics metrics = _metricsFactory.create()) {
             // Check for new clusters or services
             boolean newClusterServices = false;
             for (final AggregatedData datum : periodicData.getData()) {
@@ -120,9 +117,6 @@ public final class ExpressionSink extends BaseSink {
                         .build());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void close() {
         final DynamicConfiguration configuration = _configuration.get();
@@ -346,9 +340,6 @@ public final class ExpressionSink extends BaseSink {
             return this;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         protected Builder self() {
             return this;

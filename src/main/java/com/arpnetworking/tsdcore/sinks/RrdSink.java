@@ -40,13 +40,10 @@ import java.util.HashMap;
  *
  * TODO(vkoskela): Make this class thread safe [MAI-100]
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public final class RrdSink extends BaseSink {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void recordAggregateData(final PeriodicData periodicData) {
         LOGGER.debug()
@@ -75,9 +72,6 @@ public final class RrdSink extends BaseSink {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void close() {}
 
@@ -145,9 +139,6 @@ public final class RrdSink extends BaseSink {
             return self();
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         protected Builder self() {
             return this;
@@ -209,7 +200,7 @@ public final class RrdSink extends BaseSink {
                 final ProcessBuilder proecssBuilder = new ProcessBuilder(args);
                 proecssBuilder.redirectErrorStream(true);
                 final Process process = proecssBuilder.start();
-                try (final BufferedReader processStandardOut = new BufferedReader(
+                try (BufferedReader processStandardOut = new BufferedReader(
                         new InputStreamReader(process.getInputStream(), Charsets.UTF_8))) {
                     String line;
                     final StringBuilder processOutput = new StringBuilder();

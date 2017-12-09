@@ -54,9 +54,6 @@ import java.util.Optional;
  */
 public final class LuaAlert implements Alert {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Condition evaluate(final PeriodicData periodicData) throws ScriptingException {
         // The alert may not apply to this period
@@ -133,9 +130,6 @@ public final class LuaAlert implements Alert {
     }
 
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return toLogValue().toString();

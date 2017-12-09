@@ -22,7 +22,6 @@ import com.arpnetworking.configuration.jackson.JsonNodePaginatedUriSource;
 import com.arpnetworking.configuration.triggers.UriTrigger;
 import com.arpnetworking.logback.annotations.LogValue;
 import com.arpnetworking.steno.LogValueMapFactory;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import net.sf.oval.constraint.NotEmpty;
 import net.sf.oval.constraint.NotNull;
@@ -42,9 +41,6 @@ import java.util.List;
  */
 public final class ReMetGuiDynamicConfigurationFactory implements DynamicConfigurationFactory {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public DynamicConfiguration create(
             final DynamicConfiguration.Builder builder,
@@ -53,9 +49,6 @@ public final class ReMetGuiDynamicConfigurationFactory implements DynamicConfigu
         return builder.build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void update(
             final DynamicConfiguration.Builder builder,
@@ -75,7 +68,7 @@ public final class ReMetGuiDynamicConfigurationFactory implements DynamicConfigu
                         .addParameter(_serviceKey, parts.get(1))
                         .build();
             } catch (final URISyntaxException e) {
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
 
             // Add the key specific paginated uri source and trigger
@@ -93,7 +86,9 @@ public final class ReMetGuiDynamicConfigurationFactory implements DynamicConfigu
     }
 
     /**
-     * {@inheritDoc}
+     * Generate a Steno log compatible representation.
+     *
+     * @return Steno log compatible representation.
      */
     @LogValue
     public Object toLogValue() {
@@ -104,9 +99,6 @@ public final class ReMetGuiDynamicConfigurationFactory implements DynamicConfigu
                 .build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return toLogValue().toString();

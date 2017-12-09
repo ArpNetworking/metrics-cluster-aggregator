@@ -29,10 +29,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.Request;
-import com.ning.http.client.RequestBuilder;
 import net.sf.oval.constraint.NotNull;
+import org.asynchttpclient.AsyncHttpClient;
+import org.asynchttpclient.Request;
+import org.asynchttpclient.RequestBuilder;
 import org.joda.time.Period;
 import org.joda.time.format.ISOPeriodFormat;
 
@@ -44,7 +44,7 @@ import java.util.Map;
 /**
  * Publishes aggregations to Monitord. This class is thread safe.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public final class MonitordSink extends HttpPostSink {
 
@@ -63,9 +63,6 @@ public final class MonitordSink extends HttpPostSink {
                 .build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected Collection<byte[]> serialize(final PeriodicData periodicData) {
         final Period period = periodicData.getPeriod();
@@ -144,9 +141,6 @@ public final class MonitordSink extends HttpPostSink {
         return serializedData;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected Request createRequest(final AsyncHttpClient client, final byte[] serializedData) {
         return new RequestBuilder()
@@ -237,9 +231,6 @@ public final class MonitordSink extends HttpPostSink {
             return self();
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         protected Builder self() {
             return this;

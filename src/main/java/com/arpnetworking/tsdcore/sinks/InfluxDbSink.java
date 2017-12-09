@@ -21,9 +21,9 @@ import com.arpnetworking.tsdcore.model.FQDSN;
 import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.Request;
-import com.ning.http.client.RequestBuilder;
+import org.asynchttpclient.AsyncHttpClient;
+import org.asynchttpclient.Request;
+import org.asynchttpclient.RequestBuilder;
 import org.joda.time.format.ISOPeriodFormat;
 
 import java.nio.charset.StandardCharsets;
@@ -39,9 +39,6 @@ import java.util.StringJoiner;
 public final class InfluxDbSink extends HttpPostSink {
 
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected Request createRequest(final AsyncHttpClient client, final byte[] serializedData) {
         return new RequestBuilder()
@@ -52,9 +49,6 @@ public final class InfluxDbSink extends HttpPostSink {
                 .build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected Collection<byte[]> serialize(final PeriodicData periodicData) {
         final String period = periodicData.getPeriod()
@@ -184,9 +178,6 @@ public final class InfluxDbSink extends HttpPostSink {
             super(InfluxDbSink::new);
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         protected Builder self() {
             return this;

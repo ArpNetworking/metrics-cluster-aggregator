@@ -30,7 +30,6 @@ import com.arpnetworking.utility.Configurator;
 import com.arpnetworking.utility.Database;
 import com.arpnetworking.utility.Launchable;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -51,7 +50,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Entry point for the akka-based cluster aggregator.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public final class Main implements Launchable {
     /**
@@ -110,7 +109,7 @@ public final class Main implements Launchable {
             // Wait for application shutdown
             SHUTDOWN_SEMAPHORE.acquire();
         } catch (final InterruptedException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         } finally {
             if (configurator.isPresent()) {
                 configurator.get().shutdown();
@@ -269,7 +268,7 @@ public final class Main implements Launchable {
     private static final SourceTypeLiteral SOURCE_TYPE_LITERAL = new SourceTypeLiteral();
     private static final Semaphore SHUTDOWN_SEMAPHORE = new Semaphore(0);
     private static final Thread SHUTDOWN_THREAD = new ShutdownThread();
-    private static final String HOCON_FILE_EXTENSION = ".hocon";
+    private static final String HOCON_FILE_EXTENSION = ".conf";
 
     private static final class ShutdownThread extends Thread {
         private ShutdownThread() {
@@ -293,7 +292,7 @@ public final class Main implements Launchable {
                             .log();
                 }
             } catch (final InterruptedException e) {
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
             } finally {
                 LOGGER.info()
                         .setMessage("Shutdown complete")

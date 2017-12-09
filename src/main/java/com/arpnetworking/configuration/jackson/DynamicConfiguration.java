@@ -41,9 +41,6 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public final class DynamicConfiguration extends BaseJacksonConfiguration implements Launchable {
 
-    /**
-     * {@inheritDoc}
-     */
     @LogValue
     @Override
     public Object toLogValue() {
@@ -56,17 +53,11 @@ public final class DynamicConfiguration extends BaseJacksonConfiguration impleme
                 .build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected JsonNodeSource getJsonSource() {
         return _snapshot.get().getJsonSource();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public synchronized void launch() {
         if (!Stage.NEW.equals(_stage)) {
@@ -82,13 +73,10 @@ public final class DynamicConfiguration extends BaseJacksonConfiguration impleme
                 .setMessage("Launching")
                 .addData("component", this)
                 .log();
-        _triggerEvaluatorExecutor = Executors.newSingleThreadExecutor((runnable) -> new Thread(runnable, "DynamicConfigTriggerEvaluator"));
+        _triggerEvaluatorExecutor = Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "DynamicConfigTriggerEvaluator"));
         _triggerEvaluatorExecutor.execute(_triggerEvaluator);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public synchronized void shutdown() {
         final Stage oldStage = _stage;
@@ -384,9 +372,6 @@ public final class DynamicConfiguration extends BaseJacksonConfiguration impleme
             return self();
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         protected Builder self() {
             return this;

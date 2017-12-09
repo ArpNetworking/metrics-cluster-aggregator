@@ -27,7 +27,7 @@ import com.google.inject.Injector;
  *
  * TODO(vkoskela): This is _duplicated_ in metrics-portal and should find its way to a common utility package.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public class GuiceActorCreator implements IndirectActorProducer {
     /**
@@ -51,17 +51,11 @@ public class GuiceActorCreator implements IndirectActorProducer {
         _clazz = clazz;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Actor produce() {
         return _injector.getInstance(_clazz);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Class<? extends Actor> actorClass() {
         return _clazz;
@@ -80,9 +74,6 @@ public class GuiceActorCreator implements IndirectActorProducer {
                 .build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return toLogValue().toString();

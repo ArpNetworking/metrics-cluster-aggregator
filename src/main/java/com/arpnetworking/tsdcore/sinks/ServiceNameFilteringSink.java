@@ -36,13 +36,10 @@ import java.util.regex.Pattern;
  * and forwards included metrics to the wrapped sink. This  class is thread
  * safe.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public final class ServiceNameFilteringSink extends BaseSink {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void recordAggregateData(final PeriodicData periodicData) {
         final ImmutableList.Builder<AggregatedData> filteredDataBuilder = ImmutableList.builder();
@@ -74,9 +71,6 @@ public final class ServiceNameFilteringSink extends BaseSink {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void close() {
         _sink.close();
@@ -198,9 +192,6 @@ public final class ServiceNameFilteringSink extends BaseSink {
             return this;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         protected Builder self() {
             return this;

@@ -28,7 +28,7 @@ import java.io.IOException;
 /**
  * Deserializer for an Akka ActorRef.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public class ActorRefDeserializer extends JsonDeserializer<ActorRef> {
     /**
@@ -40,9 +40,6 @@ public class ActorRefDeserializer extends JsonDeserializer<ActorRef> {
         _system = system;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public ActorRef deserialize(final JsonParser p, final DeserializationContext ctxt) throws IOException {
         return _system.provider().resolveActorRef(p.getValueAsString());
@@ -60,9 +57,6 @@ public class ActorRefDeserializer extends JsonDeserializer<ActorRef> {
                 .build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return toLogValue().toString();

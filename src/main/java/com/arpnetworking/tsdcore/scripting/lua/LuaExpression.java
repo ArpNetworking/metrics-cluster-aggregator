@@ -30,7 +30,6 @@ import com.arpnetworking.tsdcore.scripting.ScriptingException;
 import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.arpnetworking.tsdcore.statistics.StatisticFactory;
 import com.google.common.base.Charsets;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -72,9 +71,6 @@ import java.util.Set;
  */
 public class LuaExpression implements Expression {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Optional<AggregatedData> evaluate(final PeriodicData periodicData) throws ScriptingException {
         // Check dependencies
@@ -117,17 +113,11 @@ public class LuaExpression implements Expression {
                 .build());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public FQDSN getTargetFQDSN() {
         return _fqdsn;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Set<FQDSN> getDependencies() {
         return Collections.unmodifiableSet(_dependencies);
@@ -146,9 +136,6 @@ public class LuaExpression implements Expression {
                 .build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return toLogValue().toString();
@@ -250,7 +237,7 @@ public class LuaExpression implements Expression {
             chunk.accept(visitor);
             return dependencies;
         } catch (final ParseException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

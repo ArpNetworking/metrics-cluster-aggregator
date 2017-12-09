@@ -26,7 +26,7 @@ import java.io.Serializable;
 /**
  * Message class containing the information retrieved from the {@link com.arpnetworking.clusteraggregator.aggregation.Bookkeeper}.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public final class BookkeeperData implements Serializable {
     public long getClusters() {
@@ -45,9 +45,6 @@ public final class BookkeeperData implements Serializable {
         return _statistics;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)

@@ -24,12 +24,9 @@ import java.util.regex.Pattern;
  * Compares strings lexically and numerically by splitting on digits and using the full number for numerical comparison.
  * NOTE: does not support negatives or decimal places
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public class LexicalNumericComparator implements Comparator<String>, Serializable {
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int compare(final String o1, final String o2) {
         final Matcher o1Matcher = MATCH_PATTERN.matcher(o1);

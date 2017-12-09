@@ -29,7 +29,7 @@ import java.util.Map;
 /**
  * Holds the node metrics for a single period.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public class PeriodMetrics {
     /**
@@ -57,7 +57,7 @@ public class PeriodMetrics {
                 .append("/")
                 .append(report.getPeriod())
                 .append("/")
-                .append(report.getFQDSN().getStatistic())
+                .append(report.getFQDSN().getStatistic().getName())
                 .toString();
 
         final String metricName = new StringBuilder()
@@ -97,7 +97,7 @@ public class PeriodMetrics {
 
     private void dumpMetrics() {
         if (_latestPeriod != null) {
-            try (final Metrics metrics = _metricsFactory.create()) {
+            try (Metrics metrics = _metricsFactory.create()) {
                 long totalSamples = 0L;
                 metrics.incrementCounter("cluster/period/metrics_seen", _metricsLatestPeriod);
                 metrics.incrementCounter("cluster/period/statistics_seen", _statisticsLatestPeriod);

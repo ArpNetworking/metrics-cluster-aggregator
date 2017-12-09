@@ -18,7 +18,7 @@
   <parent>
     <groupId>com.arpnetworking.build</groupId>
     <artifactId>arpnetworking-parent-pom</artifactId>
-    <version>1.0.26</version>
+    <version>1.1.3</version>
     <relativePath />
   </parent>
 
@@ -28,7 +28,7 @@
   <packaging>jar</packaging>
   <name>Metrics Cluster Aggregator</name>
   <description>(Re)Aggregates host level statistics across clusters and writes both host and cluster statistics to various destinations.</description>
-  <version>1.2.2-SNAPSHOT</version>
+  <version>1.3.3-SNAPSHOT</version>
 
   <licenses>
     <license>
@@ -43,9 +43,9 @@
     <developer>
       <id>brandonarp</id>
       <name>Brandon Arp</name>
-      <email>brandonarp@gmail.com</email>
-      <organization>ArpNetworking</organization>
-      <organizationUrl>http://www.arpnetworking.com</organizationUrl>
+      <email>brandon.arp@inscopemetrics.com</email>
+      <organization>Inscope Metrics</organization>
+      <organizationUrl>http://www.inscopemetrics.com</organizationUrl>
       <roles>
         <role>developer</role>
       </roles>
@@ -101,60 +101,61 @@
 
   <properties>
     <!--Dependency versions-->
-    <akka.version>2.4.14</akka.version>
-    <akka.http.version>2.4.11</akka.http.version>
-    <akka.persistence.cassandra.version>0.6</akka.persistence.cassandra.version>
-    <akka.kryo.version>0.5.0</akka.kryo.version>
-    <apache.httpclient.version>4.5.1</apache.httpclient.version>
-    <apache.httpcore.version>4.4.3</apache.httpcore.version>
-    <arpnetworking.commons.version>1.7.1</arpnetworking.commons.version>
-    <aspectjrt.version>1.8.9</aspectjrt.version>
-    <cglib.version>3.2.1</cglib.version>
+    <akka.version>2.5.6</akka.version>
+    <akka.http.version>10.0.6</akka.http.version>
+    <akka.persistence.cassandra.version>0.54</akka.persistence.cassandra.version>
+    <akka.kryo.version>0.5.1</akka.kryo.version>
+    <apache.httpclient.version>4.5.2</apache.httpclient.version>
+    <apache.httpcore.version>4.4.5</apache.httpcore.version>
+    <arpnetworking.commons.version>1.13.3</arpnetworking.commons.version>
+    <aspectjrt.version>1.8.10</aspectjrt.version>
+    <cglib.version>3.2.5</cglib.version>
     <commons.codec.version>1.10</commons.codec.version>
     <ebean.version>6.8.1</ebean.version>
     <findbugs.annotations.version>3.0.1</findbugs.annotations.version>
     <flyway.version>3.2.1</flyway.version>
-    <guava.version>18.0</guava.version>
-    <guice.version>4.0</guice.version>
+    <guava.version>23.4-jre</guava.version>
+    <guice.version>4.1.0</guice.version>
     <hamcrest.version>2.0.0.0</hamcrest.version>
-    <hikari.version>2.4.1</hikari.version>
-    <h2.version>1.4.190</h2.version>
-    <jackson.version>2.7.3</jackson.version>
-    <javassist.version>3.20.0-GA</javassist.version>
-    <javassist.maven.core.version>0.1.2</javassist.maven.core.version>
-    <javax.persistence.version>1.0</javax.persistence.version>
-    <joda.time.version>2.8.2</joda.time.version>
-    <jsr305.version>3.0.0</jsr305.version>
+    <hikari.version>2.5.1</hikari.version>
+    <asynchttpclient.version>2.0.24</asynchttpclient.version>
+    <h2.version>1.4.193</h2.version>
+    <jackson.version>2.9.2</jackson.version>
+    <javassist.version>3.22.0-GA</javassist.version>
+    <javassist.maven.core.version>0.2.1</javassist.maven.core.version>
+    <javax.persistence.version>1.0.2</javax.persistence.version>
+    <joda.time.version>2.9.9</joda.time.version>
+    <jsr305.version>3.0.2</jsr305.version>
     <junit.version>4.12</junit.version>
-    <junitparams.version>1.0.3</junitparams.version>
+    <junitparams.version>1.0.5</junitparams.version>
     <leveldb.version>0.7</leveldb.version>
     <leveldb.jni.version>1.8</leveldb.jni.version>
-    <logback.version>1.1.3</logback.version>
-    <logback.steno.version>1.16.0</logback.steno.version>
-    <log4j.over.slf4j.version>1.7.12</log4j.over.slf4j.version>
+    <logback.version>1.2.3</logback.version>
+    <logback.steno.version>1.17.0</logback.steno.version>
+    <log4j.over.slf4j.version>1.7.22</log4j.over.slf4j.version>
     <luaj.version>3.0.1</luaj.version>
     <maven.version>3.3.9</maven.version>
-    <metrics.client.version>0.4.5</metrics.client.version>
-    <metrics.jvm.extra.version>0.4.2</metrics.jvm.extra.version>
-    <metrics.aggregator.protocol.version>1.0.3</metrics.aggregator.protocol.version>
-    <mockito.version>1.10.19</mockito.version>
+    <metrics.client.version>0.10.0</metrics.client.version>
+    <metrics.jvm.extra.version>0.9.0</metrics.jvm.extra.version>
+    <metrics.http.extra.version>0.9.0</metrics.http.extra.version>
+    <metrics.aggregator.protocol.version>1.0.4</metrics.aggregator.protocol.version>
+    <mockito.version>2.12.0</mockito.version>
     <netty.version>3.10.3.Final</netty.version>
     <netty.all.version>4.0.21.Final</netty.all.version>
     <ning.http.client.version>1.9.31</ning.http.client.version>
-    <oval.version>1.86</oval.version>
-    <play.version>2.4.3</play.version>
+    <oval.version>1.90</oval.version>
+    <play.ws.version>1.1.2</play.ws.version>
     <postgresql.version>9.4-1202-jdbc42</postgresql.version>
-    <protobuf.version>3.0.0-beta-2</protobuf.version>
+    <protobuf.version>3.1.0</protobuf.version>
     <reflections.version>0.9.10</reflections.version>
-    <scala.version>2.11</scala.version>
-    <scala.java.compat.version>0.7.0</scala.java.compat.version>
-    <scala.library.version>2.11.7</scala.library.version>
-    <slf4j.version>1.7.12</slf4j.version>
+    <scala.version>2.12</scala.version>
+    <scala.java.compat.version>0.8.0</scala.java.compat.version>
+    <scala.library.version>2.12.3</scala.library.version>
+    <slf4j.version>1.7.25</slf4j.version>
     <signalfx.protoc.version>0.0.23</signalfx.protoc.version>
     <typesafe.config.version>1.3.1</typesafe.config.version>
-    <vertx.core.version>2.1.6</vertx.core.version>
-    <wavefront.version>3.20</wavefront.version>
-    <wiremock.version>1.57</wiremock.version>
+    <typesafe.ssl.config.version>0.2.2</typesafe.ssl.config.version>
+    <wiremock.version>2.12.0</wiremock.version>
 
     <!--Plugin versions-->
     <avaje.ebeanorm.mavenenhancer.version>4.7.1</avaje.ebeanorm.mavenenhancer.version>
@@ -303,6 +304,21 @@
               <tarLongFileMode>posix</tarLongFileMode>
               <descriptors>
                 <descripto>src/main/assembly/docker.xml</descripto>
+              </descriptors>
+            </configuration>
+          </execution>
+          <execution>
+            <id>app-tgz</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <appendAssemblyId>true</appendAssemblyId>
+              <attach>false</attach>
+              <tarLongFileMode>posix</tarLongFileMode>
+              <descriptors>
+                <descriptor>src/main/assembly/bin.xml</descriptor>
               </descriptors>
             </configuration>
           </execution>
@@ -501,6 +517,11 @@
     </dependency>
     <dependency>
       <groupId>com.arpnetworking.metrics.extras</groupId>
+      <artifactId>apache-http-sink-extra</artifactId>
+      <version>${metrics.http.extra.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.arpnetworking.metrics.extras</groupId>
       <artifactId>jvm-extra</artifactId>
       <version>${metrics.jvm.extra.version}</version>
     </dependency>
@@ -509,6 +530,14 @@
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
       <version>${guava.version}</version>
+    </dependency>
+    <!-- TODO(ville): Remove me once Guava is fixed. -->
+    <!-- See: https://github.com/google/guava/issues/2721 -->
+    <dependency>
+      <groupId>com.google.errorprone</groupId>
+      <artifactId>error_prone_annotations</artifactId>
+      <version>2.0.18</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.google.inject</groupId>
@@ -573,7 +602,7 @@
     <dependency>
       <groupId>com.typesafe.akka</groupId>
       <artifactId>akka-stream_${scala.version}</artifactId>
-      <version>${akka.http.version}</version>
+      <version>${akka.version}</version>
     </dependency>
     <dependency>
       <groupId>com.typesafe</groupId>
@@ -601,7 +630,18 @@
       <version>${akka.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.github.krasserm</groupId>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-distributed-data_${scala.version}</artifactId>
+      <version>${akka.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.typesafe</groupId>
+      <artifactId>ssl-config-core_${scala.version}</artifactId>
+      <version>${typesafe.ssl.config.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
       <artifactId>akka-persistence-cassandra_${scala.version}</artifactId>
       <version>${akka.persistence.cassandra.version}</version>
       <scope>runtime</scope>
@@ -715,29 +755,19 @@
       <version>${commons.codec.version}</version>
     </dependency>
     <dependency>
-      <groupId>io.netty</groupId>
-      <artifactId>netty-all</artifactId>
-      <version>${netty.all.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.ning</groupId>
+      <groupId>org.asynchttpclient</groupId>
       <artifactId>async-http-client</artifactId>
-      <version>${ning.http.client.version}</version>
+      <version>${asynchttpclient.version}</version>
     </dependency>
     <dependency>
       <groupId>com.typesafe.play</groupId>
-      <artifactId>play_${scala.version}</artifactId>
-      <version>${play.version}</version>
+      <artifactId>play-ahc-ws-standalone_${scala.version}</artifactId>
+      <version>${play.ws.version}</version>
     </dependency>
     <dependency>
       <groupId>com.typesafe.play</groupId>
-      <artifactId>play-java-ws_${scala.version}</artifactId>
-      <version>${play.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-core</artifactId>
-      <version>${vertx.core.version}</version>
+      <artifactId>play-ws-standalone_${scala.version}</artifactId>
+      <version>${play.ws.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
@@ -778,12 +808,6 @@
       <artifactId>signalfx-protoc</artifactId>
       <version>${signalfx.protoc.version}</version>
     </dependency>
-    <!-- Wavefront -->
-    <dependency>
-      <groupId>com.wavefront</groupId>
-      <artifactId>proxy</artifactId>
-      <version>${wavefront.version}</version>
-    </dependency>
     <!-- Test - General -->
     <dependency>
       <groupId>junit</groupId>
@@ -811,7 +835,7 @@
     </dependency>
     <dependency>
       <groupId>com.github.tomakehurst</groupId>
-      <artifactId>wiremock</artifactId>
+      <artifactId>wiremock-standalone</artifactId>
       <version>${wiremock.version}</version>
       <scope>test</scope>
     </dependency>
@@ -822,13 +846,6 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-  <repositories>
-    <repository>
-      <id>krasserm</id>
-      <name>Akka Cassandra Persistence</name>
-      <url>http://dl.bintray.com/krasserm/maven</url>
-    </repository>
-  </repositories>
   <profiles>
     <profile>
       <id>rpm</id>

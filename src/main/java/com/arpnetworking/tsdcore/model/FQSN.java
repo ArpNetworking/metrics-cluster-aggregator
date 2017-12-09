@@ -85,9 +85,6 @@ public final class FQSN {
     }
     */
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean equals(final Object object) {
         if (this == object) {
@@ -104,9 +101,6 @@ public final class FQSN {
                 && Objects.equal(_start, other._start);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int hashCode() {
         return Objects.hashCode(
@@ -115,9 +109,6 @@ public final class FQSN {
                 _start);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)

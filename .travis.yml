@@ -28,7 +28,9 @@ deploy:
   provider: releases
   api_key:
     secure: EtkLgBxZUi2rY59+fiYkaKDZIw9BYQisch0qcFGPU4g7XnJP/vfklHQsF5NZEEwW0eXOggaNWv9LhDHoz3laNdYnAsBknr4APX6UnU66fUdAaTuKCuN/7kYtJ0LC0b5TR9O5L/LaRoYUma5vxB7lGnDfazrCgQiOxK5J28dpobJZ/07z7X8VyOwzGa2i3dFMUgZs6FwGW59fp35jICZ4VYqsAwBfayGp4Egz+GXNcQ4YyJ2VaMP5qze/57cPAsunwy0rHxPvXu8JIC/DsQV03O7+jLISevZS92bWQM9GV7x0zTYd8hlNHhrorf1w+Hn8sm8eSU6aPB1ZGhkCzKrpnB+WB7AcYPf2A//Eg0CasucMCgwtUJlZ2RKtCJxMYgI90gC5CrSEnT6QbnytOdZR9bMTZxC7NXC1/oeZK+660UOdxTrBXysAKHG4S+LGmtGWaYk7Q8jV25WMGPXts4O4CsStV56yfujidU0+192VnHSpzZS0Oua5mhzoijtNi0pe2Is8glU/XFoqXNaclD6xshVr6vXeEUGzngSrDEibhcg355im9iBwhLDnwOZAexnEKg3e2Oy2liP6zheIl0X5t/Pc5uyoYTGFST4thn/P7NZEMNrBMGAwvb02CJzZV62khnODbidR8YNNUnXlQdZFK0m/iYDlllp5CEJEi66yOvc=
-  file: target/rpm/cluster-aggregator/RPMS/noarch/cluster-aggregator*.rpm
+  file:
+    - target/rpm/cluster-aggregator/RPMS/noarch/cluster-aggregator*.rpm
+    - target/metrics-cluster-aggregator*-bin.tgz
   file_glob: true
   skip_cleanup: true
   on:

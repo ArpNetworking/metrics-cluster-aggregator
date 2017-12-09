@@ -32,7 +32,7 @@ import java.util.Set;
 /**
  * Represents a shard allocation.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public final class ShardAllocation {
     public String getHost() {
@@ -78,7 +78,7 @@ public final class ShardAllocation {
     /**
      * Implementation of builder pattern for {@link ShardAllocation}.
      *
-     * @author Brandon Arp (brandonarp at gmail dot com)
+     * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
      */
     public static class Builder extends OvalBuilder<ShardAllocation> {
         /**

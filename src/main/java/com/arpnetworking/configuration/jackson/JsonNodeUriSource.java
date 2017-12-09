@@ -18,7 +18,6 @@ package com.arpnetworking.configuration.jackson;
 import com.arpnetworking.logback.annotations.LogValue;
 import com.arpnetworking.steno.LogValueMapFactory;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.base.Throwables;
 import net.sf.oval.constraint.NotNull;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
@@ -42,17 +41,11 @@ import java.util.Optional;
  */
 public final class JsonNodeUriSource extends BaseJsonNodeSource {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Optional<JsonNode> getValue(final String... keys) {
         return getValue(getJsonNode(), keys);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @LogValue
     @Override
     public Object toLogValue() {
@@ -63,9 +56,7 @@ public final class JsonNodeUriSource extends BaseJsonNodeSource {
                 .build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @Override
     public String toString() {
         return toLogValue().toString();
     }
@@ -91,7 +82,7 @@ public final class JsonNodeUriSource extends BaseJsonNodeSource {
             final HttpResponse response = CLIENT.execute(request);
             jsonNode = _objectMapper.readTree(response.getEntity().getContent());
         } catch (final IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         } finally {
             if (request != null) {
                 request.releaseConnection();
@@ -169,9 +160,6 @@ public final class JsonNodeUriSource extends BaseJsonNodeSource {
             return this;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         protected Builder self() {
             return this;

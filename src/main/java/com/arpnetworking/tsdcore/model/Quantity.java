@@ -18,6 +18,7 @@ package com.arpnetworking.tsdcore.model;
 import com.arpnetworking.commons.builder.OvalBuilder;
 import com.arpnetworking.logback.annotations.Loggable;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -33,7 +34,7 @@ import javax.annotation.Nullable;
 /**
  * Represents a sample.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 @Loggable
 public final class Quantity implements Comparable<Quantity>, Serializable {
@@ -181,9 +182,6 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
                 unit);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int compareTo(final Quantity other) {
         if (other._unit.equals(_unit)) {
@@ -200,17 +198,11 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
                 other));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int hashCode() {
         return Objects.hash(_value, _unit);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean equals(final Object o) {
         if (this == o) {
@@ -226,9 +218,6 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
                 && Objects.equals(_unit, sample._unit);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
@@ -290,7 +279,7 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
             if (unit.isPresent()) {
                 return new SampleConverter(unit.get());
             }
-            return (q) -> q;
+            return Functions.identity();
         }
 
         @Override

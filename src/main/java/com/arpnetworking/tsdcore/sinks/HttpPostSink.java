@@ -27,37 +27,32 @@ import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.google.common.collect.Lists;
-import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.AsyncHttpClientConfig;
-import com.ning.http.client.Request;
-import com.ning.http.client.RequestBuilder;
 import net.sf.oval.constraint.Min;
 import net.sf.oval.constraint.NotNull;
+import org.asynchttpclient.AsyncHttpClient;
+import org.asynchttpclient.AsyncHttpClientConfig;
+import org.asynchttpclient.DefaultAsyncHttpClient;
+import org.asynchttpclient.DefaultAsyncHttpClientConfig;
+import org.asynchttpclient.Request;
+import org.asynchttpclient.RequestBuilder;
 import org.joda.time.Period;
 
 import java.net.URI;
 import java.util.Collection;
-import java.util.concurrent.Executors;
 import java.util.function.Function;
 
 /**
  * Publishes to an HTTP endpoint. This class is thread safe.
  *
- * @author Brandon Arp (brandonarp at gmail dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public abstract class HttpPostSink extends BaseSink {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void recordAggregateData(final PeriodicData data) {
         _sinkActor.tell(new HttpSinkActor.EmitAggregation(data), ActorRef.noSender());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void close() {
         LOGGER.info()
@@ -135,7 +130,7 @@ public abstract class HttpPostSink extends BaseSink {
      * @param periodicData The <code>PeriodicData</code> to be serialized.
      * @return The serialized representation of <code>PeriodicData</code>.
      */
-    protected abstract Collection<byte[]> serialize(final PeriodicData periodicData);
+    protected abstract Collection<byte[]> serialize(PeriodicData periodicData);
 
     /**
      * Protected constructor.
@@ -157,10 +152,10 @@ public abstract class HttpPostSink extends BaseSink {
     private static final AsyncHttpClient CLIENT;
 
     static {
-        final AsyncHttpClientConfig.Builder clientConfigBuilder = new AsyncHttpClientConfig.Builder();
-        clientConfigBuilder.setExecutorService(Executors.newCachedThreadPool((r) -> new Thread(r, "HttpPostSinkWorker")));
+        final DefaultAsyncHttpClientConfig.Builder clientConfigBuilder = new DefaultAsyncHttpClientConfig.Builder();
+        clientConfigBuilder.setThreadPoolName("HttpPostSinkWorker");
         final AsyncHttpClientConfig clientConfig = clientConfigBuilder.build();
-        CLIENT = new AsyncHttpClient(clientConfig);
+        CLIENT = new DefaultAsyncHttpClient(clientConfig);
     }
 
     /**

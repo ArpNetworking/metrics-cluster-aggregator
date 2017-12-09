@@ -18,14 +18,11 @@ package com.arpnetworking.tsdcore.model;
 import akka.util.ByteString;
 import akka.util.ByteStringBuilder;
 import com.arpnetworking.metrics.aggregation.protocol.Messages;
-import com.arpnetworking.tsdcore.statistics.Statistic;
-import com.arpnetworking.tsdcore.statistics.StatisticFactory;
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.GeneratedMessageV3;
 import com.google.protobuf.UnknownFieldSet;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.vertx.java.core.buffer.Buffer;
 
 import java.nio.ByteOrder;
 import java.util.Optional;
@@ -39,19 +36,18 @@ public class AggregationMessageTest {
 
     @Test
     public void testHostIdentification() {
-        final GeneratedMessage protobufMessage = Messages.HostIdentification.getDefaultInstance();
+        final GeneratedMessageV3 protobufMessage = Messages.HostIdentification.getDefaultInstance();
         final AggregationMessage message = AggregationMessage.create(protobufMessage);
         Assert.assertNotNull(message);
         Assert.assertSame(protobufMessage, message.getMessage());
 
-        final Buffer vertxBuffer = message.serialize();
-        final byte[] messageBuffer = vertxBuffer.getBytes();
+        final ByteString byteString = message.serialize();
+        final byte[] messageBuffer = byteString.toArray();
         final byte[] protobufBuffer = protobufMessage.toByteArray();
-        final ByteString byteString = ByteString.fromArray(vertxBuffer.getBytes());
 
         // Assert length
         Assert.assertEquals(protobufBuffer.length + 5, messageBuffer.length);
-        Assert.assertEquals(protobufBuffer.length + 5, vertxBuffer.getInt(0));
+        Assert.assertEquals(protobufBuffer.length + 5, byteString.iterator().getInt(ByteOrder.BIG_ENDIAN));
         Assert.assertEquals(protobufBuffer.length + 5, message.getLength());
 
         // Assert payload type
@@ -71,7 +67,7 @@ public class AggregationMessageTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testSerializedUnsupportedMessage() {
-        final GeneratedMessage mockMessage = Mockito.mock(GeneratedMessage.class);
+        final GeneratedMessageV3 mockMessage = Mockito.mock(GeneratedMessageV3.class);
         Mockito.doReturn(UnknownFieldSet.getDefaultInstance()).when(mockMessage).getUnknownFields();
         AggregationMessage.create(mockMessage).serialize();
     }
@@ -112,7 +108,7 @@ public class AggregationMessageTest {
         Assert.assertEquals(Optional.empty(), message);
 
         // Type: 3
-        buffer = new ByteStringBuilder().putInt(Integer.SIZE / 8 + 1, ByteOrder.BIG_ENDIAN).putByte((byte) 3).result();
+        buffer = new ByteStringBuilder().putInt(Integer.SIZE / 8 + 1, ByteOrder.BIG_ENDIAN).putByte((byte) 9).result();
         message = AggregationMessage.deserialize(buffer);
         Assert.assertEquals(Optional.empty(), message);
 
@@ -124,21 +120,13 @@ public class AggregationMessageTest {
 
     @Test
     public void testDeserializeInvalidPayload() {
-        ByteString buffer;
-        Optional<AggregationMessage> message;
-
-        // No data
-        // NOTE: Some messages will deserialize from an empty buffer.
-        buffer = new ByteStringBuilder().putInt(Integer.SIZE / 8 + 1, ByteOrder.BIG_ENDIAN).putByte((byte) 3).result();
-        message = AggregationMessage.deserialize(buffer);
-        Assert.assertEquals(Optional.empty(), message);
-
         // Just one byte
-        buffer = new ByteStringBuilder().putInt(Integer.SIZE / 8 + 2, ByteOrder.BIG_ENDIAN).putByte((byte) 1).putByte((byte) 0).result();
-        message = AggregationMessage.deserialize(buffer);
+        final ByteString buffer = new ByteStringBuilder()
+                .putInt(Integer.SIZE / 8 + 2, ByteOrder.BIG_ENDIAN)
+                .putByte((byte) 1)
+                .putByte((byte) 0)
+                .result();
+        final Optional<AggregationMessage> message = AggregationMessage.deserialize(buffer);
         Assert.assertEquals(Optional.empty(), message);
     }
-
-    private static final StatisticFactory STATISTIC_FACTORY = new StatisticFactory();
-    private static final Statistic TP99_STATISTIC = STATISTIC_FACTORY.getStatistic("tp99");
 }
