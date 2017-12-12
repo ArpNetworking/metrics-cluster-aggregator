@@ -61,6 +61,7 @@ public class AggClientSupervisor extends AbstractActor {
         _emitter = emitter;
         _minConnectionTimeout = configuration.getMinConnectionTimeout();
         _maxConnectionTimeout = configuration.getMaxConnectionTimeout();
+        _calculateClusterAggregates = configuration.getCalculateClusterAggregations();
     }
 
     @Override
@@ -75,7 +76,11 @@ public class AggClientSupervisor extends AbstractActor {
                     final ActorRef connection = getSender();
 
                     final ActorRef handler = getContext().actorOf(
-                            AggClientConnection.props(connection, connected.remoteAddress(), getRandomConnectionTime()),
+                            AggClientConnection.props(
+                                    connection,
+                                    connected.remoteAddress(),
+                                    getRandomConnectionTime(),
+                                    _calculateClusterAggregates),
                             "dataHandler");
                     connection.tell(TcpMessage.register(handler, true, true), getSelf());
                     getContext().watch(handler);
@@ -124,6 +129,7 @@ public class AggClientSupervisor extends AbstractActor {
     private final ActorRef _emitter;
     private final Period _minConnectionTimeout;
     private final Period _maxConnectionTimeout;
+    private final Boolean _calculateClusterAggregates;
     private final Random _random = new Random();
     private static final Logger LOGGER = LoggerFactory.getLogger(AggClientSupervisor.class);
 }
