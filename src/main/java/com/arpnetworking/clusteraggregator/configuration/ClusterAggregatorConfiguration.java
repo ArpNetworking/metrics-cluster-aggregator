@@ -114,6 +114,10 @@ public final class ClusterAggregatorConfiguration {
         return _clusterHostSuffix;
     }
 
+    public boolean getCalculateClusterAggregations() {
+        return _calculateClusterAggregations;
+    }
+
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
@@ -155,6 +159,7 @@ public final class ClusterAggregatorConfiguration {
         _jvmMetricsCollectionInterval = builder._jvmMetricsCollectionInterval;
         _rebalanceConfiguration = builder._rebalanceConfiguration;
         _clusterHostSuffix = builder._clusterHostSuffix;
+        _calculateClusterAggregations = builder._calculateClusterAggregations;
         _databaseConfigurations = Maps.newHashMap(builder._databaseConfigurations);
     }
 
@@ -174,6 +179,7 @@ public final class ClusterAggregatorConfiguration {
     private final Period _jvmMetricsCollectionInterval;
     private final RebalanceConfiguration _rebalanceConfiguration;
     private final String _clusterHostSuffix;
+    private final boolean _calculateClusterAggregations;
     private final Map<String, DatabaseConfiguration> _databaseConfigurations;
 
     private static final InterfaceDatabase INTERFACE_DATABASE = ReflectionsDatabase.newInstance();
@@ -387,6 +393,18 @@ public final class ClusterAggregatorConfiguration {
             return this;
         }
 
+        /**
+         * Whether or not to perform cluster-level aggregations. When using a datasource that supports
+         * native histograms, turning this off will reduce cpu cost. Optional. Defaults to true.
+         *
+         * @param value true to perform cluster aggregations, false to just forward host data.
+         * @return This instance of <code>Builder</code>.
+         */
+        public Builder setCalculateClusterAggregations(final Boolean value) {
+            _calculateClusterAggregations = value;
+            return this;
+        }
+
         @NotNull
         @NotEmpty
         private String _monitoringCluster;
@@ -426,6 +444,8 @@ public final class ClusterAggregatorConfiguration {
         private RebalanceConfiguration _rebalanceConfiguration;
         @NotNull
         private String _clusterHostSuffix = "";
+        @NotNull
+        private Boolean _calculateClusterAggregations = true;
         private Map<String, DatabaseConfiguration> _databaseConfigurations;
     }
 }

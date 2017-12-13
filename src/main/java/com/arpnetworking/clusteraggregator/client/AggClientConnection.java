@@ -55,10 +55,17 @@ public class AggClientConnection extends AbstractActor {
      * @param connection Reference to the client connection actor.
      * @param remote The address of the client socket.
      * @param maxConnectionAge The maximum duration to keep a connection open before cycling it.
+     * @param calculateAggregates True to compute cluster aggregations, false to only publish host aggregations
      * @return A new <code>Props</code>.
      */
-    public static Props props(final ActorRef connection, final InetSocketAddress remote, final FiniteDuration maxConnectionAge) {
-        return Props.create(AggClientConnection.class, connection, remote, maxConnectionAge);
+    public static Props props(
+            final ActorRef connection,
+            final InetSocketAddress remote,
+            final FiniteDuration maxConnectionAge,
+            final boolean calculateAggregates) {
+        return Props.create(
+                AggClientConnection.class,
+                () -> new AggClientConnection(connection, remote, maxConnectionAge, calculateAggregates));
     }
 
     /**
@@ -67,13 +74,16 @@ public class AggClientConnection extends AbstractActor {
      * @param connection Reference to the client connection actor.
      * @param remote The address of the client socket.
      * @param maxConnectionAge The maximum duration to keep a connection open before cycling it.
+     * @param calculateAggregates True to compute cluster aggregations, false to only publish host aggregations
      */
     public AggClientConnection(
             final ActorRef connection,
             final InetSocketAddress remote,
-            final FiniteDuration maxConnectionAge) {
+            final FiniteDuration maxConnectionAge,
+            final boolean calculateAggregates) {
         _connection = connection;
         _remoteAddress = remote;
+        _calculateAggregates = calculateAggregates;
 
         getContext().watch(connection);
 
@@ -150,7 +160,11 @@ public class AggClientConnection extends AbstractActor {
                         .addData("aggregation", setRecord)
                         .addContext("actor", self())
                         .log();
-                getContext().parent().tell(setRecord, getSelf());
+                // StatisticSetRecords get forwarded to the parent, who then forwards them to the shard for cluster aggregating
+                // If we aren't doing shard aggregating, don't forward it
+                if (_calculateAggregates) {
+                    getContext().parent().tell(setRecord, getSelf());
+                }
                 if (setRecord.getStatisticsCount() > 0) {
                     final Optional<PeriodicData> periodicData = buildPeriodicData(setRecord);
                     if (periodicData.isPresent()) {
@@ -268,6 +282,7 @@ public class AggClientConnection extends AbstractActor {
     private ByteString _buffer = ByteString.empty();
     private final ActorRef _connection;
     private final InetSocketAddress _remoteAddress;
+    private final boolean _calculateAggregates;
     private static final Logger LOGGER = LoggerFactory.getLogger(AggClientConnection.class);
     private static final Logger INCOMPLETE_RECORD_LOGGER = LoggerFactory.getRateLimitLogger(
             AggClientConnection.class,
