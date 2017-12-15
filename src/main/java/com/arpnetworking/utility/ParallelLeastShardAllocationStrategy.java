@@ -115,7 +115,7 @@ public final class ParallelLeastShardAllocationStrategy extends ShardCoordinator
 
             // Make sure that we have more than 1 region
             if (leastShards == null || mostShards == null) {
-                LOGGER.debug()
+                LOGGER.trace()
                         .setMessage("Cannot rebalance shards, less than 2 shard regions found.")
                         .log();
                 break;
@@ -123,7 +123,7 @@ public final class ParallelLeastShardAllocationStrategy extends ShardCoordinator
 
             // Make sure that the difference is enough to warrant a rebalance
             if (mostShards.getEffectiveShardCount() - leastShards.getEffectiveShardCount() < _rebalanceThreshold) {
-                LOGGER.debug()
+                LOGGER.trace()
                         .setMessage("Not rebalancing any (more) shards, shard region with most shards already balanced with least")
                         .addData("most", mostShards.getEffectiveShardCount())
                         .addData("least", leastShards.getEffectiveShardCount())
@@ -155,12 +155,12 @@ public final class ParallelLeastShardAllocationStrategy extends ShardCoordinator
                 currentAllocations,
                 rebalanceInProgress,
                 _pendingRebalances);
-        LOGGER.debug()
-                .setMessage("Broadcasting rebalance info")
-                .addData("target", _notify)
-                .addData("shardAllocations", notification)
-                .log();
         if (_notify.isPresent()) {
+            LOGGER.trace()
+                    .setMessage("Broadcasting rebalance info")
+                    .addData("target", _notify)
+                    .addData("shardAllocations", notification)
+                    .log();
             _notify.get().tell(notification, ActorRef.noSender());
         }
         return Futures.successful(toRebalance);

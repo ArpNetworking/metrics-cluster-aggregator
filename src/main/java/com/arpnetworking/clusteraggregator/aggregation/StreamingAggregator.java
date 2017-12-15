@@ -15,11 +15,10 @@
  */
 package com.arpnetworking.clusteraggregator.aggregation;
 
-import akka.actor.AbstractActor;
+import akka.actor.AbstractActorWithTimers;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.ReceiveTimeout;
-import akka.actor.Scheduler;
 import akka.cluster.sharding.ShardRegion;
 import com.arpnetworking.clusteraggregator.AggregatorLifecycle;
 import com.arpnetworking.clusteraggregator.models.CombinedMetricData;
@@ -58,7 +57,7 @@ import java.util.function.Predicate;
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class StreamingAggregator extends AbstractActor {
+public class StreamingAggregator extends AbstractActorWithTimers {
 
     /**
      * Creates a <code>Props</code> for use in Akka.
@@ -96,21 +95,9 @@ public class StreamingAggregator extends AbstractActor {
         _clusterHostSuffix = clusterHostSuffix;
         context().setReceiveTimeout(FiniteDuration.apply(30, TimeUnit.MINUTES));
 
-        final Scheduler scheduler = getContext().system().scheduler();
-        scheduler.schedule(
-                FiniteDuration.apply(5, TimeUnit.SECONDS),
-                FiniteDuration.apply(5, TimeUnit.SECONDS),
-                getSelf(),
-                new BucketCheck(),
-                getContext().dispatcher(),
-                getSelf());
-        scheduler.schedule(
-                FiniteDuration.apply(5, TimeUnit.SECONDS),
-                FiniteDuration.apply(1, TimeUnit.HOURS),
-                getSelf(),
-                new UpdateBookkeeper(),
-                getContext().dispatcher(),
-                getSelf());
+        timers().startPeriodicTimer(BUCKET_CHECK_TIMER_KEY, BucketCheck.getInstance(), FiniteDuration.apply(5, TimeUnit.SECONDS));
+        timers().startSingleTimer(BOOKKEEPER_UPDATE_TIMER_KEY, UpdateBookkeeper.getInstance(), FiniteDuration.apply(5, TimeUnit.SECONDS));
+
         _emitter = emitter;
     }
 
@@ -188,10 +175,12 @@ public class StreamingAggregator extends AbstractActor {
                         }
                         _statistics.clear();
                     }
+                    timers().startSingleTimer(BOOKKEEPER_UPDATE_TIMER_KEY, UpdateBookkeeper.getInstance(),
+                            FiniteDuration.apply(1, TimeUnit.HOURS));
                 })
                 .match(ShutdownAggregator.class, message -> context().stop(self()))
                 .match(ReceiveTimeout.class, message -> {
-                    getContext().parent().tell(new ShardRegion.Passivate(new ShutdownAggregator()), getSelf());
+                    getContext().parent().tell(new ShardRegion.Passivate(ShutdownAggregator.getInstance()), getSelf());
                 })
                 .build();
     }
@@ -332,16 +321,48 @@ public class StreamingAggregator extends AbstractActor {
             !(entry.getKey().equals(CombinedMetricData.CLUSTER_KEY)
                     || entry.getKey().equals(CombinedMetricData.HOST_KEY)
                     || entry.getKey().equals(CombinedMetricData.SERVICE_KEY));
+    private static final String BUCKET_CHECK_TIMER_KEY = "bucketcheck";
+    private static final String BOOKKEEPER_UPDATE_TIMER_KEY = "updatebookkeeper";
 
     private static final class BucketCheck implements Serializable {
+        /**
+         * Gets the singleton instance.
+         *
+         * @return singleton instance
+         */
+        public static BucketCheck getInstance() {
+            return INSTANCE;
+        }
+
+        private static final BucketCheck INSTANCE = new BucketCheck();
         private static final long serialVersionUID = 1L;
     }
 
     private static final class UpdateBookkeeper implements Serializable {
+        /**
+         * Gets the singleton instance.
+         *
+         * @return singleton instance
+         */
+        public static UpdateBookkeeper getInstance() {
+            return INSTANCE;
+        }
+
+        private static final UpdateBookkeeper INSTANCE = new UpdateBookkeeper();
         private static final long serialVersionUID = 1L;
     }
 
     private static final class ShutdownAggregator implements Serializable {
+        /**
+         * Gets the singleton instance.
+         *
+         * @return singleton instance
+         */
+        public static ShutdownAggregator getInstance() {
+            return INSTANCE;
+        }
+
+        private static final ShutdownAggregator INSTANCE = new ShutdownAggregator();
         private static final long serialVersionUID = 1L;
     }
 }
