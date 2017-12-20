@@ -131,13 +131,13 @@
     <leveldb.version>0.7</leveldb.version>
     <leveldb.jni.version>1.8</leveldb.jni.version>
     <logback.version>1.2.3</logback.version>
-    <logback.steno.version>1.17.0</logback.steno.version>
+    <logback.steno.version>1.18.0</logback.steno.version>
     <log4j.over.slf4j.version>1.7.22</log4j.over.slf4j.version>
     <luaj.version>3.0.1</luaj.version>
     <maven.version>3.3.9</maven.version>
     <metrics.client.version>0.10.0</metrics.client.version>
     <metrics.jvm.extra.version>0.9.0</metrics.jvm.extra.version>
-    <metrics.http.extra.version>0.9.0</metrics.http.extra.version>
+    <metrics.http.extra.version>0.9.1</metrics.http.extra.version>
     <metrics.aggregator.protocol.version>1.0.4</metrics.aggregator.protocol.version>
     <mockito.version>2.12.0</mockito.version>
     <netty.version>3.10.3.Final</netty.version>
