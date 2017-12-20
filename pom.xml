@@ -28,7 +28,7 @@
   <packaging>jar</packaging>
   <name>Metrics Cluster Aggregator</name>
   <description>(Re)Aggregates host level statistics across clusters and writes both host and cluster statistics to various destinations.</description>
-  <version>1.3.5</version>
+  <version>1.3.6-SNAPSHOT</version>
 
   <licenses>
     <license>
@@ -96,7 +96,7 @@
     <connection>scm:git:git@github.com:ArpNetworking/metrics-cluster-aggregator.git</connection>
     <developerConnection>scm:git:git@github.com:ArpNetworking/metrics-cluster-aggregator.git</developerConnection>
     <url>https://github.com/arpnetworking/metrics-cluster-aggregator</url>
-    <tag>metrics-cluster-aggregator-1.3.5</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <properties>
