@@ -88,7 +88,7 @@ public abstract class HttpPostSink extends BaseSink {
      */
     protected Request createRequest(final AsyncHttpClient client, final byte[] serializedData) {
         return new RequestBuilder()
-                .setUrl(_uri.toString())
+                .setUri(_uri)
                 .setHeader("Content-Type", MediaTypes.APPLICATION_JSON.toString())
                 .setBody(serializedData)
                 .setMethod(HttpMethods.POST.value())
