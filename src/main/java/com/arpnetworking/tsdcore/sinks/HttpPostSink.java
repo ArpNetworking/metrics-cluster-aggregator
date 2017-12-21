@@ -147,7 +147,7 @@ public abstract class HttpPostSink extends BaseSink {
                 HttpSinkActor.props(CLIENT, this, builder._maximumConcurrency, builder._maximumQueueSize, builder._spreadPeriod));
     }
 
-    private final URI _uri
+    private final URI _uri;
     private final Uri _apacheUri;
     private final ActorRef _sinkActor;
 
