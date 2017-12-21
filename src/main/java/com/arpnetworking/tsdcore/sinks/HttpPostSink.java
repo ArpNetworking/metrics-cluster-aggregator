@@ -35,6 +35,7 @@ import org.asynchttpclient.DefaultAsyncHttpClient;
 import org.asynchttpclient.DefaultAsyncHttpClientConfig;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.RequestBuilder;
+import org.asynchttpclient.uri.Uri;
 import org.joda.time.Period;
 
 import java.net.URI;
@@ -88,7 +89,7 @@ public abstract class HttpPostSink extends BaseSink {
      */
     protected Request createRequest(final AsyncHttpClient client, final byte[] serializedData) {
         return new RequestBuilder()
-                .setUrl(_uri.toString())
+                .setUri(_aysncHttpClientUri)
                 .setHeader("Content-Type", MediaTypes.APPLICATION_JSON.toString())
                 .setBody(serializedData)
                 .setMethod(HttpMethods.POST.value())
@@ -122,6 +123,15 @@ public abstract class HttpPostSink extends BaseSink {
     protected URI getUri() {
         return _uri;
     }
+    
+    /**
+     * Accessor for the AysncHttpClient <code>Uri</code>.
+     *
+     * @return The AysncHttpClient <code>Uri</code>.
+     */
+    protected Uri getAysncHttpClientUri() {
+        return _aysncHttpClientUri;
+    }
 
     /**
      * Serialize the <code>PeriodicData</code> and <code>Condition</code> instances
@@ -140,12 +150,14 @@ public abstract class HttpPostSink extends BaseSink {
     protected HttpPostSink(final Builder<?, ?> builder) {
         super(builder);
         _uri = builder._uri;
+        _aysncHttpClientUri = Uri.create(_uri.toString());
 
         _sinkActor = builder._actorSystem.actorOf(
                 HttpSinkActor.props(CLIENT, this, builder._maximumConcurrency, builder._maximumQueueSize, builder._spreadPeriod));
     }
 
     private final URI _uri;
+    private final Uri _aysncHttpClientUri;
     private final ActorRef _sinkActor;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpPostSink.class);
