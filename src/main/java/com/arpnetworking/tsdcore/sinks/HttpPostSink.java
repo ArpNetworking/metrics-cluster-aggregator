@@ -33,6 +33,7 @@ import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.AsyncHttpClientConfig;
 import org.asynchttpclient.DefaultAsyncHttpClient;
 import org.asynchttpclient.DefaultAsyncHttpClientConfig;
+import org.asynchttpclient.uri.Uri;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.RequestBuilder;
 import org.joda.time.Period;
@@ -139,13 +140,13 @@ public abstract class HttpPostSink extends BaseSink {
      */
     protected HttpPostSink(final Builder<?, ?> builder) {
         super(builder);
-        _uri = builder._uri;
+        _uri = Uri.create(builder._uri.toString());
 
         _sinkActor = builder._actorSystem.actorOf(
                 HttpSinkActor.props(CLIENT, this, builder._maximumConcurrency, builder._maximumQueueSize, builder._spreadPeriod));
     }
 
-    private final URI _uri;
+    private final Uri _uri;
     private final ActorRef _sinkActor;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpPostSink.class);
