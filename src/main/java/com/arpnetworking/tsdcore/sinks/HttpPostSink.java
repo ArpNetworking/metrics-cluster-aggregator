@@ -89,7 +89,7 @@ public abstract class HttpPostSink extends BaseSink {
      */
     protected Request createRequest(final AsyncHttpClient client, final byte[] serializedData) {
         return new RequestBuilder()
-                .setUri(_uri)
+                .setUri(_apacheUri)
                 .setHeader("Content-Type", MediaTypes.APPLICATION_JSON.toString())
                 .setBody(serializedData)
                 .setMethod(HttpMethods.POST.value())
@@ -140,13 +140,15 @@ public abstract class HttpPostSink extends BaseSink {
      */
     protected HttpPostSink(final Builder<?, ?> builder) {
         super(builder);
-        _uri = Uri.create(builder._uri.toString());
+        _uri = builder._uri;
+        _apacheUri = Uri.create(_uri.toString());
 
         _sinkActor = builder._actorSystem.actorOf(
                 HttpSinkActor.props(CLIENT, this, builder._maximumConcurrency, builder._maximumQueueSize, builder._spreadPeriod));
     }
 
-    private final Uri _uri;
+    private final URI _uri
+    private final Uri _apacheUri;
     private final ActorRef _sinkActor;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpPostSink.class);
