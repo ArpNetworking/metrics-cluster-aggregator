@@ -123,6 +123,15 @@ public abstract class HttpPostSink extends BaseSink {
     protected URI getUri() {
         return _uri;
     }
+    
+    /**
+     * Accessor for the Apache <code>Uri</code>.
+     *
+     * @return The Apache <code>Uri</code>.
+     */
+    protected Uri getApacheUri() {
+        return _apacheUri;
+    }
 
     /**
      * Serialize the <code>PeriodicData</code> and <code>Condition</code> instances
