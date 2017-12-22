@@ -135,7 +135,7 @@ public final class KMonDSink extends HttpPostSink {
     @Override
     protected Request createRequest(final AsyncHttpClient client, final byte[] serializedData) {
         return new RequestBuilder()
-                .setUrl(getUri().toString())
+                .setUri(getAysncHttpClientUri())
                 .setHeader("Content-Type", MediaTypes.APPLICATION_X_WWW_FORM_URLENCODED.toString())
                 .setBody(serializedData)
                 .setMethod(HttpMethods.POST.value())

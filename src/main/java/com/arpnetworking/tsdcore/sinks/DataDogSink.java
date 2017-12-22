@@ -114,7 +114,7 @@ public final class DataDogSink extends HttpPostSink {
     @Override
     protected Request createRequest(final AsyncHttpClient client, final byte[] serializedData) {
         return new RequestBuilder()
-                .setUrl(getUri().toString())
+                .setUri(getAysncHttpClientUri())
                 .setBody(serializedData)
                 .setMethod(HttpMethods.POST.value())
                 .setHeader("Content-Type", "application/json")
