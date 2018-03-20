@@ -45,6 +45,9 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.io.IOException;
@@ -57,6 +60,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
+@Singleton
 public final class Routes implements Function<HttpRequest, CompletionStage<HttpResponse>> {
 
     /**
@@ -67,10 +71,13 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
      * @param healthCheckPath The path for the health check.
      * @param statusPath The path for the status.
      */
+    @Inject
     public Routes(
             final ActorSystem actorSystem,
             final MetricsFactory metricsFactory,
+            @Named("health-check-path")
             final String healthCheckPath,
+            @Named("status-path")
             final String statusPath) {
         _actorSystem = actorSystem;
         _metricsFactory = metricsFactory;
@@ -141,6 +148,10 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
                                     }
                                 });
             }
+        } else if (HttpMethods.POST.equals(request.method())) {
+            if (INCOMING_DATA_V1_PATH.equals(request.getUri().path())) {
+                return ask("/user/http-ingest-v1", request, HttpResponse.create().withStatus(500));
+            }
         }
         return CompletableFuture.completedFuture(HttpResponse.create().withStatus(404));
     }
@@ -153,7 +164,15 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
                         request,
                         Timeout.apply(5, TimeUnit.SECONDS))
                 .thenApply(o -> (T) o)
-                .exceptionally(throwable -> defaultValue);
+                .exceptionally(throwable -> {
+                    LOGGER.error()
+                            .setMessage("error when routing ask")
+                            .addData("actorPath", actorPath)
+                            .addData("request", request)
+                            .setThrowable(throwable)
+                            .log();
+                    return defaultValue;
+                });
     }
 
     private String createTimerName(final HttpRequest request) {
@@ -185,6 +204,7 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
             CacheDirectives.MUST_REVALIDATE);
     private static final String UNHEALTHY_STATE = "UNHEALTHY";
     private static final String HEALTHY_STATE = "HEALTHY";
+    private static final String INCOMING_DATA_V1_PATH = "/metrics/v1/data";
 
     private static final ContentType JSON_CONTENT_TYPE = ContentTypes.APPLICATION_JSON;
 

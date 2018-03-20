@@ -40,6 +40,7 @@ import com.arpnetworking.clusteraggregator.aggregation.Bookkeeper;
 import com.arpnetworking.clusteraggregator.bookkeeper.persistence.InMemoryBookkeeper;
 import com.arpnetworking.clusteraggregator.client.AggClientServer;
 import com.arpnetworking.clusteraggregator.client.AggClientSupervisor;
+import com.arpnetworking.clusteraggregator.client.HttpSourceActor;
 import com.arpnetworking.clusteraggregator.configuration.ClusterAggregatorConfiguration;
 import com.arpnetworking.clusteraggregator.configuration.ConfigurableActorProxy;
 import com.arpnetworking.clusteraggregator.configuration.DatabaseConfiguration;
@@ -112,6 +113,13 @@ public class GuiceModule extends AbstractModule {
                     .toProvider(new DatabaseProvider(entry.getKey(), entry.getValue()))
                     .in(Singleton.class);
         }
+
+        bind(String.class).annotatedWith(Names.named("health-check-path")).toInstance(_configuration.getHttpHealthCheckPath());
+        bind(String.class).annotatedWith(Names.named("status-path")).toInstance(_configuration.getHttpStatusPath());
+        bind(ActorRef.class)
+                .annotatedWith(Names.named("http-ingest-v1"))
+                .toProvider(GuiceActorCreator.provider(HttpSourceActor.class, "http-ingest-v1"))
+                .asEagerSingleton();
     }
 
     @Provides
@@ -258,15 +266,10 @@ public class GuiceModule extends AbstractModule {
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
     private java.util.concurrent.CompletionStage<akka.http.javadsl.ServerBinding> provideHttpServer(
             final ActorSystem system,
-            final MetricsFactory metricsFactory) {
+            final Routes routes) {
 
         // Create and bind Http server
         final Materializer materializer = ActorMaterializer.create(system);
-        final Routes routes = new Routes(
-                system,
-                metricsFactory,
-                _configuration.getHttpHealthCheckPath(),
-                _configuration.getHttpStatusPath());
         final Http http = Http.get(system);
         final akka.stream.javadsl.Source<IncomingConnection, CompletionStage<ServerBinding>> binding = http.bind(
                 ConnectHttp.toHost(
