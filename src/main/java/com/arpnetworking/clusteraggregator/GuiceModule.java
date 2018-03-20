@@ -112,6 +112,9 @@ public class GuiceModule extends AbstractModule {
                     .toProvider(new DatabaseProvider(entry.getKey(), entry.getValue()))
                     .in(Singleton.class);
         }
+
+        bind(String.class).annotatedWith(Names.named("health-check-path")).toInstance(_configuration.getHttpHealthCheckPath());
+        bind(String.class).annotatedWith(Names.named("status-path")).toInstance(_configuration.getHttpStatusPath());
     }
 
     @Provides
@@ -258,15 +261,10 @@ public class GuiceModule extends AbstractModule {
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
     private java.util.concurrent.CompletionStage<akka.http.javadsl.ServerBinding> provideHttpServer(
             final ActorSystem system,
-            final MetricsFactory metricsFactory) {
+            final Routes routes) {
 
         // Create and bind Http server
         final Materializer materializer = ActorMaterializer.create(system);
-        final Routes routes = new Routes(
-                system,
-                metricsFactory,
-                _configuration.getHttpHealthCheckPath(),
-                _configuration.getHttpStatusPath());
         final Http http = Http.get(system);
         final akka.stream.javadsl.Source<IncomingConnection, CompletionStage<ServerBinding>> binding = http.bind(
                 ConnectHttp.toHost(
