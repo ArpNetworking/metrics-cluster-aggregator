@@ -446,6 +446,7 @@ public final class ClusterAggregatorConfiguration {
         private String _clusterHostSuffix = "";
         @NotNull
         private Boolean _calculateClusterAggregations = true;
-        private Map<String, DatabaseConfiguration> _databaseConfigurations;
+        @NotNull
+        private Map<String, DatabaseConfiguration> _databaseConfigurations = Maps.newHashMap();
     }
 }
