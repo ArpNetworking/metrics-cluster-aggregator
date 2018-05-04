@@ -12,7 +12,6 @@ addons:
 env:
   global:
   - TARGET=install
-  - JDKW=https://raw.githubusercontent.com/vjkoskela/jdk-wrapper/master/jdk-wrapper.sh
   - secure: jpTQGbymmpa0WE0QqwTK3sg2kOqgrJ7/XwyFFsr7+rfF4a5YHTbEJ10ApB3Q+TrIT5/irOZr/vqUcX1nEl4BE/vqGnBiJxowvc8Hoq3V33UlqriWvV6SVcLBRtzsI9YB3g91RawokuPIU9EjsmgokJ1cdDbSpTAqDLccKHBupA2QpI5kaynVcuXu3RWXBXEIIj0oE2uxBsJVxGuIwP3ps24rAsnklOB2neQrVcoCeZyku+v+kwRd8dcQQXqg/X4D0N/Vt23bwlWXR9CxMiU4MdywedSIC6h0w2rUeqzTu/wl8qk6Mf1gs/GfkszU/6O6s8cWIlCylPnVhQ6VXlyUmbhkJOmzGUxurGKViR9aDmnCU+fRoyz2Dbnd9U2OrRzc1vg/KtT6dz+IHZ+9IB5gfkz24XzfnJBbP2745i+aLETV8HuMSTayvnKzujgw3is6e1OKNN6LnsFVQYqStOQ8afGESks4igsQZvAck0I9xXsZGyC2NNZRtmd9kcq7c0xOaQO8g1kjJEwO51vO3pWPHVj4Z8tMa6Uqfktqeu0y9il4LEoKryJHGFeaLY9giDLD12T7JbBjGI4xqlFnd5kSEUp/4YL0r6FIrhTPD2MXShq8z7+iGMJfDVlY1rjkb6LPejr4ZkyaYPeears5FZlXP38tJgNDR9jDkZJe/GTyUXQ=
   - secure: fNkPe74gPWuwl+pBhz6dRhHo2y/mihEuaYQtbMwtO1xyz8UJYRUWjncRPZV/XFgB8O/VcdQi4YQcOnddAGBy85Dx5XsVnj+w+/j4hbNvkU46Dklym2IoWjQlV3MRhuWER4XHT1UpGxb9jFf2z7vAr/H/X7w1aDo7RleQ3CDIRFMvy+0b/bWZG7/6wjnzSk8SKJVkO2fMAl0cW8Yj2kG1ZImiPcUv1DW5xUKk2QChOHGJso+09eRTdprQ3lVwjMIG/0cy6HDETMLs5GkEp/zG9MJ/RgCZJwTrZ6WCz0UpqTKFEfBLkqNZHfvw62gGAsI3m2v7Whn39Qxyq9m2VXgXLHPSln/D6opN9Woe9588TwxWmsUqx1SABceOnYzcLxjUcFr+6UNaakfzNrkzExYPdFo3H5FHMFhyVRXqJ2RlTrZsAMIlQl8CL/4mt0vC5Oz5W3wbIsB7RbvoywC1oRDZGTbwJ0JtQXi2YJMT8kGvY3ZTRpkgA+nncDkd63R72pomFcdwtDtoJHdadZOr3kl6cDftQdFW5lr84trAPyO5uIvzQw3jzDz55oLjOyNlHK1gNmMjXAqXDd5qWWRssGbL8P2pfa/Ef+0oP2QCzE2BCeQrWtXzRthervKpYiTtjEkQe+QSUGVsaHnQmMLgyyY/jD+1fEuiscd5AljQQIrPbYc=
   - secure: JLqLcG9IUTl+odtuYNhKeTng0a/KNdkqU5tqaID8L/ZqbXlsuwjkkRuMKGm3LSdMRFj+EWD/sztRiEtsNXT9fsvl8grwrEpBhnGZy0TLDJ0FfkLl2BpvaOGgytR69eqNTTmvUnGTYZLzUHionl99FiN8/JcxkP6bKvEaJpJYYNOiSz8YmlHrE6HZTLu9+04xCrugLE4fwcK7PidaXL2uwn97M5JBOZqk3347WJCSM135vVrMyaFpnECGPCdlYX57SNZvW/hzM1phChluGLmqXLo5REc51QOm9SbT9PLCBK3oIobjDYBai+1eFxPjWz4HoEx/qrO0MTEb5a/nlZOQZsygbFAe66UN1wv/aM0DuQvk1rXzEZXQfCzvqKMCMow7LAAThIVACXyiRwH81ged3pmPcTyM2MiT+cJhWttwdJwgTeIjxVnBqFCOur795RwJD5CAZjIq9o3IqG2qwxMnYZs/3JIc0d4OkWMB9DlzPZ/QCQZErLhixw0N/NbXvz5WpBR631lvQvBr0Fz8qe9GKrWrkUK+7B3dIFV+Sp8gn2bP9n3FsTgXkBUn2p87sizk6QqyeNRvngvjZRGHSzLPWk0oCCJgR3/zSu0vfyti13opb2i5WVkzWRpGcXJctpI4l+YYASVmPl9KoGAaQuCw8FTlCWjJnQnyZwXD1pPjf68=
@@ -23,7 +22,7 @@ before_script:
 - gpg --import arpnetworking.key
 - if [ \( -n "${TRAVIS_TAG}" \) -a  "${TRAVIS_PULL_REQUEST}" = "false" ]; then export TARGET="deploy -P release --settings settings.xml"; fi;
 script:
-- curl -s ${JDKW} | bash /dev/stdin ./mvnw clean ${TARGET} -P rpm -U
+- ./jdk-wrapper.sh ./mvnw clean ${TARGET} -P rpm -U
 deploy:
   provider: releases
   api_key:
