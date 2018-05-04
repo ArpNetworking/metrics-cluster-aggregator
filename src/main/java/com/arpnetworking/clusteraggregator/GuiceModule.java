@@ -67,6 +67,7 @@ import com.arpnetworking.utility.partitioning.PartitionSet;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -348,7 +349,8 @@ public class GuiceModule extends AbstractModule {
     @Provides
     @Named("circonus-partition-set")
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
-    private PartitionSet provideDatabasePartitionSet(@Named("metrics_clusteragg") final Database database) {
+    private PartitionSet provideDatabasePartitionSet(final Injector injector) {
+        final Database database = injector.getInstance(Key.get(Database.class, Names.named("metrics_clusteragg")));
         final com.arpnetworking.clusteraggregator.models.ebean.PartitionSet partitionSet =
                 com.arpnetworking.clusteraggregator.models.ebean.PartitionSet.findOrCreate(
                         "circonus-partition-set",
