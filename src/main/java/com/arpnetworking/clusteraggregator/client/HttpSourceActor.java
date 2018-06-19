@@ -37,7 +37,6 @@ import akka.stream.UniformFanOutShape;
 import akka.stream.javadsl.Broadcast;
 import akka.stream.javadsl.Flow;
 import akka.stream.javadsl.GraphDSL;
-import akka.stream.javadsl.Keep;
 import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Zip;
 import akka.stream.scaladsl.RunnableGraph;
@@ -71,6 +70,11 @@ public class HttpSourceActor extends AbstractActor {
         return Props.create(() -> new HttpSourceActor(emitter));
     }
 
+    /**
+     * Public constructor.
+     *
+     * @param emitter {@code ActorRef} to the host emitter actor
+     */
     @Inject
     public HttpSourceActor(@Named("host-emitter") final ActorRef emitter) {
         final ActorRef self = self();
@@ -170,10 +174,10 @@ public class HttpSourceActor extends AbstractActor {
             records.add(message);
             current = current.drop(message.getLength());
             messageOptional = AggregationMessage.deserialize(current);
-            if (!messageOptional.isPresent() && current.length() > 4) {
+            if (!messageOptional.isPresent() && current.size() > 4) {
                 LOGGER.debug()
                         .setMessage("buffer did not deserialize completely")
-                        .addData("remainingBytes", current.length())
+                        .addData("remainingBytes", current.size())
                         .addContext("actor", self())
                         .log();
             }
