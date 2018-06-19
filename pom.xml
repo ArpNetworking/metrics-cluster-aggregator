@@ -108,7 +108,7 @@
     <apache.httpclient.version>4.5.2</apache.httpclient.version>
     <apache.httpcore.version>4.4.5</apache.httpcore.version>
     <arpnetworking.commons.version>1.13.3</arpnetworking.commons.version>
-    <aspectjrt.version>1.8.10</aspectjrt.version>
+    <aspectjrt.version>1.9.1</aspectjrt.version>
     <cglib.version>3.2.5</cglib.version>
     <commons.codec.version>1.10</commons.codec.version>
     <ebean.version>6.8.1</ebean.version>
@@ -158,8 +158,8 @@
 
     <!--Plugin versions-->
     <avaje.ebeanorm.mavenenhancer.version>4.7.1</avaje.ebeanorm.mavenenhancer.version>
-    <aspectjtools.maven.plugin>1.8.9</aspectjtools.maven.plugin>
-    <aspectj.maven.plugin.version>1.8</aspectj.maven.plugin.version>
+    <aspectjtools.maven.plugin>1.9.1</aspectjtools.maven.plugin>
+    <aspectj.maven.plugin.version>1.11</aspectj.maven.plugin.version>
     <docker.maven.plugin.version>0.15.9</docker.maven.plugin.version>
     <javassist.maven.plugin.version>0.1.2</javassist.maven.plugin.version>
     <maven.assembly.plugin.version>2.6</maven.assembly.plugin.version>

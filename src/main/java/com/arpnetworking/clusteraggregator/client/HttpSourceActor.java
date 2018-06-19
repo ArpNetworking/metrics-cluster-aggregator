@@ -19,7 +19,6 @@ import akka.Done;
 import akka.NotUsed;
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
-import akka.actor.Identify;
 import akka.actor.Props;
 import akka.http.javadsl.model.HttpHeader;
 import akka.http.javadsl.model.HttpRequest;
@@ -28,6 +27,7 @@ import akka.http.javadsl.model.RequestEntity;
 import akka.japi.Pair;
 import akka.stream.ActorMaterializer;
 import akka.stream.ActorMaterializerSettings;
+import akka.stream.ClosedShape;
 import akka.stream.FanInShape2;
 import akka.stream.FlowShape;
 import akka.stream.Graph;
@@ -40,13 +40,16 @@ import akka.stream.javadsl.GraphDSL;
 import akka.stream.javadsl.Keep;
 import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Zip;
+import akka.stream.scaladsl.RunnableGraph;
 import akka.util.ByteString;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.model.AggregationMessage;
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Lists;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
@@ -77,7 +80,7 @@ public class HttpSourceActor extends AbstractActor {
                         .withSupervisionStrategy(Supervision.stoppingDecider()),
                 context());
 
-        _processGraph = GraphDSL.create(builder -> {
+        _processGraph = GraphDSL.create(_sink, (builder, sink) -> {
 
             // Flows
             final Flow<HttpRequest, ByteString, NotUsed> getBodyFlow = Flow.<HttpRequest>create()
@@ -114,8 +117,9 @@ public class HttpSourceActor extends AbstractActor {
             builder.from(split.out(0)).via(getBody).toInlet(join.in0()); // Split to get the body bytes
             builder.from(split.out(1)).via(getHeaders).toInlet(join.in1()); // Split to get the headers
             builder.from(join.out()).toInlet(createRequest.in()); // Join to create the Request and parse it
+            builder.from(createRequest.out()).to(sink);
 
-            return new FlowShape<>(split.in(), createRequest.out());
+            return ClosedShape.getInstance();
         });
     }
 
@@ -125,11 +129,8 @@ public class HttpSourceActor extends AbstractActor {
                 .match(HttpRequest.class, request -> {
                     // TODO(barp): Fix the ugly HttpRequest cast here due to java vs scala dsl
                     final ActorRef sender = sender();
-                    akka.stream.javadsl.Source.single(request)
-                            .via(_processGraph)
-                            .toMat(_sink, Keep.right())
-                            .run(_materializer)
-                            .whenComplete((done, err) -> {
+                    RunnableGraph.fromGraph(_processGraph)
+                            .mapMaterializedValue(completion -> completion.whenComplete((done, err) -> {
                                 if (err == null) {
                                     sender.tell(HttpResponse.create().withStatus(200), self());
                                 } else {
@@ -139,7 +140,8 @@ public class HttpSourceActor extends AbstractActor {
                                             .log();
                                     sender.tell(HttpResponse.create().withStatus(500), self());
                                 }
-                            });
+                            }))
+                            .run(_materializer);
                 })
                 .build();
     }
@@ -160,10 +162,12 @@ public class HttpSourceActor extends AbstractActor {
     }
 
     private List<AggregationMessage> parseRecords(final com.arpnetworking.clusteraggregator.models.HttpRequest request) {
+        final ArrayList<AggregationMessage> records = Lists.newArrayList();
         ByteString current = request.getBody();
         Optional<AggregationMessage> messageOptional = AggregationMessage.deserialize(current);
         while (messageOptional.isPresent()) {
             final AggregationMessage message = messageOptional.get();
+            records.add(message);
             current = current.drop(message.getLength());
             messageOptional = AggregationMessage.deserialize(current);
             if (!messageOptional.isPresent() && current.length() > 4) {
@@ -174,11 +178,12 @@ public class HttpSourceActor extends AbstractActor {
                         .log();
             }
         }
+        return records;
     }
 
     private final Sink<AggregationMessage, CompletionStage<Done>> _sink;
     private final Materializer _materializer;
-    private final Graph<FlowShape<HttpRequest, AggregationMessage>, CompletionStage<Done>> _processGraph;
+    private final Graph<ClosedShape, CompletionStage<Done>> _processGraph;
 
     private static final Logger BAD_REQUEST_LOGGER =
                 LoggerFactory.getRateLimitLogger(HttpSourceActor.class, Duration.ofSeconds(30));
