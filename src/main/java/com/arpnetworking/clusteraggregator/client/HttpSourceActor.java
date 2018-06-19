@@ -37,24 +37,26 @@ import akka.stream.UniformFanOutShape;
 import akka.stream.javadsl.Broadcast;
 import akka.stream.javadsl.Flow;
 import akka.stream.javadsl.GraphDSL;
-import akka.stream.javadsl.Keep;
 import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Zip;
 import akka.stream.scaladsl.RunnableGraph;
 import akka.util.ByteString;
+import com.arpnetworking.clusteraggregator.configuration.ClusterAggregatorConfiguration;
+import com.arpnetworking.metrics.aggregation.protocol.Messages;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.model.AggregationMessage;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import com.google.protobuf.GeneratedMessageV3;
 
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
-import javax.inject.Inject;
-import javax.inject.Named;
 
 /**
  * Source that uses HTTP POSTs as input.
@@ -65,22 +67,46 @@ public class HttpSourceActor extends AbstractActor {
     /**
      * Creates a {@link Props} for this actor.
      *
+     * @param shardRegion The aggregator shard region actor.
+     * @param emitter actor that emits the host data
+     * @param configuration The cluster aggregator configuration.
      * @return A new {@link Props}
      */
-    /* package private */ static Props props(final ActorRef emitter) {
-        return Props.create(() -> new HttpSourceActor(emitter));
+    /* package private */ static Props props(
+            final ActorRef shardRegion,
+            final ActorRef emitter,
+            final ClusterAggregatorConfiguration configuration) {
+        return Props.create(() -> new HttpSourceActor(shardRegion, emitter, configuration));
     }
 
+    /**
+     * Public constructor.
+     * @param shardRegion The aggregator shard region actor.
+     * @param emitter actor that emits the host data
+     * @param configuration The cluster aggregator configuration.
+     */
     @Inject
-    public HttpSourceActor(@Named("host-emitter") final ActorRef emitter) {
+    public HttpSourceActor(
+            @Named("aggregator-shard-region") final ActorRef shardRegion,
+            @Named("host-emitter") final ActorRef emitter,
+            final ClusterAggregatorConfiguration configuration) {
+
         final ActorRef self = self();
-        _sink = Sink.foreach(msg -> emitter.tell(msg, self));
+        final Sink<AggregationMessage, CompletionStage<Done>> sink1 = Sink.foreach(msg -> {
+            final GeneratedMessageV3 generatedMessageV3 = msg.getMessage();
+            if (generatedMessageV3 instanceof Messages.StatisticSetRecord) {
+                if (configuration.getCalculateClusterAggregations()) {
+                    shardRegion.tell(msg, self);
+                }
+                emitter.tell(msg, self);
+            }
+        });
         _materializer = ActorMaterializer.create(
                 ActorMaterializerSettings.create(context().system())
                         .withSupervisionStrategy(Supervision.stoppingDecider()),
                 context());
 
-        _processGraph = GraphDSL.create(_sink, (builder, sink) -> {
+        _processGraph = GraphDSL.create(sink1, (builder, sink) -> {
 
             // Flows
             final Flow<HttpRequest, ByteString, NotUsed> getBodyFlow = Flow.<HttpRequest>create()
@@ -127,7 +153,6 @@ public class HttpSourceActor extends AbstractActor {
     public Receive createReceive() {
         return receiveBuilder()
                 .match(HttpRequest.class, request -> {
-                    // TODO(barp): Fix the ugly HttpRequest cast here due to java vs scala dsl
                     final ActorRef sender = sender();
                     RunnableGraph.fromGraph(_processGraph)
                             .mapMaterializedValue(completion -> completion.whenComplete((done, err) -> {
@@ -170,10 +195,10 @@ public class HttpSourceActor extends AbstractActor {
             records.add(message);
             current = current.drop(message.getLength());
             messageOptional = AggregationMessage.deserialize(current);
-            if (!messageOptional.isPresent() && current.length() > 4) {
+            if (!messageOptional.isPresent() && current.lengthCompare(4) < 0) {
                 LOGGER.debug()
                         .setMessage("buffer did not deserialize completely")
-                        .addData("remainingBytes", current.length())
+                        .addData("remainingBytes", current.size())
                         .addContext("actor", self())
                         .log();
             }
@@ -181,7 +206,6 @@ public class HttpSourceActor extends AbstractActor {
         return records;
     }
 
-    private final Sink<AggregationMessage, CompletionStage<Done>> _sink;
     private final Materializer _materializer;
     private final Graph<ClosedShape, CompletionStage<Done>> _processGraph;
 
