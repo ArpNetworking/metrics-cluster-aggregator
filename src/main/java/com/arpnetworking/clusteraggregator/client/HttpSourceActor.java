@@ -27,7 +27,6 @@ import akka.http.javadsl.model.RequestEntity;
 import akka.japi.Pair;
 import akka.stream.ActorMaterializer;
 import akka.stream.ActorMaterializerSettings;
-import akka.stream.ClosedShape;
 import akka.stream.FanInShape2;
 import akka.stream.FlowShape;
 import akka.stream.Graph;
@@ -37,9 +36,10 @@ import akka.stream.UniformFanOutShape;
 import akka.stream.javadsl.Broadcast;
 import akka.stream.javadsl.Flow;
 import akka.stream.javadsl.GraphDSL;
+import akka.stream.javadsl.Keep;
 import akka.stream.javadsl.Sink;
+import akka.stream.javadsl.Source;
 import akka.stream.javadsl.Zip;
-import akka.stream.scaladsl.RunnableGraph;
 import akka.util.ByteString;
 import com.arpnetworking.clusteraggregator.configuration.ClusterAggregatorConfiguration;
 import com.arpnetworking.metrics.aggregation.protocol.Messages;
@@ -92,7 +92,7 @@ public class HttpSourceActor extends AbstractActor {
             final ClusterAggregatorConfiguration configuration) {
 
         final ActorRef self = self();
-        final Sink<AggregationMessage, CompletionStage<Done>> sink1 = Sink.foreach(msg -> {
+        _sink = Sink.foreach(msg -> {
             final GeneratedMessageV3 generatedMessageV3 = msg.getMessage();
             if (generatedMessageV3 instanceof Messages.StatisticSetRecord) {
                 if (configuration.getCalculateClusterAggregations()) {
@@ -101,12 +101,13 @@ public class HttpSourceActor extends AbstractActor {
                 emitter.tell(msg, self);
             }
         });
+
         _materializer = ActorMaterializer.create(
                 ActorMaterializerSettings.create(context().system())
                         .withSupervisionStrategy(Supervision.stoppingDecider()),
                 context());
 
-        _processGraph = GraphDSL.create(sink1, (builder, sink) -> {
+        _processGraph = GraphDSL.create(builder -> {
 
             // Flows
             final Flow<HttpRequest, ByteString, NotUsed> getBodyFlow = Flow.<HttpRequest>create()
@@ -143,9 +144,8 @@ public class HttpSourceActor extends AbstractActor {
             builder.from(split.out(0)).via(getBody).toInlet(join.in0()); // Split to get the body bytes
             builder.from(split.out(1)).via(getHeaders).toInlet(join.in1()); // Split to get the headers
             builder.from(join.out()).toInlet(createRequest.in()); // Join to create the Request and parse it
-            builder.from(createRequest.out()).to(sink);
 
-            return ClosedShape.getInstance();
+            return FlowShape.of(split.in(), createRequest.out());
         });
     }
 
@@ -154,19 +154,25 @@ public class HttpSourceActor extends AbstractActor {
         return receiveBuilder()
                 .match(HttpRequest.class, request -> {
                     final ActorRef sender = sender();
-                    RunnableGraph.fromGraph(_processGraph)
-                            .mapMaterializedValue(completion -> completion.whenComplete((done, err) -> {
+                    Source.single(request)
+                            .via(_processGraph)
+                            .toMat(_sink, Keep.right())
+                            .run(_materializer)
+                            .whenComplete((done, err) -> {
                                 if (err == null) {
                                     sender.tell(HttpResponse.create().withStatus(200), self());
                                 } else {
-                                    BAD_REQUEST_LOGGER.warn()
-                                            .setMessage("Error handling http post")
-                                            .setThrowable(err)
-                                            .log();
-                                    sender.tell(HttpResponse.create().withStatus(500), self());
+                                    if (err instanceof NoRecordsException) {
+                                        sender.tell(HttpResponse.create().withStatus(400), self());
+                                    } else {
+                                        BAD_REQUEST_LOGGER.warn()
+                                                .setMessage("Error handling http post")
+                                                .setThrowable(err)
+                                                .log();
+                                        sender.tell(HttpResponse.create().withStatus(500), self());
+                                    }
                                 }
-                            }))
-                            .run(_materializer);
+                            });
                 })
                 .build();
     }
@@ -203,14 +209,43 @@ public class HttpSourceActor extends AbstractActor {
                         .log();
             }
         }
+        if (records.size() == 0) {
+            throw new NoRecordsException();
+        }
         return records;
     }
 
     private final Materializer _materializer;
-    private final Graph<ClosedShape, CompletionStage<Done>> _processGraph;
+    private final Sink<AggregationMessage, CompletionStage<Done>> _sink;
+    private final Graph<FlowShape<HttpRequest, AggregationMessage>, NotUsed> _processGraph;
 
     private static final Logger BAD_REQUEST_LOGGER =
                 LoggerFactory.getRateLimitLogger(HttpSourceActor.class, Duration.ofSeconds(30));
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpSourceActor.class);
+
+
+    private static class NoRecordsException extends RuntimeException {
+        NoRecordsException() {
+        }
+
+        NoRecordsException(final String message) {
+            super(message);
+        }
+
+        NoRecordsException(final String message, final Throwable cause) {
+            super(message, cause);
+        }
+
+        NoRecordsException(final Throwable cause) {
+            super(cause);
+        }
+
+        NoRecordsException(final String message, final Throwable cause, final boolean enableSuppression,
+                final boolean writableStackTrace) {
+            super(message, cause, enableSuppression, writableStackTrace);
+        }
+
+        private static final long serialVersionUID = 1L;
+    }
 }
 

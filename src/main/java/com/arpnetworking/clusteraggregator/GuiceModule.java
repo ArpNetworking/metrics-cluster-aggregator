@@ -40,6 +40,7 @@ import com.arpnetworking.clusteraggregator.aggregation.Bookkeeper;
 import com.arpnetworking.clusteraggregator.bookkeeper.persistence.InMemoryBookkeeper;
 import com.arpnetworking.clusteraggregator.client.AggClientServer;
 import com.arpnetworking.clusteraggregator.client.AggClientSupervisor;
+import com.arpnetworking.clusteraggregator.client.HttpSourceActor;
 import com.arpnetworking.clusteraggregator.configuration.ClusterAggregatorConfiguration;
 import com.arpnetworking.clusteraggregator.configuration.ConfigurableActorProxy;
 import com.arpnetworking.clusteraggregator.configuration.DatabaseConfiguration;
@@ -115,6 +116,10 @@ public class GuiceModule extends AbstractModule {
 
         bind(String.class).annotatedWith(Names.named("health-check-path")).toInstance(_configuration.getHttpHealthCheckPath());
         bind(String.class).annotatedWith(Names.named("status-path")).toInstance(_configuration.getHttpStatusPath());
+        bind(ActorRef.class)
+                .annotatedWith(Names.named("http-ingest-v1"))
+                .toProvider(GuiceActorCreator.provider(HttpSourceActor.class, "http-ingest-v1"))
+                .asEagerSingleton();
     }
 
     @Provides
