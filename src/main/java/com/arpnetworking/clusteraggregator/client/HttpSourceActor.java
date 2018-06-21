@@ -42,10 +42,17 @@ import akka.stream.javadsl.Source;
 import akka.stream.javadsl.Zip;
 import akka.util.ByteString;
 import com.arpnetworking.clusteraggregator.configuration.ClusterAggregatorConfiguration;
+import com.arpnetworking.clusteraggregator.models.CombinedMetricData;
 import com.arpnetworking.metrics.aggregation.protocol.Messages;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
+import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.AggregationMessage;
+import com.arpnetworking.tsdcore.model.FQDSN;
+import com.arpnetworking.tsdcore.model.PeriodicData;
+import com.arpnetworking.tsdcore.statistics.Statistic;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -54,7 +61,9 @@ import com.google.protobuf.GeneratedMessageV3;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 
@@ -95,10 +104,15 @@ public class HttpSourceActor extends AbstractActor {
         _sink = Sink.foreach(msg -> {
             final GeneratedMessageV3 generatedMessageV3 = msg.getMessage();
             if (generatedMessageV3 instanceof Messages.StatisticSetRecord) {
+                final Messages.StatisticSetRecord statisticSetRecord =
+                        (Messages.StatisticSetRecord) msg.getMessage();
                 if (configuration.getCalculateClusterAggregations()) {
-                    shardRegion.tell(msg, self);
+                    shardRegion.tell(statisticSetRecord, self);
                 }
-                emitter.tell(msg, self);
+                final Optional<PeriodicData> periodicData = buildPeriodicData(statisticSetRecord);
+                if (periodicData.isPresent()) {
+                    emitter.tell(periodicData.get(), self);
+                }
             }
         });
 
@@ -201,7 +215,7 @@ public class HttpSourceActor extends AbstractActor {
             records.add(message);
             current = current.drop(message.getLength());
             messageOptional = AggregationMessage.deserialize(current);
-            if (!messageOptional.isPresent() && current.lengthCompare(4) < 0) {
+            if (!messageOptional.isPresent() && current.lengthCompare(4) > 0) {
                 LOGGER.debug()
                         .setMessage("buffer did not deserialize completely")
                         .addData("remainingBytes", current.size())
@@ -213,6 +227,68 @@ public class HttpSourceActor extends AbstractActor {
             throw new NoRecordsException();
         }
         return records;
+    }
+
+    private Optional<PeriodicData> buildPeriodicData(final Messages.StatisticSetRecord setRecord) {
+        final CombinedMetricData combinedMetricData = CombinedMetricData.Builder.fromStatisticSetRecord(setRecord).build();
+        final ImmutableList.Builder<AggregatedData> builder = ImmutableList.builder();
+        final Map<String, String> dimensionsMap = setRecord.getDimensionsMap();
+        final ImmutableMap.Builder<String, String> dimensionBuilder = ImmutableMap.builder();
+
+        dimensionsMap.entrySet().stream()
+                .filter(entry ->
+                        !CombinedMetricData.HOST_KEY.equals(entry.getKey())
+                                && !CombinedMetricData.SERVICE_KEY.equals(entry.getKey())
+                                && !CombinedMetricData.CLUSTER_KEY.equals(entry.getKey()))
+                .forEach(dim ->
+                        dimensionBuilder.put(dim.getKey(), dim.getValue()
+                        ));
+
+        final Optional<String> host = Optional.ofNullable(dimensionsMap.get(CombinedMetricData.HOST_KEY));
+        Optional<String> service = Optional.ofNullable(dimensionsMap.get(CombinedMetricData.SERVICE_KEY));
+        Optional<String> cluster = Optional.ofNullable(dimensionsMap.get(CombinedMetricData.CLUSTER_KEY));
+
+        if (!service.isPresent()) {
+            service = Optional.ofNullable(setRecord.getService());
+        }
+
+        if (!cluster.isPresent()) {
+            cluster = Optional.ofNullable(setRecord.getCluster());
+        }
+
+        dimensionBuilder.put(CombinedMetricData.HOST_KEY, host.orElse(""));
+        dimensionBuilder.put(CombinedMetricData.SERVICE_KEY, service.orElse(""));
+        dimensionBuilder.put(CombinedMetricData.CLUSTER_KEY, cluster.orElse(""));
+
+        final ImmutableMap<String, String> dimensions = dimensionBuilder.build();
+
+        for (final Map.Entry<Statistic, CombinedMetricData.StatisticValue> record
+                : combinedMetricData.getCalculatedValues().entrySet()) {
+            final AggregatedData aggregatedData = new AggregatedData.Builder()
+                    .setFQDSN(new FQDSN.Builder()
+                            .setCluster(setRecord.getCluster())
+                            .setMetric(setRecord.getMetric())
+                            .setService(setRecord.getService())
+                            .setStatistic(record.getKey())
+                            .build())
+                    .setHost(host.get())
+                    .setIsSpecified(record.getValue().getUserSpecified())
+                    .setPeriod(combinedMetricData.getPeriod())
+                    .setPopulationSize(1L)
+                    .setSamples(Collections.emptyList())
+                    .setStart(combinedMetricData.getPeriodStart())
+                    .setSupportingData(record.getValue().getValue().getData())
+                    .setValue(record.getValue().getValue().getValue())
+                    .build();
+            builder.add(aggregatedData);
+        }
+        return Optional.of(new PeriodicData.Builder()
+                .setData(builder.build())
+                .setConditions(ImmutableList.of())
+                .setDimensions(dimensions)
+                .setPeriod(combinedMetricData.getPeriod())
+                .setStart(combinedMetricData.getPeriodStart())
+                .build());
     }
 
     private final Materializer _materializer;
