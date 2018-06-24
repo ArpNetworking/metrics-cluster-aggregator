@@ -176,6 +176,15 @@
     <!-- JVM Debug -->
     <debugJavaOptions />
     <debugJavaPort>9000</debugJavaPort>
+
+    <!-- Docker Overrides -->
+    <skipDockerBuild>false</skipDockerBuild>
+
+    <!-- Assembly Overrides -->
+    <tgz.finalName>${project.build.finalName}</tgz.finalName>
+
+    <!-- Project Overrides -->
+    <buildDirectory>${project.basedir}/target</buildDirectory>
   </properties>
 
   <build>
@@ -265,6 +274,7 @@
               <mainClass>com.arpnetworking.clusteraggregator.Main</mainClass>
             </program>
           </programs>
+          <unixScriptTemplate>${project.build.directory}/appAssemblerUnixBinTemplate</unixScriptTemplate>
           <endorsedDir>lib/ext</endorsedDir>
         </configuration>
       </plugin>
@@ -314,6 +324,7 @@
               <goal>single</goal>
             </goals>
             <configuration>
+              <finalName>${tgz.finalName}</finalName>
               <appendAssemblyId>true</appendAssemblyId>
               <attach>false</attach>
               <tarLongFileMode>posix</tarLongFileMode>
@@ -475,6 +486,7 @@
               </run>
             </image>
           </images>
+          <skip>${skipDockerBuild}</skip>
         </configuration>
       </plugin>
     </plugins>
@@ -891,7 +903,7 @@
                   <directory>/opt/cluster-aggregator</directory>
                   <sources>
                     <source>
-                      <location>target/appassembler</location>
+                      <location>${buildDirectory}/appassembler</location>
                     </source>
                   </sources>
                 </mapping>
@@ -937,6 +949,16 @@
       </activation>
       <properties>
         <debugJavaOptions>-Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=${debugJavaPort},suspend=n</debugJavaOptions>
+      </properties>
+    </profile>
+    <profile>
+      <id>no-docker</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <properties>
+        <skipIntegrationTests>true</skipIntegrationTests>
+        <skipDockerBuild>true</skipDockerBuild>
       </properties>
     </profile>
   </profiles>
