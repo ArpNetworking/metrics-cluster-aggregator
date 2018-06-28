@@ -59,6 +59,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.GeneratedMessageV3;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -176,7 +177,17 @@ public class HttpSourceActor extends AbstractActor {
                                 if (err == null) {
                                     sender.tell(HttpResponse.create().withStatus(200), self());
                                 } else {
-                                    if (err instanceof NoRecordsException) {
+                                    if (err instanceof InvalidRecordsException) {
+                                        BAD_REQUEST_LOGGER.debug()
+                                                .setMessage("Invalid records in http post")
+                                                .setThrowable(err)
+                                                .log();
+                                        sender.tell(HttpResponse.create().withStatus(400), self());
+                                    } else if (err instanceof NoRecordsException) {
+                                        BAD_REQUEST_LOGGER.debug()
+                                                .setMessage("No records in http post")
+                                                .setThrowable(err)
+                                                .log();
                                         sender.tell(HttpResponse.create().withStatus(400), self());
                                     } else {
                                         BAD_REQUEST_LOGGER.warn()
@@ -206,7 +217,7 @@ public class HttpSourceActor extends AbstractActor {
         return new com.arpnetworking.clusteraggregator.models.HttpRequest(pair.second(), pair.first());
     }
 
-    private List<AggregationMessage> parseRecords(final com.arpnetworking.clusteraggregator.models.HttpRequest request) {
+    private List<AggregationMessage> parseRecords(final com.arpnetworking.clusteraggregator.models.HttpRequest request) throws IOException {
         final ArrayList<AggregationMessage> records = Lists.newArrayList();
         ByteString current = request.getBody();
         Optional<AggregationMessage> messageOptional = AggregationMessage.deserialize(current);
@@ -216,11 +227,12 @@ public class HttpSourceActor extends AbstractActor {
             current = current.drop(message.getLength());
             messageOptional = AggregationMessage.deserialize(current);
             if (!messageOptional.isPresent() && current.lengthCompare(4) > 0) {
-                LOGGER.debug()
+                LOGGER.trace()
                         .setMessage("buffer did not deserialize completely")
                         .addData("remainingBytes", current.size())
                         .addContext("actor", self())
                         .log();
+                throw new InvalidRecordsException("buffer did not deserialize completely");
             }
         }
         if (records.size() == 0) {
@@ -300,25 +312,16 @@ public class HttpSourceActor extends AbstractActor {
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpSourceActor.class);
 
 
-    private static class NoRecordsException extends RuntimeException {
+    private static class NoRecordsException extends IOException {
         NoRecordsException() {
         }
 
-        NoRecordsException(final String message) {
+        private static final long serialVersionUID = 1L;
+    }
+
+    private static class InvalidRecordsException extends IOException {
+        InvalidRecordsException(final String message) {
             super(message);
-        }
-
-        NoRecordsException(final String message, final Throwable cause) {
-            super(message, cause);
-        }
-
-        NoRecordsException(final Throwable cause) {
-            super(cause);
-        }
-
-        NoRecordsException(final String message, final Throwable cause, final boolean enableSuppression,
-                final boolean writableStackTrace) {
-            super(message, cause, enableSuppression, writableStackTrace);
         }
 
         private static final long serialVersionUID = 1L;
