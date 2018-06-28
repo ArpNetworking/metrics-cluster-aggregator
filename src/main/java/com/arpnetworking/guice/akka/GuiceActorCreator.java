@@ -16,11 +16,15 @@
 package com.arpnetworking.guice.akka;
 
 import akka.actor.Actor;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.IndirectActorProducer;
 import akka.actor.Props;
 import com.arpnetworking.logback.annotations.LogValue;
 import com.arpnetworking.steno.LogValueMapFactory;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.Provider;
 
 /**
  * A Guice-based factory for Akka actors.
@@ -38,6 +42,28 @@ public class GuiceActorCreator implements IndirectActorProducer {
      */
     public static Props props(final Injector injector, final Class<? extends Actor> clazz) {
         return Props.create(GuiceActorCreator.class, injector, clazz);
+    }
+
+    /**
+     * Creates a provider that is suitable for eager singleton binding.
+     *
+     * @param clazz the class to create
+     * @param name the name of the actor
+     * @return a {@link Provider} that will create the actor
+     */
+    public static Provider<ActorRef> provider(final Class<? extends Actor> clazz, final String name) {
+        return new Provider<ActorRef>() {
+            @Override
+            public ActorRef get() {
+                return _system.actorOf(props(_injector, clazz), name);
+            }
+
+            @Inject
+            private ActorSystem _system;
+
+            @Inject
+            private Injector _injector;
+        };
     }
 
     /**
