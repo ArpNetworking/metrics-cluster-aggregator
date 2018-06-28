@@ -54,14 +54,12 @@ import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.GeneratedMessageV3;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -91,6 +89,7 @@ public class HttpSourceActor extends AbstractActor {
 
     /**
      * Public constructor.
+     *
      * @param shardRegion The aggregator shard region actor.
      * @param emitter actor that emits the host data
      * @param configuration The cluster aggregator configuration.
@@ -218,23 +217,20 @@ public class HttpSourceActor extends AbstractActor {
     }
 
     private List<AggregationMessage> parseRecords(final com.arpnetworking.clusteraggregator.models.HttpRequest request) throws IOException {
-        final ArrayList<AggregationMessage> records = Lists.newArrayList();
+        final ImmutableList.Builder<AggregationMessage> recordsBuilder = ImmutableList.builder();
         ByteString current = request.getBody();
         Optional<AggregationMessage> messageOptional = AggregationMessage.deserialize(current);
         while (messageOptional.isPresent()) {
             final AggregationMessage message = messageOptional.get();
-            records.add(message);
+            recordsBuilder.add(message);
             current = current.drop(message.getLength());
             messageOptional = AggregationMessage.deserialize(current);
-            if (!messageOptional.isPresent() && current.lengthCompare(4) > 0) {
-                LOGGER.trace()
-                        .setMessage("buffer did not deserialize completely")
-                        .addData("remainingBytes", current.size())
-                        .addContext("actor", self())
-                        .log();
-                throw new InvalidRecordsException("buffer did not deserialize completely");
+            if (!messageOptional.isPresent() && current.lengthCompare(0) > 0) {
+                throw new InvalidRecordsException(
+                        String.format("buffer did not deserialize completely, %d leftover bytes", current.size()));
             }
         }
+        final ImmutableList<AggregationMessage> records = recordsBuilder.build();
         if (records.size() == 0) {
             throw new NoRecordsException();
         }
