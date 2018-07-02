@@ -121,7 +121,7 @@ public final class AggregationMessage {
             }
         } catch (final InvalidProtocolBufferException e) {
             LOGGER.warn(
-                String.format("Invalid protocol buffer; type=%s bytes=%s", type, Hex.encodeHexString(payloadBytes)), e);
+                    String.format("Invalid protocol buffer; type=%s bytes=%s", type, Hex.encodeHexString(payloadBytes)), e);
             return Optional.empty();
         }
     }
@@ -190,5 +190,4 @@ public final class AggregationMessage {
     private static final int INTEGER_SIZE_IN_BYTES = Integer.SIZE / 8;
     private static final int HEADER_SIZE_IN_BYTES = INTEGER_SIZE_IN_BYTES + 1;
     private static final Logger LOGGER = LoggerFactory.getLogger(AggregationMessage.class);
-
 }

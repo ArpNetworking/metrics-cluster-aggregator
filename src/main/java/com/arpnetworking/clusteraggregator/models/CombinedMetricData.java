@@ -207,9 +207,9 @@ public final class CombinedMetricData {
 
                     final HistogramStatistic.HistogramSupportingData histogramSupportingData =
                             new HistogramStatistic.HistogramSupportingData.Builder()
-                            .setHistogramSnapshot(histogram.getSnapshot())
-                            .setUnit(getUnitFromName(supportingData.getUnit()))
-                            .build();
+                                    .setHistogramSnapshot(histogram.getSnapshot())
+                                    .setUnit(getUnitFromName(supportingData.getUnit()))
+                                    .build();
 
                     calculatedValueBuilder = new CalculatedValue.Builder<HistogramStatistic.HistogramSupportingData>()
                             .setData(histogramSupportingData);

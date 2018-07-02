@@ -25,6 +25,11 @@ import com.google.common.collect.Multimap;
  * @author Brandon Arp (brandon dot arp at smartsheet dot com)
  */
 public final class HttpRequest {
+
+    public String getPath() {
+        return _path;
+    }
+
     public Multimap<String, String> getHeaders() {
         return _headers;
     }
@@ -36,14 +41,20 @@ public final class HttpRequest {
     /**
      * Public constructor.
      *
+     * @param path The path.
      * @param headers The headers.
      * @param body The body of the request.
      */
-    public HttpRequest(final ImmutableMultimap<String, String> headers, final ByteString body) {
+    public HttpRequest(
+            final String path,
+            final ImmutableMultimap<String, String> headers,
+            final ByteString body) {
+        _path = path;
         _headers = headers;
         _body = body;
     }
 
+    private final String _path;
     private final ImmutableMultimap<String, String> _headers;
     private final ByteString _body;
 }

@@ -161,7 +161,9 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
                                 });
             }
         } else if (HttpMethods.POST.equals(request.method())) {
-            if (INCOMING_DATA_V1_PATH.equals(request.getUri().path())) {
+            if (INCOMING_DATA_V1_PATH.equals(request.getUri().path())
+                    || INCOMING_DATA_PERSIST_V1_PATH.equals(request.getUri().path())
+                    || INCOMING_DATA_REAGGREGATE_V1_PATH.equals(request.getUri().path())) {
                 return ask("/user/http-ingest-v1", request, HttpResponse.create().withStatus(500));
             }
         }
@@ -210,7 +212,6 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Routes.class);
 
-    // Ping
     private static final HttpHeader PING_CACHE_CONTROL_HEADER = CacheControl.create(
             CacheDirectives.PRIVATE(),
             CacheDirectives.NO_CACHE,
@@ -218,7 +219,6 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
             CacheDirectives.MUST_REVALIDATE);
     private static final String UNHEALTHY_STATE = "UNHEALTHY";
     private static final String HEALTHY_STATE = "HEALTHY";
-    private static final String INCOMING_DATA_V1_PATH = "/metrics/v1/data";
     private static final String REST_SERVICE_METRIC_ROOT = "rest_service/";
     private static final String BODY_SIZE_METRIC = "body_size";
     private static final String REQUEST_METRIC = "request";
@@ -228,6 +228,29 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
     private static final ContentType JSON_CONTENT_TYPE = ContentTypes.APPLICATION_JSON;
 
     private static final long serialVersionUID = -1573473630801540757L;
+    
+    /**
+     * The legacy path for incoming data over HTTP. The reaggregation behavior
+     * on this path is controlled by the the {@code calculateClusterAggregations}
+     * value. If this is set to {@code False} this endpoint behaves with
+     * {@link com.arpnetworking.clusteraggregator.models.AggregationMode} set to
+     * {@code PERSIST}. If the configuration key is set to {@code True} this endpoint
+     * behaves with {@link com.arpnetworking.clusteraggregator.models.AggregationMode}
+     * set to {@code PERSIST_AND_REAGGREGATE}.
+     */
+    public static final String INCOMING_DATA_V1_PATH = "/metrics/v1/data";
+
+    /**
+     * This HTTP endpoint is for only persisting data directly and through the
+     * host emitter.
+     */
+    public static final String INCOMING_DATA_PERSIST_V1_PATH = "/metrics/v1/data/persist";
+
+    /**
+     * This HTTP endpoint is for only reaggregating data and then persisting
+     * through the cluster emitter.
+     */
+    public static final String INCOMING_DATA_REAGGREGATE_V1_PATH = "/metrics/v1/data/reaggregate";
 
     private static class MemberSerializer extends JsonSerializer<Member> {
         @Override
