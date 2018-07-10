@@ -23,6 +23,7 @@ import akka.actor.Terminated;
 import akka.io.Tcp;
 import akka.io.TcpMessage;
 import akka.util.ByteString;
+import com.arpnetworking.clusteraggregator.models.AggregationMode;
 import com.arpnetworking.clusteraggregator.models.CombinedMetricData;
 import com.arpnetworking.metrics.aggregation.protocol.Messages;
 import com.arpnetworking.steno.Logger;
@@ -137,6 +138,8 @@ public class AggClientConnection extends AbstractActor {
     }
 
     private void processMessages() {
+        final AggregationMode aggregationMode =
+                _calculateAggregates ? AggregationMode.PERSIST_AND_REAGGREGATE : AggregationMode.PERSIST;
         ByteString current = _buffer;
         Optional<AggregationMessage> messageOptional = AggregationMessage.deserialize(current);
         while (messageOptional.isPresent()) {
@@ -162,13 +165,15 @@ public class AggClientConnection extends AbstractActor {
                         .log();
                 // StatisticSetRecords get forwarded to the parent, who then forwards them to the shard for cluster aggregating
                 // If we aren't doing shard aggregating, don't forward it
-                if (_calculateAggregates) {
+                if (aggregationMode.shouldReaggregate()) {
                     getContext().parent().tell(setRecord, getSelf());
                 }
-                if (setRecord.getStatisticsCount() > 0) {
-                    final Optional<PeriodicData> periodicData = buildPeriodicData(setRecord);
-                    if (periodicData.isPresent()) {
-                        getContext().parent().tell(periodicData.get(), self());
+                if (aggregationMode.shouldPersist()) {
+                    if (setRecord.getStatisticsCount() > 0) {
+                        final Optional<PeriodicData> periodicData = buildPeriodicData(setRecord);
+                        if (periodicData.isPresent()) {
+                            getContext().parent().tell(periodicData.get(), self());
+                        }
                     }
                 }
             } else if (gm instanceof Messages.HeartbeatRecord) {

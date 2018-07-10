@@ -42,12 +42,15 @@ import akka.stream.javadsl.Source;
 import akka.stream.javadsl.Zip;
 import akka.util.ByteString;
 import com.arpnetworking.clusteraggregator.configuration.ClusterAggregatorConfiguration;
+import com.arpnetworking.clusteraggregator.http.Routes;
+import com.arpnetworking.clusteraggregator.models.AggregationMode;
 import com.arpnetworking.clusteraggregator.models.CombinedMetricData;
 import com.arpnetworking.metrics.aggregation.protocol.Messages;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.AggregationMessage;
+import com.arpnetworking.tsdcore.model.AggregationRequest;
 import com.arpnetworking.tsdcore.model.FQDSN;
 import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.arpnetworking.tsdcore.statistics.Statistic;
@@ -61,7 +64,6 @@ import com.google.protobuf.GeneratedMessageV3;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
@@ -100,18 +102,27 @@ public class HttpSourceActor extends AbstractActor {
             @Named("host-emitter") final ActorRef emitter,
             final ClusterAggregatorConfiguration configuration) {
 
+        _calculateAggregates = configuration.getCalculateClusterAggregations();
+
         final ActorRef self = self();
-        _sink = Sink.foreach(msg -> {
-            final GeneratedMessageV3 generatedMessageV3 = msg.getMessage();
-            if (generatedMessageV3 instanceof Messages.StatisticSetRecord) {
-                final Messages.StatisticSetRecord statisticSetRecord =
-                        (Messages.StatisticSetRecord) msg.getMessage();
-                if (configuration.getCalculateClusterAggregations()) {
-                    shardRegion.tell(statisticSetRecord, self);
-                }
-                final Optional<PeriodicData> periodicData = buildPeriodicData(statisticSetRecord);
-                if (periodicData.isPresent()) {
-                    emitter.tell(periodicData.get(), self);
+        _sink = Sink.foreach(aggregationRequest -> {
+            final AggregationMode aggregationMode = aggregationRequest.getAggregationMode();
+            for (final AggregationMessage aggregationMessage : aggregationRequest.getAggregationMessages()) {
+                final GeneratedMessageV3 generatedMessageV3 = aggregationMessage.getMessage();
+                if (generatedMessageV3 instanceof Messages.StatisticSetRecord) {
+                    final Messages.StatisticSetRecord statisticSetRecord =
+                            (Messages.StatisticSetRecord) aggregationMessage.getMessage();
+
+                    if (aggregationMode.shouldReaggregate()) {
+                        shardRegion.tell(statisticSetRecord, self);
+                    }
+
+                    if (aggregationMode.shouldPersist()) {
+                        final Optional<PeriodicData> periodicData = buildPeriodicData(statisticSetRecord);
+                        if (periodicData.isPresent()) {
+                            emitter.tell(periodicData.get(), self);
+                        }
+                    }
                 }
             }
         });
@@ -130,15 +141,10 @@ public class HttpSourceActor extends AbstractActor {
                     .reduce(ByteString::concat)
                     .named("getBody");
 
-            final Flow<HttpRequest, ImmutableMultimap<String, String>, NotUsed> getHeadersFlow = Flow.<HttpRequest>create()
-                    .map(HttpRequest::getHeaders)
-                    .map(HttpSourceActor::createHeaderMultimap) // Transform to array form
-                    .named("getHeaders");
-
-            final Flow<Pair<ByteString, ImmutableMultimap<String, String>>, AggregationMessage, NotUsed> createAndParseFlow =
-                    Flow.<Pair<ByteString, ImmutableMultimap<String, String>>>create()
+            final Flow<Pair<ByteString, HttpRequest>, AggregationRequest, NotUsed> createAndParseFlow =
+                    Flow.<Pair<ByteString, HttpRequest>>create()
                             .map(HttpSourceActor::mapModel)
-                            .mapConcat(this::parseRecords) // Parse the json string into a record builder
+                            .map(this::parseRecords) // Parse the json string into a record builder
                             // NOTE: this should be _parser::parse, but aspectj NPEs with that currently
                             .named("createAndParseRequest");
 
@@ -146,17 +152,16 @@ public class HttpSourceActor extends AbstractActor {
             final UniformFanOutShape<HttpRequest, HttpRequest> split = builder.add(Broadcast.create(2));
 
             final FlowShape<HttpRequest, ByteString> getBody = builder.add(getBodyFlow);
-            final FlowShape<HttpRequest, ImmutableMultimap<String, String>> getHeaders = builder.add(getHeadersFlow);
             final FanInShape2<
                     ByteString,
-                    ImmutableMultimap<String, String>,
-                    Pair<ByteString, ImmutableMultimap<String, String>>> join = builder.add(Zip.create());
-            final FlowShape<Pair<ByteString, ImmutableMultimap<String, String>>, AggregationMessage> createRequest =
+                    HttpRequest,
+                    Pair<ByteString, HttpRequest>> join = builder.add(Zip.create());
+            final FlowShape<Pair<ByteString, HttpRequest>, AggregationRequest> createRequest =
                     builder.add(createAndParseFlow);
 
             // Wire the shapes
             builder.from(split.out(0)).via(getBody).toInlet(join.in0()); // Split to get the body bytes
-            builder.from(split.out(1)).via(getHeaders).toInlet(join.in1()); // Split to get the headers
+            builder.from(split.out(1)).toInlet(join.in1()); // Pass the Akka HTTP request through
             builder.from(join.out()).toInlet(createRequest.in()); // Join to create the Request and parse it
 
             return FlowShape.of(split.in(), createRequest.out());
@@ -201,22 +206,30 @@ public class HttpSourceActor extends AbstractActor {
                 .build();
     }
 
-    private static ImmutableMultimap<String, String> createHeaderMultimap(final Iterable<HttpHeader> headers) {
+    private static com.arpnetworking.clusteraggregator.models.HttpRequest mapModel(
+            final Pair<ByteString, HttpRequest> pair) {
         final ImmutableMultimap.Builder<String, String> headersBuilder = ImmutableMultimap.builder();
 
-        for (final HttpHeader httpHeader : headers) {
+        for (final HttpHeader httpHeader : pair.second().getHeaders()) {
             headersBuilder.put(httpHeader.lowercaseName(), httpHeader.value());
         }
 
-        return headersBuilder.build();
+        return new com.arpnetworking.clusteraggregator.models.HttpRequest(
+                pair.second().getUri().path(),
+                headersBuilder.build(),
+                pair.first());
     }
 
-    private static com.arpnetworking.clusteraggregator.models.HttpRequest mapModel(
-            final Pair<ByteString, ImmutableMultimap<String, String>> pair) {
-        return new com.arpnetworking.clusteraggregator.models.HttpRequest(pair.second(), pair.first());
-    }
+    private AggregationRequest parseRecords(final com.arpnetworking.clusteraggregator.models.HttpRequest request) throws IOException {
+        final AggregationMode aggregationMode;
+        if (Routes.INCOMING_DATA_REAGGREGATE_V1_PATH.equals(request.getPath())) {
+            aggregationMode = AggregationMode.REAGGREGATE;
+        } else if (Routes.INCOMING_DATA_PERSIST_V1_PATH.equals(request.getPath())) {
+            aggregationMode = AggregationMode.PERSIST;
+        } else {
+            aggregationMode = _calculateAggregates ? AggregationMode.PERSIST_AND_REAGGREGATE : AggregationMode.PERSIST;
+        }
 
-    private List<AggregationMessage> parseRecords(final com.arpnetworking.clusteraggregator.models.HttpRequest request) throws IOException {
         final ImmutableList.Builder<AggregationMessage> recordsBuilder = ImmutableList.builder();
         ByteString current = request.getBody();
         Optional<AggregationMessage> messageOptional = AggregationMessage.deserialize(current);
@@ -234,7 +247,10 @@ public class HttpSourceActor extends AbstractActor {
         if (records.size() == 0) {
             throw new NoRecordsException();
         }
-        return records;
+        return new AggregationRequest.Builder()
+                .setAggregationMode(aggregationMode)
+                .setAggregationMessages(recordsBuilder.build())
+                .build();
     }
 
     private Optional<PeriodicData> buildPeriodicData(final Messages.StatisticSetRecord setRecord) {
@@ -299,13 +315,13 @@ public class HttpSourceActor extends AbstractActor {
                 .build());
     }
 
+    private final boolean _calculateAggregates;
     private final Materializer _materializer;
-    private final Sink<AggregationMessage, CompletionStage<Done>> _sink;
-    private final Graph<FlowShape<HttpRequest, AggregationMessage>, NotUsed> _processGraph;
+    private final Sink<AggregationRequest, CompletionStage<Done>> _sink;
+    private final Graph<FlowShape<HttpRequest, AggregationRequest>, NotUsed> _processGraph;
 
     private static final Logger BAD_REQUEST_LOGGER =
                 LoggerFactory.getRateLimitLogger(HttpSourceActor.class, Duration.ofSeconds(30));
-    private static final Logger LOGGER = LoggerFactory.getLogger(HttpSourceActor.class);
 
 
     private static class NoRecordsException extends IOException {
