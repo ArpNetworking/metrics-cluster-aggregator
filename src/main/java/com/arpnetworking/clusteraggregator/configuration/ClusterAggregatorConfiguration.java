@@ -50,6 +50,10 @@ public final class ClusterAggregatorConfiguration {
         return _monitoringCluster;
     }
 
+    public String getMonitoringService() {
+        return _monitoringService;
+    }
+
     public int getHttpPort() {
         return _httpPort;
     }
@@ -123,6 +127,7 @@ public final class ClusterAggregatorConfiguration {
         return MoreObjects.toStringHelper(this)
                 .add("id", Integer.toHexString(System.identityHashCode(this)))
                 .add("MonitoringCluster", _monitoringCluster)
+                .add("MonitoringService", _monitoringService)
                 .add("HttpHost", _httpHost)
                 .add("HttpPort", _httpPort)
                 .add("HttpHealthCheckPath", _httpHealthCheckPath)
@@ -144,6 +149,7 @@ public final class ClusterAggregatorConfiguration {
 
     private ClusterAggregatorConfiguration(final Builder builder) {
         _monitoringCluster = builder._monitoringCluster;
+        _monitoringService = builder._monitoringService;
         _httpHost = builder._httpHost;
         _httpPort = builder._httpPort;
         _httpHealthCheckPath = builder._httpHealthCheckPath;
@@ -164,6 +170,7 @@ public final class ClusterAggregatorConfiguration {
     }
 
     private final String _monitoringCluster;
+    private final String _monitoringService;
     private final File _logDirectory;
     private final String _httpHost;
     private final int _httpPort;
@@ -205,6 +212,18 @@ public final class ClusterAggregatorConfiguration {
          */
         public Builder setMonitoringCluster(final String value) {
             _monitoringCluster = value;
+            return this;
+        }
+
+        /**
+         * The monitoring service. Optional. Cannot be null or empty. Default
+         * is cluster_aggregator.
+         *
+         * @param value The monitoring service.
+         * @return This instance of <code>Builder</code>.
+         */
+        public Builder setMonitoringService(final String value) {
+            _monitoringService = value;
             return this;
         }
 
@@ -408,6 +427,9 @@ public final class ClusterAggregatorConfiguration {
         @NotNull
         @NotEmpty
         private String _monitoringCluster;
+        @NotNull
+        @NotEmpty
+        private String _monitoringService = "cluster_aggregator";
         @NotNull
         @NotEmpty
         private String _httpHost = "0.0.0.0";
