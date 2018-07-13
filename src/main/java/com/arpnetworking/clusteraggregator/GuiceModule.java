@@ -66,6 +66,7 @@ import com.arpnetworking.utility.Database;
 import com.arpnetworking.utility.ParallelLeastShardAllocationStrategy;
 import com.arpnetworking.utility.partitioning.PartitionSet;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -347,6 +348,20 @@ public class GuiceModule extends AbstractModule {
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
     private String provideClusterHostSuffix(final ClusterAggregatorConfiguration config) {
         return config.getClusterHostSuffix();
+    }
+
+    @Provides
+    @Named("reaggregation-dimensions")
+    @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
+    private ImmutableSet<String> provideReaggregationDimensions(final ClusterAggregatorConfiguration config) {
+        return config.getReaggregationDimensions();
+    }
+
+    @Provides
+    @Named("reaggregation-cluster-as-host")
+    @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
+    private boolean provideReaggregationInjectClusterAsHost(final ClusterAggregatorConfiguration config) {
+        return config.getReaggregationInjectClusterAsHost();
     }
 
     @Provides
