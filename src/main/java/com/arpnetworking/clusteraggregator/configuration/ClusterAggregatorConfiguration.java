@@ -17,10 +17,9 @@ package com.arpnetworking.clusteraggregator.configuration;
 
 import com.arpnetworking.commons.builder.OvalBuilder;
 import com.arpnetworking.commons.jackson.databind.ObjectMapperFactory;
-import com.arpnetworking.utility.InterfaceDatabase;
-import com.arpnetworking.utility.ReflectionsDatabase;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import net.sf.oval.constraint.NotEmpty;
 import net.sf.oval.constraint.NotNull;
@@ -98,6 +97,14 @@ public final class ClusterAggregatorConfiguration {
         return _clusterPipelineConfiguration;
     }
 
+    public ImmutableSet<String> getReaggregationDimensions() {
+        return _reaggregationDimensions;
+    }
+
+    public boolean getReaggregationInjectClusterAsHost() {
+        return _reaggregationInjectClusterAsHost;
+    }
+
     public RebalanceConfiguration getRebalanceConfiguration() {
         return _rebalanceConfiguration;
     }
@@ -138,6 +145,8 @@ public final class ClusterAggregatorConfiguration {
                 .add("AkkaConfiguration", _akkaConfiguration)
                 .add("HostPipelineConfiguration", _hostPipelineConfiguration)
                 .add("ClusterPipelineConfiguration", _hostPipelineConfiguration)
+                .add("ReaggregationDimensions", _reaggregationDimensions)
+                .add("ReaggregationInjectClusterAsHost", _reaggregationInjectClusterAsHost)
                 .add("MinConnectionTimeout", _minConnectionTimeout)
                 .add("MaxConnectionTimeout", _maxConnectionTimeout)
                 .add("JvmMetricsCollectionInterval", _jvmMetricsCollectionInterval)
@@ -160,6 +169,8 @@ public final class ClusterAggregatorConfiguration {
         _akkaConfiguration = Maps.newHashMap(builder._akkaConfiguration);
         _hostPipelineConfiguration = builder._hostPipelineConfiguration;
         _clusterPipelineConfiguration = builder._clusterPipelineConfiguration;
+        _reaggregationDimensions = builder._reaggregationDimensions;
+        _reaggregationInjectClusterAsHost = builder._reaggregationInjectClusterAsHost;
         _minConnectionTimeout = builder._minConnectionTimeout;
         _maxConnectionTimeout = builder._maxConnectionTimeout;
         _jvmMetricsCollectionInterval = builder._jvmMetricsCollectionInterval;
@@ -181,6 +192,8 @@ public final class ClusterAggregatorConfiguration {
     private final Map<String, ?> _akkaConfiguration;
     private final File _clusterPipelineConfiguration;
     private final File _hostPipelineConfiguration;
+    private final ImmutableSet<String> _reaggregationDimensions;
+    private final boolean _reaggregationInjectClusterAsHost;
     private final Period _minConnectionTimeout;
     private final Period _maxConnectionTimeout;
     private final Period _jvmMetricsCollectionInterval;
@@ -188,8 +201,6 @@ public final class ClusterAggregatorConfiguration {
     private final String _clusterHostSuffix;
     private final boolean _calculateClusterAggregations;
     private final Map<String, DatabaseConfiguration> _databaseConfigurations;
-
-    private static final InterfaceDatabase INTERFACE_DATABASE = ReflectionsDatabase.newInstance();
 
     /**
      * Implementation of builder pattern for {@link com.arpnetworking.clusteraggregator.configuration.ClusterAggregatorConfiguration}.
@@ -391,6 +402,31 @@ public final class ClusterAggregatorConfiguration {
         }
 
         /**
+         * The reaggregation dimensions. Optional. Default is set containing
+         * {@code host}. Cannot be null.
+         *
+         * @param value The regaggregation dimensions.
+         * @return This instance of <code>Builder</code>.
+         */
+        public Builder setReaggregationDimensions(final ImmutableSet<String> value) {
+            _reaggregationDimensions = value;
+            return this;
+        }
+
+        /**
+         * Whether to inject a {@code host} dimension with a value based on
+         * the {@code cluster} dimension. Optional. Default is {@code True}.
+         * Cannot be null.
+         *
+         * @param value Whether to inject {@code host} derived from {@code cluster}.
+         * @return This instance of <code>Builder</code>.
+         */
+        public Builder setReaggregationInjectClusterAsHost(final Boolean value) {
+            _reaggregationInjectClusterAsHost = value;
+            return this;
+        }
+
+        /**
          * Configuration for the shard rebalance settings.
          *
          * @param value The rebalacing configuration.
@@ -452,6 +488,10 @@ public final class ClusterAggregatorConfiguration {
         private File _logDirectory;
         @NotNull
         private File _clusterPipelineConfiguration;
+        @NotNull
+        private ImmutableSet<String> _reaggregationDimensions = ImmutableSet.of();
+        @NotNull
+        private Boolean _reaggregationInjectClusterAsHost = Boolean.TRUE;
         @NotNull
         private File _hostPipelineConfiguration;
         @NotNull

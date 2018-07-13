@@ -23,6 +23,7 @@ import akka.cluster.sharding.ShardRegion;
 import com.arpnetworking.metrics.aggregation.protocol.Messages;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import scala.concurrent.duration.FiniteDuration;
@@ -45,14 +46,25 @@ public class AggregationRouter extends AbstractActor {
      * @param metricsListener Where to send metrics about aggregation computations.
      * @param emitter Where to send the metrics data.
      * @param clusterHostSuffix The suffix to append to the hostname for cluster aggregations.
+     * @param reaggregationDimensions The dimensions to reaggregate over.
+     * @param injectClusterAsHost Whether to inject a host dimension based on cluster.
      * @return A new <code>Props</code>.
      */
     public static Props props(
             final ActorRef lifecycleTracker,
             final ActorRef metricsListener,
             final ActorRef emitter,
-            final String clusterHostSuffix) {
-        return Props.create(AggregationRouter.class, lifecycleTracker, metricsListener, emitter, clusterHostSuffix);
+            final String clusterHostSuffix,
+            final ImmutableSet<String> reaggregationDimensions,
+            final boolean injectClusterAsHost) {
+        return Props.create(
+                AggregationRouter.class,
+                lifecycleTracker,
+                metricsListener,
+                emitter,
+                clusterHostSuffix,
+                reaggregationDimensions,
+                injectClusterAsHost);
     }
 
     /**
@@ -62,15 +74,26 @@ public class AggregationRouter extends AbstractActor {
      * @param periodicStatistics Where to send metrics about aggregation computations.
      * @param emitter Where to send the metrics data.
      * @param clusterHostSuffix The suffix to append to the hostname for cluster aggregations.
+     * @param reaggregationDimensions The dimensions to reaggregate over.
+     * @param injectClusterAsHost Whether to inject a host dimension based on cluster.
      */
     @Inject
     public AggregationRouter(
             @Named("bookkeeper-proxy") final ActorRef lifecycleTracker,
             @Named("periodic-statistics") final ActorRef periodicStatistics,
             @Named("cluster-emitter") final ActorRef emitter,
-            @Named("cluster-host-suffix") final String clusterHostSuffix) {
+            @Named("cluster-host-suffix") final String clusterHostSuffix,
+            @Named("reaggregation-dimensions") final ImmutableSet<String> reaggregationDimensions,
+            @Named("reaggregation-cluster-as-host") final boolean injectClusterAsHost) {
         _streamingChild = context().actorOf(
-                StreamingAggregator.props(lifecycleTracker, periodicStatistics, emitter, clusterHostSuffix), "streaming");
+                StreamingAggregator.props(
+                        lifecycleTracker,
+                        periodicStatistics,
+                        emitter,
+                        clusterHostSuffix,
+                        reaggregationDimensions,
+                        injectClusterAsHost),
+                "streaming");
         context().setReceiveTimeout(FiniteDuration.apply(30, TimeUnit.MINUTES));
     }
 
