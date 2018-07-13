@@ -33,6 +33,7 @@ import com.arpnetworking.tsdcore.model.Quantity;
 import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -51,6 +52,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
+import javax.annotation.Nullable;
 
 /**
  * Actual actor responsible for aggregating.
@@ -66,14 +68,25 @@ public class StreamingAggregator extends AbstractActorWithTimers {
      * @param metricsListener Where to send metrics about aggregation computations.
      * @param emitter Where to send the metrics data.
      * @param clusterHostSuffix The suffix to append to the hostname for cluster aggregations.
+     * @param reaggregationDimensions The dimensions to reaggregate over.
+     * @param injectClusterAsHost Whether to inject a host dimension based on cluster.
      * @return A new <code>Props</code>.
      */
     public static Props props(
             final ActorRef lifecycleTracker,
             final ActorRef metricsListener,
             final ActorRef emitter,
-            final String clusterHostSuffix) {
-        return Props.create(StreamingAggregator.class, lifecycleTracker, metricsListener, emitter, clusterHostSuffix);
+            final String clusterHostSuffix,
+            final ImmutableSet<String> reaggregationDimensions,
+            final boolean injectClusterAsHost) {
+        return Props.create(
+                StreamingAggregator.class,
+                lifecycleTracker,
+                metricsListener,
+                emitter,
+                clusterHostSuffix,
+                reaggregationDimensions,
+                injectClusterAsHost);
     }
 
     /**
@@ -83,16 +96,22 @@ public class StreamingAggregator extends AbstractActorWithTimers {
      * @param periodicStatistics Where to send metrics about aggregation computations.
      * @param emitter Where to send the metrics data.
      * @param clusterHostSuffix The suffix to append to the hostname for cluster aggregations.
+     * @param reaggregationDimensions The dimensions to reaggregate over.
+     * @param injectClusterAsHost Whether to inject a host dimension based on cluster.
      */
     @Inject
     public StreamingAggregator(
             @Named("bookkeeper-proxy") final ActorRef lifecycleTracker,
             @Named("periodic-statistics") final ActorRef periodicStatistics,
             @Named("cluster-emitter") final ActorRef emitter,
-            @Named("cluster-host-suffix") final String clusterHostSuffix) {
+            @Named("cluster-host-suffix") final String clusterHostSuffix,
+            @Named("reaggregation-dimensions") final ImmutableSet<String> reaggregationDimensions,
+            @Named("reaggregation-cluster-as-host") final boolean injectClusterAsHost) {
         _lifecycleTracker = lifecycleTracker;
         _periodicStatistics = periodicStatistics;
         _clusterHostSuffix = clusterHostSuffix;
+        _reaggregationDimensions = reaggregationDimensions;
+        _injectClusterAsHost = injectClusterAsHost;
         context().setReceiveTimeout(FiniteDuration.apply(30, TimeUnit.MINUTES));
 
         timers().startPeriodicTimer(BUCKET_CHECK_TIMER_KEY, BucketCheck.getInstance(), FiniteDuration.apply(5, TimeUnit.SECONDS));
@@ -284,18 +303,37 @@ public class StreamingAggregator extends AbstractActorWithTimers {
     }
 
     private ImmutableMap<String, String> dimensionsToMap(final Messages.StatisticSetRecord statisticSetRecord) {
-        final ImmutableMap.Builder<String, String> builder = ImmutableMap.<String, String>builder()
-                .put(CombinedMetricData.CLUSTER_KEY, statisticSetRecord.getCluster())
-                .put(CombinedMetricData.SERVICE_KEY, statisticSetRecord.getService())
-                .put(CombinedMetricData.HOST_KEY, createHost());
+        // Build a map of dimension key-value pairs dropping any that are to be reaggregated over
+        final ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
 
+        // Grab the explicit cluster and service dimensions from the record
+        addDimension(CombinedMetricData.CLUSTER_KEY, statisticSetRecord.getCluster(), builder);
+        addDimension(CombinedMetricData.SERVICE_KEY, statisticSetRecord.getService(), builder);
+
+        // Either inject the cluster as the host dimension or grab it from the record dimensions
+        if (_injectClusterAsHost) {
+            addDimension(CombinedMetricData.HOST_KEY, createHost(), builder);
+        } else {
+            final @Nullable String hostDimension = statisticSetRecord.getDimensionsMap().get(CombinedMetricData.HOST_KEY);
+            if (hostDimension != null) {
+                addDimension(CombinedMetricData.HOST_KEY, hostDimension, builder);
+            }
+        }
+
+        // Inject all other dimensions (e.g. not service, cluster or host)
         statisticSetRecord.getDimensionsMap()
                 .entrySet()
                 .stream()
                 .filter(NOT_EXPLICIT_DIMENSION)
-                .forEach(entry -> builder.put(entry.getKey(), entry.getValue()));
+                .forEach(entry -> addDimension(entry.getKey(), entry.getValue(), builder));
 
         return builder.build();
+    }
+
+    private void addDimension(final String key, final String value, final ImmutableMap.Builder<String, String> mapBuilder) {
+        if (!_reaggregationDimensions.contains(key)) {
+            mapBuilder.put(key, value);
+        }
     }
 
     private String createHost() {
@@ -307,6 +345,8 @@ public class StreamingAggregator extends AbstractActorWithTimers {
     private final ActorRef _lifecycleTracker;
     private final ActorRef _periodicStatistics;
     private final String _clusterHostSuffix;
+    private final ImmutableSet<String> _reaggregationDimensions;
+    private final boolean _injectClusterAsHost;
     private final Set<Statistic> _statistics = Sets.newHashSet();
     private boolean _initialized = false;
     private Period _period;

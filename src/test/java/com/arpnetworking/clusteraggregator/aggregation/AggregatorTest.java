@@ -22,6 +22,7 @@ import akka.cluster.sharding.ShardRegion;
 import akka.testkit.TestActorRef;
 import akka.testkit.TestProbe;
 import com.arpnetworking.utility.BaseActorTest;
+import com.google.common.collect.ImmutableSet;
 import org.junit.Assert;
 import org.junit.Test;
 import scala.concurrent.duration.FiniteDuration;
@@ -51,7 +52,16 @@ public class AggregatorTest extends BaseActorTest {
     public ActorRef createAggregator(final TestProbe probe) {
         final TestProbe ignored = TestProbe.apply(getSystem());
         return TestActorRef.apply(
-                AggregationRouter.props(ignored.ref(), ignored.ref(), ignored.ref(), ""), probe.ref(), "agg", getSystem());
+                AggregationRouter.props(
+                        ignored.ref(),
+                        ignored.ref(),
+                        ignored.ref(),
+                        "",
+                        ImmutableSet.of(),
+                        true),
+                probe.ref(),
+                "agg",
+                getSystem());
     }
 
     private static final FiniteDuration TIMEOUT = FiniteDuration.apply(10, TimeUnit.SECONDS);
