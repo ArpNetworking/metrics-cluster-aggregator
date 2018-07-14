@@ -152,7 +152,7 @@ public class GuiceModule extends AbstractModule {
 
         return new TsdMetricsFactory.Builder()
                 .setClusterName(_configuration.getMonitoringCluster())
-                .setServiceName("cluster_aggregator")
+                .setServiceName(_configuration.getMonitoringService())
                 .setSinks(Collections.singletonList(sink))
                 .build();
     }
