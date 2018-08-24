@@ -17,6 +17,7 @@ package com.arpnetworking.tsdcore.statistics;
 
 import com.arpnetworking.utility.InterfaceDatabase;
 import com.arpnetworking.utility.ReflectionsDatabase;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
