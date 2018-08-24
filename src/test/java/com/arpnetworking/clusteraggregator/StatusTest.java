@@ -54,7 +54,7 @@ public class StatusTest extends BaseActorTest {
     public void setUp() {
         super.setUp();
         final Address localAddress = Address.apply("tcp", "default");
-        final Member selfMember = new Member(UniqueAddress.apply(localAddress, 1821),
+        final Member selfMember = new Member(UniqueAddress.apply(localAddress, 1821L),
                                              1,
                                              MemberStatus.up(),
                                              new Set.Set1<>("test"));
