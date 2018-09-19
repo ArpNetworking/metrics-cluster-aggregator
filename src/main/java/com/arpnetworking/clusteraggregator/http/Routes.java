@@ -29,7 +29,6 @@ import akka.http.javadsl.model.headers.CacheDirectives;
 import akka.japi.function.Function;
 import akka.pattern.PatternsCS;
 import akka.util.ByteString;
-import akka.util.Timeout;
 import com.arpnetworking.clusteraggregator.Status;
 import com.arpnetworking.clusteraggregator.models.StatusResponse;
 import com.arpnetworking.commons.jackson.databind.ObjectMapperFactory;
@@ -53,9 +52,12 @@ import com.google.inject.name.Named;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * Http server routes.
@@ -99,32 +101,60 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
                 createMetricName(request, BODY_SIZE_METRIC),
                 request.entity().getContentLengthOption().orElse(0L),
                 Units.BYTE);
-        LOGGER.trace()
-                .setEvent("http.in.start")
-                .addData("method", request.method())
-                .addData("url", request.getUri())
-                .addData("headers", request.getHeaders())
-                .log();
+        final UUID requestId = UUID.randomUUID();
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace()
+                    .setEvent("http.in.start")
+                    .addContext("requestId", requestId)
+                    .addData("method", request.method().toString())
+                    .addData("url", request.getUri().toString())
+                    .addData(
+                            "headers",
+                            StreamSupport.stream(request.getHeaders().spliterator(), false)
+                                    .map(h -> h.name() + "=" + h.value())
+                                    .collect(Collectors.toList()))
+                    .log();
+        }
         return process(request).<HttpResponse>whenComplete(
                 (response, failure) -> {
                     timer.close();
-                    final int responseStatusClass = response.status().intValue() / 100;
+
+                    final int responseStatus;
+                    if (response != null) {
+                        responseStatus = response.status().intValue();
+                    } else {
+                        // TODO(ville): Figure out how to intercept post-exception mapping.
+                        responseStatus = 599;
+                    }
+                    final int responseStatusClass = responseStatus / 100;
                     for (final int i : STATUS_CLASSES) {
                         metrics.incrementCounter(
                                 createMetricName(request, String.format("%s/%dxx", STATUS_METRIC, i)),
                                 responseStatusClass == i ? 1 : 0);
                     }
                     metrics.close();
-                    final LogBuilder log = LOGGER.trace()
-                            .setEvent("http.in")
-                            .addData("method", request.method())
-                            .addData("url", request.getUri())
-                            .addData("status", response.status().intValue())
-                            .addData("headers", request.getHeaders());
-                    if (failure != null) {
-                        log.setEvent("http.in.error").addData("exception", failure);
+
+                    final LogBuilder log;
+                    if (failure != null || responseStatusClass == 5) {
+                        log = LOGGER.info().setEvent("http.in.failure");
+                        if (failure != null) {
+                            log.setThrowable(failure);
+                        }
+                        if (!LOGGER.isTraceEnabled() && LOGGER.isInfoEnabled()) {
+                            log.addData("method", request.method().toString())
+                                    .addData("url", request.getUri().toString())
+                                    .addData(
+                                            "headers",
+                                            StreamSupport.stream(request.getHeaders().spliterator(), false)
+                                                    .map(h -> h.name() + "=" + h.value())
+                                                    .collect(Collectors.toList()));
+                        }
+                    } else {
+                        log = LOGGER.trace().setEvent("http.in.complete");
                     }
-                    log.log();
+                    log.addContext("requestId", requestId)
+                            .addData("status", responseStatus)
+                            .log();
                 });
     }
 
@@ -176,7 +206,7 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
                 PatternsCS.ask(
                         _actorSystem.actorSelection(actorPath),
                         request,
-                        Timeout.apply(5, TimeUnit.SECONDS))
+                        Duration.ofSeconds(5))
                 .thenApply(o -> (T) o)
                 .exceptionally(throwable -> {
                     LOGGER.error()

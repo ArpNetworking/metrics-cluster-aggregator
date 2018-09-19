@@ -90,22 +90,32 @@ For example:
       "stdout-loglevel": "DEBUG",
       "logging-filter": "akka.event.slf4j.Slf4jLoggingFilter",
       "actor": {
+        "provider": "akka.cluster.ClusterActorRefProvider",
         "debug": {
           "unhandled": "on"
         },
-        "provider": "akka.cluster.ClusterActorRefProvider",
         "serializers": {
-          "loggingJava": "com.arpnetworking.akka.LoggingSerializer"
+          "kryo": "com.romix.akka.serialization.kryo.KryoSerializer"
         },
-        "serialization-bindings" : {
-          "\"com.arpnetworking.tsdcore.model.AggregatedData\"": "loggingJava"
+        "serialization-bindings": {
+          "java.lang.Object": "kryo",
+          "java.io.Serializable": "none"
+        },
+        "kryo": {
+          "type": "graph",
+          "idstrategy": "default",
+          "buffer-size": 4096,
+          "max-buffer-size": -1,
+          "kryo-custom-serializer-init": "com.arpnetworking.clusteraggregator.kryo.KryoInitialization"
         }
       },
       "cluster": {
+        "sharding": {
+          "state-store-mode": "persistence"
+        },
         "seed-nodes": [
           "akka.tcp://Metrics@127.0.0.1:2551"
-        ],
-        "auto-down-unreachable-after": "300s"
+        ]
       },
       "remote": {
         "log-remote-lifecycle-events": "on",
@@ -113,23 +123,6 @@ For example:
           "tcp": {
             "hostname": "127.0.0.1",
             "port": 2551
-          }
-        }
-      },
-      "contrib": {
-        "cluster": {
-          "sharding": {
-            "guardian-name": "sharding",
-            "role": "",
-            "retry-interval": "2 s",
-            "buffer-size": 100000,
-            "handoff-timeout": "60 s",
-            "rebalance-interval": "10 s",
-            "snapshot-interval": "720 s",
-            "least-shard-allocation-strategy": {
-              "rebalance-threshold": 10,
-              "max-simultaneous-rebalance": 3
-            }
           }
         }
       }

@@ -23,7 +23,6 @@ import akka.cluster.Cluster;
 import akka.cluster.MemberStatus;
 import akka.pattern.PatternsCS;
 import akka.remote.AssociationErrorEvent;
-import akka.util.Timeout;
 import com.arpnetworking.clusteraggregator.models.BookkeeperData;
 import com.arpnetworking.clusteraggregator.models.MetricsRequest;
 import com.arpnetworking.clusteraggregator.models.PeriodMetrics;
@@ -31,10 +30,10 @@ import com.arpnetworking.clusteraggregator.models.StatusResponse;
 import com.arpnetworking.utility.CastMapper;
 import org.joda.time.Period;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 /**
@@ -104,7 +103,7 @@ public class Status extends AbstractActor {
                             .ask(
                                     _clusterStatusCache,
                                     new ClusterStatusCache.GetRequest(),
-                                    Timeout.apply(3, TimeUnit.SECONDS))
+                                    Duration.ofSeconds(3))
                             .thenApply(CAST_MAPPER);
                     PatternsCS.pipe(stateFuture, context().dispatcher()).to(self(), sender());
                 })
@@ -120,7 +119,7 @@ public class Status extends AbstractActor {
         final CompletableFuture<BookkeeperData> bookkeeperFuture = PatternsCS.ask(
                 _metricsBookkeeper,
                 new MetricsRequest(),
-                Timeout.apply(3, TimeUnit.SECONDS))
+                Duration.ofSeconds(3))
                 .<BookkeeperData>thenApply(new CastMapper<>())
                 .exceptionally(new AsNullRecovery<>())
                 .toCompletableFuture();
@@ -128,7 +127,7 @@ public class Status extends AbstractActor {
                 PatternsCS.ask(
                         _clusterStatusCache,
                         new ClusterStatusCache.GetRequest(),
-                        Timeout.apply(3, TimeUnit.SECONDS))
+                        Duration.ofSeconds(3))
                 .thenApply(CAST_MAPPER)
                 .exceptionally(new AsNullRecovery<>())
                 .toCompletableFuture();
@@ -137,7 +136,7 @@ public class Status extends AbstractActor {
                 PatternsCS.ask(
                         _localMetrics,
                         new MetricsRequest(),
-                        Timeout.apply(3, TimeUnit.SECONDS))
+                        Duration.ofSeconds(3))
                 .<Map<Period, PeriodMetrics>>thenApply(new CastMapper<>())
                 .exceptionally(new AsNullRecovery<>())
                 .toCompletableFuture();
