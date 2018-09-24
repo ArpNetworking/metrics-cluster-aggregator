@@ -23,7 +23,6 @@ import akka.cluster.Cluster;
 import akka.cluster.MemberStatus;
 import akka.pattern.PatternsCS;
 import akka.remote.AssociationErrorEvent;
-import com.arpnetworking.clusteraggregator.models.BookkeeperData;
 import com.arpnetworking.clusteraggregator.models.MetricsRequest;
 import com.arpnetworking.clusteraggregator.models.PeriodMetrics;
 import com.arpnetworking.clusteraggregator.models.StatusResponse;
@@ -53,18 +52,15 @@ public class Status extends AbstractActor {
     /**
      * Public constructor.
      *
-     * @param metricsBookkeeper Where to get the status metrics from.
      * @param cluster The instance of the Clustering extension.
      * @param clusterStatusCache The actor holding the cached cluster status.
      * @param localMetrics The actor holding the local node metrics.
      */
     public Status(
-            final ActorRef metricsBookkeeper,
             final Cluster cluster,
             final ActorRef clusterStatusCache,
             final ActorRef localMetrics) {
 
-        _metricsBookkeeper = metricsBookkeeper;
         _cluster = cluster;
         _clusterStatusCache = clusterStatusCache;
         _localMetrics = localMetrics;
@@ -74,19 +70,17 @@ public class Status extends AbstractActor {
     /**
      * Creates a <code>Props</code> for use in Akka.
      *
-     * @param bookkeeper Where to get the status metrics from.
      * @param cluster The instance of the Clustering extension.
      * @param clusterStatusCache The actor holding the cached cluster status.
      * @param localMetrics The actor holding the local node metrics.
      * @return A new <code>Props</code>.
      */
     public static Props props(
-            final ActorRef bookkeeper,
             final Cluster cluster,
             final ActorRef clusterStatusCache,
             final ActorRef localMetrics) {
 
-        return Props.create(Status.class, bookkeeper, cluster, clusterStatusCache, localMetrics);
+        return Props.create(Status.class, cluster, clusterStatusCache, localMetrics);
     }
 
     @Override
@@ -116,13 +110,6 @@ public class Status extends AbstractActor {
 
     private void processStatusRequest() {
         // Call the bookkeeper
-        final CompletableFuture<BookkeeperData> bookkeeperFuture = PatternsCS.ask(
-                _metricsBookkeeper,
-                new MetricsRequest(),
-                Duration.ofSeconds(3))
-                .<BookkeeperData>thenApply(new CastMapper<>())
-                .exceptionally(new AsNullRecovery<>())
-                .toCompletableFuture();
         final CompletableFuture<ClusterStatusCache.StatusResponse> clusterStateFuture =
                 PatternsCS.ask(
                         _clusterStatusCache,
@@ -143,11 +130,9 @@ public class Status extends AbstractActor {
 
         PatternsCS.pipe(
                 CompletableFuture.allOf(
-                        bookkeeperFuture.toCompletableFuture(),
                         clusterStateFuture.toCompletableFuture(),
                         localMetricsFuture.toCompletableFuture())
                         .thenApply(aVoid -> new StatusResponse.Builder()
-                                .setClusterMetrics(bookkeeperFuture.getNow(null))
                                 .setClusterState(clusterStateFuture.getNow(null))
                                 .setLocalMetrics(localMetricsFuture.getNow(null))
                                 .setLocalAddress(_cluster.selfAddress())
@@ -158,7 +143,6 @@ public class Status extends AbstractActor {
 
     private boolean _quarantined = false;
 
-    private final ActorRef _metricsBookkeeper;
     private final Cluster _cluster;
     private final ActorRef _clusterStatusCache;
     private final ActorRef _localMetrics;

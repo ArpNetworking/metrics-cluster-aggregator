@@ -20,7 +20,6 @@ import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.ReceiveTimeout;
 import akka.cluster.sharding.ShardRegion;
-import com.arpnetworking.clusteraggregator.AggregatorLifecycle;
 import com.arpnetworking.clusteraggregator.models.CombinedMetricData;
 import com.arpnetworking.metrics.aggregation.protocol.Messages;
 import com.arpnetworking.steno.Logger;
@@ -39,13 +38,12 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import org.joda.time.DateTime;
-import org.joda.time.Duration;
 import org.joda.time.Period;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.io.Serializable;
+import java.time.Duration;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Optional;
@@ -64,58 +62,57 @@ public class StreamingAggregator extends AbstractActorWithTimers {
     /**
      * Creates a <code>Props</code> for use in Akka.
      *
-     * @param lifecycleTracker Where to register the liveliness of this aggregator.
      * @param metricsListener Where to send metrics about aggregation computations.
      * @param emitter Where to send the metrics data.
      * @param clusterHostSuffix The suffix to append to the hostname for cluster aggregations.
      * @param reaggregationDimensions The dimensions to reaggregate over.
      * @param injectClusterAsHost Whether to inject a host dimension based on cluster.
+     * @param aggregatorTimeout The time to wait from the start of the period for all data.
      * @return A new <code>Props</code>.
      */
     public static Props props(
-            final ActorRef lifecycleTracker,
             final ActorRef metricsListener,
             final ActorRef emitter,
             final String clusterHostSuffix,
             final ImmutableSet<String> reaggregationDimensions,
-            final boolean injectClusterAsHost) {
+            final boolean injectClusterAsHost,
+            final Period aggregatorTimeout) {
         return Props.create(
                 StreamingAggregator.class,
-                lifecycleTracker,
                 metricsListener,
                 emitter,
                 clusterHostSuffix,
                 reaggregationDimensions,
-                injectClusterAsHost);
+                injectClusterAsHost,
+                aggregatorTimeout);
     }
 
     /**
      * Public constructor.
      *
-     * @param lifecycleTracker Where to register the liveliness of this aggregator.
      * @param periodicStatistics Where to send metrics about aggregation computations.
      * @param emitter Where to send the metrics data.
      * @param clusterHostSuffix The suffix to append to the hostname for cluster aggregations.
      * @param reaggregationDimensions The dimensions to reaggregate over.
      * @param injectClusterAsHost Whether to inject a host dimension based on cluster.
+     * @param aggregatorTimeout The time to wait from the start of the period for all data.
      */
     @Inject
     public StreamingAggregator(
-            @Named("bookkeeper-proxy") final ActorRef lifecycleTracker,
             @Named("periodic-statistics") final ActorRef periodicStatistics,
             @Named("cluster-emitter") final ActorRef emitter,
             @Named("cluster-host-suffix") final String clusterHostSuffix,
             @Named("reaggregation-dimensions") final ImmutableSet<String> reaggregationDimensions,
-            @Named("reaggregation-cluster-as-host") final boolean injectClusterAsHost) {
-        _lifecycleTracker = lifecycleTracker;
+            @Named("reaggregation-cluster-as-host") final boolean injectClusterAsHost,
+            @Named("reaggregation-timeout") final Period aggregatorTimeout) {
         _periodicStatistics = periodicStatistics;
         _clusterHostSuffix = clusterHostSuffix;
         _reaggregationDimensions = reaggregationDimensions;
         _injectClusterAsHost = injectClusterAsHost;
+        _aggregatorTimeout = aggregatorTimeout;
         context().setReceiveTimeout(FiniteDuration.apply(30, TimeUnit.MINUTES));
 
         timers().startPeriodicTimer(BUCKET_CHECK_TIMER_KEY, BucketCheck.getInstance(), FiniteDuration.apply(5, TimeUnit.SECONDS));
-        timers().startSingleTimer(BOOKKEEPER_UPDATE_TIMER_KEY, UpdateBookkeeper.getInstance(), FiniteDuration.apply(5, TimeUnit.SECONDS));
 
         _emitter = emitter;
     }
@@ -135,7 +132,7 @@ public class StreamingAggregator extends AbstractActorWithTimers {
                     if (_initialized) {
                         while (_aggBuckets.size() > 0) {
                             final StreamingAggregationBucket bucket = _aggBuckets.getFirst();
-                            if (bucket.getPeriodStart().plus(_period).plus(AGG_TIMEOUT).isBeforeNow()) {
+                            if (bucket.getPeriodStart().plus(_period).plus(_aggregatorTimeout).isBeforeNow()) {
                                 _aggBuckets.removeFirst();
 
                                 // Walk over every statistic in the bucket
@@ -175,27 +172,11 @@ public class StreamingAggregator extends AbstractActorWithTimers {
                                         .build();
                                 _emitter.tell(periodicData, getSelf());
                             } else {
-                                //Walk of the list is complete
+                                // Walk of the list is complete
                                 break;
                             }
                         }
                     }
-                })
-                .match(UpdateBookkeeper.class, message -> {
-                    if (_resultBuilder != null) {
-                        for (final Statistic statistic : _statistics) {
-                            _resultBuilder.setFQDSN(new FQDSN.Builder()
-                                    .setCluster(_cluster)
-                                    .setMetric(_metric)
-                                    .setService(_service)
-                                    .setStatistic(statistic)
-                                    .build());
-                            _lifecycleTracker.tell(new AggregatorLifecycle.NotifyAggregatorStarted(_resultBuilder.build()), getSelf());
-                        }
-                        _statistics.clear();
-                    }
-                    timers().startSingleTimer(BOOKKEEPER_UPDATE_TIMER_KEY, UpdateBookkeeper.getInstance(),
-                            FiniteDuration.apply(1, TimeUnit.HOURS));
                 })
                 .match(ShutdownAggregator.class, message -> context().stop(self()))
                 .match(ReceiveTimeout.class, message -> {
@@ -217,7 +198,77 @@ public class StreamingAggregator extends AbstractActorWithTimers {
 
     private void processAggregationMessage(final Messages.StatisticSetRecord data) {
         final CombinedMetricData metricData = CombinedMetricData.Builder.fromStatisticSetRecord(data).build();
-        //First message sets the data we know about this actor
+
+        // First message sets the data we know about this actor
+        initialize(data, metricData);
+
+        // Find the time bucket to dump this in
+        final DateTime periodStart = DateTime.parse(data.getPeriodStart());
+        if (_aggBuckets.size() > 0 && _aggBuckets.getFirst().getPeriodStart().isAfter(periodStart)) {
+            // We got a bit of data that is too old for us to aggregate.
+            WORK_TOO_OLD_LOGGER.warn()
+                    .setMessage("Received a work item that is too old to aggregate")
+                    .addData("start", periodStart)
+                    .addData("firstStart", _aggBuckets.getFirst().getPeriodStart())
+                    .addData("metric", data.getMetric())
+                    .addData("dimensions", data.getDimensionsMap())
+                    .addContext("actor", self())
+                    .log();
+        } else {
+            // TODO(ville): Support skipped bucket creation.
+            StreamingAggregationBucket correctBucket = null;
+            if (_aggBuckets.size() == 0 || _aggBuckets.getLast().getPeriodStart().isBefore(periodStart)) {
+                // We need to create a new bucket to hold this data.
+                if (_aggBuckets.size() != 0 && !_aggBuckets.getLast().getPeriodStart().equals(periodStart.minus(_period))) {
+                    NON_CONSECUTIVE_LOGGER.warn()
+                            .setMessage("Creating new non-consecutive aggregation bucket for period")
+                            .addData("start", periodStart)
+                            .addData("lastStart", _aggBuckets.getLast().getPeriodStart())
+                            .addData("metric", data.getMetric())
+                            .addData("dimensions", data.getDimensionsMap())
+                            .addContext("actor", self())
+                            .log();
+                } else {
+                    LOGGER.debug()
+                            .setMessage("Creating new aggregation bucket for period")
+                            .addData("start", periodStart)
+                            .addContext("actor", self())
+                            .log();
+                }
+                correctBucket = new StreamingAggregationBucket(periodStart);
+                _aggBuckets.add(correctBucket);
+            } else {
+                for (final StreamingAggregationBucket currentBucket : _aggBuckets) {
+                    if (currentBucket.getPeriodStart().equals(periodStart)) {
+                        // We found the correct bucket
+                        correctBucket = currentBucket;
+                        break;
+                    }
+                }
+            }
+            if (correctBucket == null) {
+                LOGGER.error()
+                        .setMessage("No bucket found to aggregate into, bug in the bucket walk")
+                        .addData("start", periodStart)
+                        .addData("firstStart", _aggBuckets.getFirst().getPeriodStart())
+                        .addData("lastStart", _aggBuckets.getLast().getPeriodStart())
+                        .addData("metric", data.getMetric())
+                        .addData("dimensions", data.getDimensionsMap())
+                        .addContext("actor", self())
+                        .log();
+            } else {
+                LOGGER.debug()
+                        .setMessage("Updating bucket")
+                        .addData("bucket", correctBucket)
+                        .addData("data", metricData)
+                        .addContext("actor", self())
+                        .log();
+                correctBucket.update(metricData);
+            }
+        }
+    }
+
+    private void initialize(final Messages.StatisticSetRecord data, final CombinedMetricData metricData) {
         if (!_initialized) {
             _period = metricData.getPeriod();
             _cluster = metricData.getCluster();
@@ -231,8 +282,6 @@ public class StreamingAggregator extends AbstractActorWithTimers {
                     .setSamples(Collections.emptyList())
                     .setStart(DateTime.now().hourOfDay().roundFloorCopy())
                     .setValue(new Quantity.Builder().setValue(0d).build());
-
-
             _initialized = true;
             LOGGER.debug()
                     .setMessage("Initialized aggregator")
@@ -241,64 +290,18 @@ public class StreamingAggregator extends AbstractActorWithTimers {
         } else if (!(_period.equals(metricData.getPeriod())
                 && _cluster.equals(metricData.getCluster())
                 && _service.equals(metricData.getService())
-                && _metric.equals(metricData.getMetricName()))) {
+                && _metric.equals(metricData.getMetricName())
+                && _dimensions.equals(dimensionsToMap(data)))) {
             LOGGER.error()
                     .setMessage("Received a work item for another aggregator")
-                    .addData("workItem", data)
+                    .addData("data", metricData)
+                    .addData("actorPeriod", _period)
+                    .addData("actorCluster", _cluster)
+                    .addData("actorService", _service)
+                    .addData("actorMetric", _metric)
+                    .addData("actorDimensions", _dimensions)
                     .addContext("actor", self())
                     .log();
-        }
-        //Find the time bucket to dump this in
-        final DateTime periodStart = DateTime.parse(data.getPeriodStart());
-        if (_aggBuckets.size() > 0 && _aggBuckets.getFirst().getPeriodStart().isAfter(periodStart)) {
-            //We got a bit of data that is too old for us to aggregate.
-            LOGGER.warn()
-                    .setMessage("Received a work item that is too old to aggregate")
-                    .addData("bucketStart", _aggBuckets.getFirst().getPeriodStart())
-                    .addData("workItem", data)
-                    .addContext("actor", self())
-                    .log();
-        } else {
-            if (_aggBuckets.size() == 0 || _aggBuckets.getLast().getPeriodStart().isBefore(periodStart)) {
-                //We need to create a new bucket to hold this data.
-                LOGGER.debug()
-                        .setMessage("Creating new aggregation bucket for period")
-                        .addData("period", periodStart)
-                        .addContext("actor", self())
-                        .log();
-                _aggBuckets.add(new StreamingAggregationBucket(periodStart));
-            }
-            final Iterator<StreamingAggregationBucket> bucketIterator = _aggBuckets.iterator();
-            StreamingAggregationBucket currentBucket;
-            StreamingAggregationBucket correctBucket = null;
-            while (bucketIterator.hasNext()) {
-                currentBucket = bucketIterator.next();
-                if (currentBucket.getPeriodStart().equals(periodStart)) {
-                    //We found the correct bucket
-                    correctBucket = currentBucket;
-                    break;
-                }
-            }
-
-            if (correctBucket == null) {
-                LOGGER.error()
-                        .setMessage("No bucket found to aggregate into, bug in the bucket walk")
-                        .addContext("actor", self())
-                        .log();
-            } else {
-                LOGGER.debug()
-                        .setMessage("Updating bucket")
-                        .addData("bucket", correctBucket)
-                        .addData("data", metricData)
-                        .addContext("actor", self())
-                        .log();
-                correctBucket.update(metricData);
-                LOGGER.debug()
-                        .setMessage("Done updating bucket")
-                        .addData("bucket", correctBucket)
-                        .addContext("actor", self())
-                        .log();
-            }
         }
     }
 
@@ -342,12 +345,12 @@ public class StreamingAggregator extends AbstractActorWithTimers {
 
     private final LinkedList<StreamingAggregationBucket> _aggBuckets = Lists.newLinkedList();
     private final ActorRef _emitter;
-    private final ActorRef _lifecycleTracker;
     private final ActorRef _periodicStatistics;
     private final String _clusterHostSuffix;
     private final ImmutableSet<String> _reaggregationDimensions;
     private final boolean _injectClusterAsHost;
     private final Set<Statistic> _statistics = Sets.newHashSet();
+    private final Period _aggregatorTimeout;
     private boolean _initialized = false;
     private Period _period;
     private String _cluster;
@@ -355,14 +358,18 @@ public class StreamingAggregator extends AbstractActorWithTimers {
     private String _service;
     private ImmutableMap<String, String> _dimensions;
     private AggregatedData.Builder _resultBuilder;
-    private static final Duration AGG_TIMEOUT = Duration.standardMinutes(1);
-    private static final Logger LOGGER = LoggerFactory.getLogger(StreamingAggregator.class);
     private static final Predicate<Map.Entry<String, String>> NOT_EXPLICIT_DIMENSION = entry ->
             !(entry.getKey().equals(CombinedMetricData.CLUSTER_KEY)
                     || entry.getKey().equals(CombinedMetricData.HOST_KEY)
                     || entry.getKey().equals(CombinedMetricData.SERVICE_KEY));
     private static final String BUCKET_CHECK_TIMER_KEY = "bucketcheck";
-    private static final String BOOKKEEPER_UPDATE_TIMER_KEY = "updatebookkeeper";
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(StreamingAggregator.class);
+    private static final Logger WORK_TOO_OLD_LOGGER = LoggerFactory.getRateLimitLogger(
+            StreamingAggregator.class, Duration.ofSeconds(30));
+    private static final Logger NON_CONSECUTIVE_LOGGER = LoggerFactory.getRateLimitLogger(
+            StreamingAggregator.class, Duration.ofSeconds(30));
+
 
     private static final class BucketCheck implements Serializable {
         /**
@@ -375,20 +382,6 @@ public class StreamingAggregator extends AbstractActorWithTimers {
         }
 
         private static final BucketCheck INSTANCE = new BucketCheck();
-        private static final long serialVersionUID = 1L;
-    }
-
-    private static final class UpdateBookkeeper implements Serializable {
-        /**
-         * Gets the singleton instance.
-         *
-         * @return singleton instance
-         */
-        public static UpdateBookkeeper getInstance() {
-            return INSTANCE;
-        }
-
-        private static final UpdateBookkeeper INSTANCE = new UpdateBookkeeper();
         private static final long serialVersionUID = 1L;
     }
 

@@ -105,6 +105,10 @@ public final class ClusterAggregatorConfiguration {
         return _reaggregationInjectClusterAsHost;
     }
 
+    public Period getReaggregationTimeout() {
+        return _reaggregationTimeout;
+    }
+
     public RebalanceConfiguration getRebalanceConfiguration() {
         return _rebalanceConfiguration;
     }
@@ -147,6 +151,7 @@ public final class ClusterAggregatorConfiguration {
                 .add("ClusterPipelineConfiguration", _hostPipelineConfiguration)
                 .add("ReaggregationDimensions", _reaggregationDimensions)
                 .add("ReaggregationInjectClusterAsHost", _reaggregationInjectClusterAsHost)
+                .add("ReaggregationTimeout", _reaggregationTimeout)
                 .add("MinConnectionTimeout", _minConnectionTimeout)
                 .add("MaxConnectionTimeout", _maxConnectionTimeout)
                 .add("JvmMetricsCollectionInterval", _jvmMetricsCollectionInterval)
@@ -171,6 +176,7 @@ public final class ClusterAggregatorConfiguration {
         _clusterPipelineConfiguration = builder._clusterPipelineConfiguration;
         _reaggregationDimensions = builder._reaggregationDimensions;
         _reaggregationInjectClusterAsHost = builder._reaggregationInjectClusterAsHost;
+        _reaggregationTimeout = builder._reaggregationTimeout;
         _minConnectionTimeout = builder._minConnectionTimeout;
         _maxConnectionTimeout = builder._maxConnectionTimeout;
         _jvmMetricsCollectionInterval = builder._jvmMetricsCollectionInterval;
@@ -194,6 +200,7 @@ public final class ClusterAggregatorConfiguration {
     private final File _hostPipelineConfiguration;
     private final ImmutableSet<String> _reaggregationDimensions;
     private final boolean _reaggregationInjectClusterAsHost;
+    private final Period _reaggregationTimeout;
     private final Period _minConnectionTimeout;
     private final Period _maxConnectionTimeout;
     private final Period _jvmMetricsCollectionInterval;
@@ -427,6 +434,20 @@ public final class ClusterAggregatorConfiguration {
         }
 
         /**
+         * The time from period start to wait for all data to arrive. This
+         * should include any timeout in MAD plus any send spread/jitter in
+         * MAD plus the actual desired time to wait in CAGG. Optional. Default
+         * is {@code PT1M}. Cannot be null.
+         *
+         * @param value Timeout from period start to wait for all data to arrive.
+         * @return This instance of <code>Builder</code>.
+         */
+        public Builder setReaggregationTimeout(final Period value) {
+            _reaggregationTimeout = value;
+            return this;
+        }
+
+        /**
          * Configuration for the shard rebalance settings.
          *
          * @param value The rebalacing configuration.
@@ -492,6 +513,8 @@ public final class ClusterAggregatorConfiguration {
         private ImmutableSet<String> _reaggregationDimensions = ImmutableSet.of();
         @NotNull
         private Boolean _reaggregationInjectClusterAsHost = Boolean.TRUE;
+        @NotNull
+        private Period _reaggregationTimeout = Period.minutes(1);
         @NotNull
         private File _hostPipelineConfiguration;
         @NotNull
