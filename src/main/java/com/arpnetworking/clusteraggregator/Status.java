@@ -32,7 +32,6 @@ import org.joda.time.Period;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 
 /**
@@ -93,15 +92,6 @@ public class Status extends AbstractActor {
                     }
                 })
                 .match(HealthRequest.class, message -> {
-                    final CompletionStage<ClusterStatusCache.StatusResponse> stateFuture = PatternsCS
-                            .ask(
-                                    _clusterStatusCache,
-                                    new ClusterStatusCache.GetRequest(),
-                                    Duration.ofSeconds(3))
-                            .thenApply(CAST_MAPPER);
-                    PatternsCS.pipe(stateFuture, context().dispatcher()).to(self(), sender());
-                })
-                .match(ClusterStatusCache.StatusResponse.class, response -> {
                     final boolean healthy = _cluster.readView().self().status() == MemberStatus.up() && !_quarantined;
                     sender().tell(healthy, getSelf());
                 })
