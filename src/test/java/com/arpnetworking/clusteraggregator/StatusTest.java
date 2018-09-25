@@ -74,12 +74,12 @@ public class StatusTest extends BaseActorTest {
                     ref.tell(state, ActorRef.noSender());
                     return null;
                 })
-                .when(_clusterMock).sendCurrentClusterState(Mockito.<ActorRef>any());
+                .when(_clusterMock).sendCurrentClusterState(Mockito.any());
     }
 
     @Test
     public void createProps() {
-        TestActorRef.create(getSystem(), Status.props(_listenerProbe.ref(), _clusterMock, _listenerProbe.ref(), _listenerProbe.ref()));
+        TestActorRef.create(getSystem(), Status.props(_clusterMock, _listenerProbe.ref(), _listenerProbe.ref()));
     }
 
     @Test
@@ -87,7 +87,7 @@ public class StatusTest extends BaseActorTest {
         final TestProbe probe = TestProbe.apply(getSystem());
         final TestActorRef<Actor> ref = TestActorRef.create(
                 getSystem(),
-                Status.props(_listenerProbe.ref(), _clusterMock, _listenerProbe.ref(), _listenerProbe.ref()));
+                Status.props(_clusterMock, _listenerProbe.ref(), _listenerProbe.ref()));
         getSystem().eventStream().subscribe(probe.ref(), UnhandledMessage.class);
         ref.tell("notAValidMessage", ActorRef.noSender());
         probe.expectMsgClass(FiniteDuration.apply(3, TimeUnit.SECONDS), UnhandledMessage.class);

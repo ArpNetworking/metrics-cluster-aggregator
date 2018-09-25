@@ -22,10 +22,6 @@ import akka.actor.Props;
 import akka.cluster.Cluster;
 import akka.cluster.sharding.ClusterSharding;
 import akka.cluster.sharding.ClusterShardingSettings;
-import akka.cluster.singleton.ClusterSingletonManager;
-import akka.cluster.singleton.ClusterSingletonManagerSettings;
-import akka.cluster.singleton.ClusterSingletonProxy;
-import akka.cluster.singleton.ClusterSingletonProxySettings;
 import akka.http.javadsl.ConnectHttp;
 import akka.http.javadsl.Http;
 import akka.http.javadsl.IncomingConnection;
@@ -36,8 +32,6 @@ import akka.stream.ActorMaterializer;
 import akka.stream.Materializer;
 import com.arpnetworking.clusteraggregator.aggregation.AggMessageExtractor;
 import com.arpnetworking.clusteraggregator.aggregation.AggregationRouter;
-import com.arpnetworking.clusteraggregator.aggregation.Bookkeeper;
-import com.arpnetworking.clusteraggregator.bookkeeper.persistence.InMemoryBookkeeper;
 import com.arpnetworking.clusteraggregator.client.AggClientServer;
 import com.arpnetworking.clusteraggregator.client.AggClientSupervisor;
 import com.arpnetworking.clusteraggregator.client.HttpSourceActor;
@@ -79,6 +73,7 @@ import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigParseOptions;
 import com.typesafe.config.ConfigSyntax;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.joda.time.Period;
 
 import java.io.File;
 import java.io.IOException;
@@ -212,33 +207,15 @@ public class GuiceModule extends AbstractModule {
 
     @Provides
     @Singleton
-    @Named("bookkeeper-proxy")
-    @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
-    private ActorRef provideBookkeeperProxy(final ActorSystem system) {
-        system.actorOf(
-                ClusterSingletonManager.props(
-                        Bookkeeper.props(new InMemoryBookkeeper()),
-                        PoisonPill.getInstance(),
-                        ClusterSingletonManagerSettings.create(system)),
-                "bookkeeper");
-
-        return system.actorOf(
-                ClusterSingletonProxy.props("/user/bookkeeper", ClusterSingletonProxySettings.create(system)),
-                "bookkeeperProxy");
-    }
-
-    @Provides
-    @Singleton
     @Named("status-cache")
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
     private ActorRef provideStatusCache(
             final ActorSystem system,
-            @Named("bookkeeper-proxy") final ActorRef bookkeeperProxy,
             @Named("periodic-statistics") final ActorRef periodicStats,
             final MetricsFactory metricsFactory) {
         final Cluster cluster = Cluster.get(system);
         final ActorRef clusterStatusCache = system.actorOf(ClusterStatusCache.props(cluster, metricsFactory), "cluster-status");
-        return system.actorOf(Status.props(bookkeeperProxy, cluster, clusterStatusCache, periodicStats), "status");
+        return system.actorOf(Status.props(cluster, clusterStatusCache, periodicStats), "status");
     }
 
     @Provides
@@ -247,18 +224,6 @@ public class GuiceModule extends AbstractModule {
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
     private ActorRef provideTcpServer(final Injector injector, final ActorSystem system) {
         return system.actorOf(GuiceActorCreator.props(injector, AggClientServer.class), "tcp-server");
-    }
-
-    @Provides
-    @Singleton
-    @Named("aggregator-lifecycle")
-    @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
-    private ActorRef provideAggregatorLifecycleTracker(
-            final ActorSystem system,
-            @Named("bookkeeper-proxy") final ActorRef bookkeeperProxy) {
-        final ActorRef aggLifecycle = system.actorOf(AggregatorLifecycle.props(), "agg-lifecycle");
-        aggLifecycle.tell(new AggregatorLifecycle.Subscribe(bookkeeperProxy), bookkeeperProxy);
-        return aggLifecycle;
     }
 
     @Provides
@@ -362,6 +327,13 @@ public class GuiceModule extends AbstractModule {
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
     private boolean provideReaggregationInjectClusterAsHost(final ClusterAggregatorConfiguration config) {
         return config.getReaggregationInjectClusterAsHost();
+    }
+
+    @Provides
+    @Named("reaggregation-timeout")
+    @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
+    private Period provideReaggregationTimeout(final ClusterAggregatorConfiguration config) {
+        return config.getReaggregationTimeout();
     }
 
     @Provides

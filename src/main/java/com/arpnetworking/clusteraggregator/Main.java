@@ -172,12 +172,6 @@ public final class Main implements Launchable {
         injector.getInstance(Key.get(ActorRef.class, Names.named("host-emitter")));
         injector.getInstance(Key.get(ActorRef.class, Names.named("cluster-emitter")));
 
-        LOGGER.info()
-                .setMessage("Launching bookkeeper singleton and proxy")
-                .log();
-        injector.getInstance(Key.get(ActorRef.class, Names.named("bookkeeper-proxy")));
-
-        injector.getInstance(Key.get(ActorRef.class, Names.named("aggregator-lifecycle")));
         injector.getInstance(Key.get(ActorRef.class, Names.named("periodic-statistics")));
 
         LOGGER.info()
@@ -231,9 +225,13 @@ public final class Main implements Launchable {
         LOGGER.info()
                 .setMessage("Stopping Akka")
                 .log();
-        _shutdownActor.tell(GracefulShutdownActor.Shutdown.instance(), ActorRef.noSender());
+        if (_shutdownActor != null) {
+            _shutdownActor.tell(GracefulShutdownActor.Shutdown.instance(), ActorRef.noSender());
+        }
         try {
-            Await.result(_system.whenTerminated(), SHUTDOWN_TIMEOUT);
+            if (_system != null) {
+                Await.result(_system.whenTerminated(), SHUTDOWN_TIMEOUT);
+            }
             // CHECKSTYLE.OFF: IllegalCatch - Prevent program shutdown
         } catch (final Exception e) {
             // CHECKSTYLE.ON: IllegalCatch

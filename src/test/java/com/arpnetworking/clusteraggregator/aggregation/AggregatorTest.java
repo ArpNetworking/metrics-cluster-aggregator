@@ -23,6 +23,7 @@ import akka.testkit.TestActorRef;
 import akka.testkit.TestProbe;
 import com.arpnetworking.utility.BaseActorTest;
 import com.google.common.collect.ImmutableSet;
+import org.joda.time.Period;
 import org.junit.Assert;
 import org.junit.Test;
 import scala.concurrent.duration.FiniteDuration;
@@ -55,10 +56,10 @@ public class AggregatorTest extends BaseActorTest {
                 AggregationRouter.props(
                         ignored.ref(),
                         ignored.ref(),
-                        ignored.ref(),
                         "",
                         ImmutableSet.of(),
-                        true),
+                        true,
+                        Period.minutes(1)),
                 probe.ref(),
                 "agg",
                 getSystem());

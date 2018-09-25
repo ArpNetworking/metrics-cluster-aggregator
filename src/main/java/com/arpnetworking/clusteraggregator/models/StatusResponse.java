@@ -55,10 +55,6 @@ public final class StatusResponse {
         return _localAddress.toString();
     }
 
-    public BookkeeperData getMetrics() {
-        return _metrics;
-    }
-
     @JsonProperty("isLeader")
     public boolean isLeader() {
         return _localAddress.equals(_clusterLeader);
@@ -99,7 +95,6 @@ public final class StatusResponse {
         }
 
         _localAddress = builder._localAddress;
-        _metrics = builder._bookkeeperData;
         _localMetrics = builder._localMetrics;
         _allocations = flatten(
                 Optional.ofNullable(builder._clusterState)
@@ -115,7 +110,6 @@ public final class StatusResponse {
 
     private final Address _localAddress;
     private final Address _clusterLeader;
-    private final BookkeeperData _metrics;
     private final Iterable<Member> _members;
     private final Map<Period, PeriodMetrics> _localMetrics;
     private final Optional<List<ShardAllocation>> _allocations;
@@ -168,17 +162,6 @@ public final class StatusResponse {
         }
 
         /**
-         * Sets the bookkeeper data. Optional.
-         *
-         * @param value The bookkeeper data.
-         * @return This builder.
-         */
-        public Builder setClusterMetrics(final BookkeeperData value) {
-            _bookkeeperData = value;
-            return this;
-        }
-
-        /**
          * Sets the local address of this cluster node. Required. Cannot be null.
          *
          * @param value The address of the local node.
@@ -201,7 +184,6 @@ public final class StatusResponse {
         }
 
         private ClusterStatusCache.StatusResponse _clusterState;
-        private BookkeeperData _bookkeeperData;
         private Address _localAddress;
         private Map<Period, PeriodMetrics> _localMetrics;
     }
