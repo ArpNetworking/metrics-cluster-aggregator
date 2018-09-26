@@ -38,12 +38,11 @@ import java.util.function.Function;
  * Periodically polls the cluster status and caches the result.
  *
  * Accepts the following messages:
- *     STATUS: Replies with a StatusResponse message containing the service status data
- *     HEALTH: Replies with a boolean value
- *     ClusterEvent.CurrentClusterState: Updates the cached state of the cluster
+ *     {@link StatusRequest}: Replies with a StatusResponse message containing the service status data
+ *     {@link HealthRequest}: Replies with a boolean value, true indicating healthy, false indicating unhealthy
  *
  * Internal-only messages:
- *     POLL: Triggers an update of the cluster data.
+ *     {@link AssociationErrorEvent}: Evaluates the possibility of the node being quarantined
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
