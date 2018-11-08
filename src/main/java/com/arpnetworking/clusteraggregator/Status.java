@@ -32,19 +32,17 @@ import org.joda.time.Period;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 
 /**
  * Periodically polls the cluster status and caches the result.
  *
  * Accepts the following messages:
- *     STATUS: Replies with a StatusResponse message containing the service status data
- *     HEALTH: Replies with a boolean value
- *     ClusterEvent.CurrentClusterState: Updates the cached state of the cluster
+ *     {@link StatusRequest}: Replies with a StatusResponse message containing the service status data
+ *     {@link HealthRequest}: Replies with a boolean value, true indicating healthy, false indicating unhealthy
  *
  * Internal-only messages:
- *     POLL: Triggers an update of the cluster data.
+ *     {@link AssociationErrorEvent}: Evaluates the possibility of the node being quarantined
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
@@ -93,15 +91,6 @@ public class Status extends AbstractActor {
                     }
                 })
                 .match(HealthRequest.class, message -> {
-                    final CompletionStage<ClusterStatusCache.StatusResponse> stateFuture = PatternsCS
-                            .ask(
-                                    _clusterStatusCache,
-                                    new ClusterStatusCache.GetRequest(),
-                                    Duration.ofSeconds(3))
-                            .thenApply(CAST_MAPPER);
-                    PatternsCS.pipe(stateFuture, context().dispatcher()).to(self(), sender());
-                })
-                .match(ClusterStatusCache.StatusResponse.class, response -> {
                     final boolean healthy = _cluster.readView().self().status() == MemberStatus.up() && !_quarantined;
                     sender().tell(healthy, getSelf());
                 })
