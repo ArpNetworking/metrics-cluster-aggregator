@@ -27,6 +27,7 @@ import net.sf.oval.constraint.Range;
 import org.joda.time.Period;
 
 import java.io.File;
+import java.net.URI;
 import java.util.Collections;
 import java.util.Map;
 
@@ -51,6 +52,10 @@ public final class ClusterAggregatorConfiguration {
 
     public String getMonitoringService() {
         return _monitoringService;
+    }
+
+    public URI getMonitoringUri() {
+        return _monitoringUri;
     }
 
     public int getHttpPort() {
@@ -164,6 +169,7 @@ public final class ClusterAggregatorConfiguration {
     private ClusterAggregatorConfiguration(final Builder builder) {
         _monitoringCluster = builder._monitoringCluster;
         _monitoringService = builder._monitoringService;
+        _monitoringUri = builder._monitoringUri;
         _httpHost = builder._httpHost;
         _httpPort = builder._httpPort;
         _httpHealthCheckPath = builder._httpHealthCheckPath;
@@ -188,6 +194,7 @@ public final class ClusterAggregatorConfiguration {
 
     private final String _monitoringCluster;
     private final String _monitoringService;
+    private final URI _monitoringUri;
     private final File _logDirectory;
     private final String _httpHost;
     private final int _httpPort;
@@ -242,6 +249,18 @@ public final class ClusterAggregatorConfiguration {
          */
         public Builder setMonitoringService(final String value) {
             _monitoringService = value;
+            return this;
+        }
+
+        /**
+         * The monitoring endpoint URI (Where to post data). Optional. Cannot be null or empty. Default
+         * is 'http://localhost:7090/metrics/v2/application'.
+         *
+         * @param value The monitoring endpoint uri.
+         * @return This instance of <code>Builder</code>.
+         */
+        public Builder setMonitoringUri(final URI value) {
+            _monitoringUri = value;
             return this;
         }
 
@@ -487,6 +506,9 @@ public final class ClusterAggregatorConfiguration {
         @NotNull
         @NotEmpty
         private String _monitoringService = "cluster_aggregator";
+        @NotNull
+        @NotEmpty
+        private URI _monitoringUri = URI.create("http://localhost:7090/metrics/v2/application");
         @NotNull
         @NotEmpty
         private String _httpHost = "0.0.0.0";

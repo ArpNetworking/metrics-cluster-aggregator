@@ -143,6 +143,7 @@ public class GuiceModule extends AbstractModule {
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
     private MetricsFactory provideMetricsFactory() {
         final Sink sink = new ApacheHttpSink.Builder()
+                .setUri(_configuration.getMonitoringUri())
                 .build();
 
         return new TsdMetricsFactory.Builder()
