@@ -27,7 +27,6 @@ import net.sf.oval.constraint.Range;
 import org.joda.time.Period;
 
 import java.io.File;
-import java.net.URI;
 import java.util.Collections;
 import java.util.Map;
 
@@ -54,8 +53,12 @@ public final class ClusterAggregatorConfiguration {
         return _monitoringService;
     }
 
-    public URI getMonitoringUri() {
-        return _monitoringUri;
+    public String getMonitoringHost() {
+        return _monitoringHost;
+    }
+
+    public int getMonitoringPort() {
+        return _monitoringPort;
     }
 
     public int getHttpPort() {
@@ -169,7 +172,8 @@ public final class ClusterAggregatorConfiguration {
     private ClusterAggregatorConfiguration(final Builder builder) {
         _monitoringCluster = builder._monitoringCluster;
         _monitoringService = builder._monitoringService;
-        _monitoringUri = builder._monitoringUri;
+        _monitoringHost = builder._monitoringHost;
+        _monitoringPort = builder._monitoringPort;
         _httpHost = builder._httpHost;
         _httpPort = builder._httpPort;
         _httpHealthCheckPath = builder._httpHealthCheckPath;
@@ -194,7 +198,8 @@ public final class ClusterAggregatorConfiguration {
 
     private final String _monitoringCluster;
     private final String _monitoringService;
-    private final URI _monitoringUri;
+    private final String _monitoringHost;
+    private final int _monitoringPort;
     private final File _logDirectory;
     private final String _httpHost;
     private final int _httpPort;
@@ -253,14 +258,26 @@ public final class ClusterAggregatorConfiguration {
         }
 
         /**
-         * The monitoring endpoint URI (Where to post data). Optional. Cannot be null or empty. Default
-         * is 'http://localhost:7090/metrics/v2/application'.
+         * The monitoring endpoint host (Where to post data). Optional. Cannot be null or empty. Default
+         * is 'localhost'.
          *
          * @param value The monitoring endpoint uri.
          * @return This instance of <code>Builder</code>.
          */
-        public Builder setMonitoringUri(final URI value) {
-            _monitoringUri = value;
+        public Builder setMonitoringHost(final String value) {
+            _monitoringHost = value;
+            return this;
+        }
+
+        /**
+         * The monitoring endpoint port. Optional. Cannot be null, must be between 1 and
+         * 65535 (inclusive). Defaults to 7090.
+         *
+         * @param value The port to listen on.
+         * @return This instance of <code>Builder</code>.
+         */
+        public Builder setMonitoringPort(final Integer value) {
+            _monitoringPort = value;
             return this;
         }
 
@@ -508,7 +525,10 @@ public final class ClusterAggregatorConfiguration {
         private String _monitoringService = "cluster_aggregator";
         @NotNull
         @NotEmpty
-        private URI _monitoringUri = URI.create("http://localhost:7090/metrics/v2/application");
+        private String _monitoringHost = "localhost";
+        @NotNull
+        @Range(min = 1, max = 65535)
+        private Integer _monitoringPort = 7090;
         @NotNull
         @NotEmpty
         private String _httpHost = "0.0.0.0";

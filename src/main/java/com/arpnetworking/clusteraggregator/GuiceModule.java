@@ -77,6 +77,8 @@ import org.joda.time.Period;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
@@ -141,9 +143,12 @@ public class GuiceModule extends AbstractModule {
     @Provides
     @Singleton
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
-    private MetricsFactory provideMetricsFactory() {
+    private MetricsFactory provideMetricsFactory() throws URISyntaxException {
         final Sink sink = new ApacheHttpSink.Builder()
-                .setUri(_configuration.getMonitoringUri())
+                .setUri(new URI(String.format(
+                        "http://%s:%d/metrics/v2/application",
+                        _configuration.getMonitoringHost(),
+                        _configuration.getMonitoringPort())))
                 .build();
 
         return new TsdMetricsFactory.Builder()
