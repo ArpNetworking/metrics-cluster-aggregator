@@ -21,11 +21,14 @@ import com.arpnetworking.tsdcore.model.FQDSN;
 import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import net.sf.oval.constraint.Min;
+import net.sf.oval.constraint.NotNull;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.RequestBuilder;
 import org.joda.time.format.ISOPeriodFormat;
 
+import javax.annotation.Nonnull;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
@@ -198,7 +201,7 @@ public final class InfluxDbSink extends HttpPostSink {
          * @param value The lines per request.
          * @return This instance of <code>Builder</code>.
          */
-        public final Builder setLinesPerRequest(final long value) {
+        public final Builder setLinesPerRequest(@Nonnull final Long value) {
             _linesPerRequest = value;
             return self();
         }
@@ -208,7 +211,9 @@ public final class InfluxDbSink extends HttpPostSink {
             return this;
         }
 
-        private long _linesPerRequest;
+        @NotNull
+        @Min(1)
+        private Long _linesPerRequest;
     }
 
 }
