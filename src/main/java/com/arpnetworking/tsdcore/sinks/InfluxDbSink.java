@@ -28,6 +28,7 @@ import org.joda.time.format.ISOPeriodFormat;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
@@ -76,15 +77,25 @@ public final class InfluxDbSink extends HttpPostSink {
                     data.getFQDSN().getStatistic().getName(),
                     data.getValue().getValue()
             );
-            //TODO(dguerreromartin): include Conditional
         }
 
-        final StringJoiner dataList = new StringJoiner("\n");
-        for (MetricFormat metric : metrics.values()) {
-            dataList.add(metric.buildMetricString());
+        final List<byte[]> requests = Lists.newArrayList();
+        int currentRequestSize = 0;
+        StringJoiner currentRequestData = new StringJoiner("\n");
+        for (final MetricFormat metric : metrics.values()) {
+            currentRequestData.add(metric.buildMetricString());
+            ++currentRequestSize;
+            if (currentRequestSize > 1000) {
+                requests.add(currentRequestData.toString().getBytes(StandardCharsets.UTF_8));
+                currentRequestSize = 0;
+                currentRequestData = new StringJoiner("\n");
+            }
+        }
+        if (currentRequestSize > 0) {
+            requests.add(currentRequestData.toString().getBytes(StandardCharsets.UTF_8));
         }
 
-        return Lists.newArrayList(dataList.toString().getBytes(StandardCharsets.UTF_8));
+        return requests;
     }
 
 
