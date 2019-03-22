@@ -80,18 +80,18 @@ public final class InfluxDbSink extends HttpPostSink {
         }
 
         final List<byte[]> requests = Lists.newArrayList();
-        int currentRequestSize = 0;
+        int currentRequestLineCount = 0;
         StringJoiner currentRequestData = new StringJoiner("\n");
         for (final MetricFormat metric : metrics.values()) {
             currentRequestData.add(metric.buildMetricString());
-            ++currentRequestSize;
-            if (currentRequestSize > 1000) {
+            ++currentRequestLineCount;
+            if (currentRequestLineCount >= _linesPerRequest) {
                 requests.add(currentRequestData.toString().getBytes(StandardCharsets.UTF_8));
-                currentRequestSize = 0;
+                currentRequestLineCount = 0;
                 currentRequestData = new StringJoiner("\n");
             }
         }
-        if (currentRequestSize > 0) {
+        if (currentRequestLineCount > 0) {
             requests.add(currentRequestData.toString().getBytes(StandardCharsets.UTF_8));
         }
 
@@ -105,6 +105,18 @@ public final class InfluxDbSink extends HttpPostSink {
                 .append(fqdsn.getMetric())
                 .toString();
     }
+
+    /**
+     * Private constructor.
+     *
+     * @param builder Instance of <code>Builder</code>.
+     */
+    private InfluxDbSink(final Builder builder) {
+        super(builder);
+        _linesPerRequest = builder._linesPerRequest;
+    }
+
+    private final long _linesPerRequest;
 
     /**
      * Implementation of output format for <code>InfluxDB</code> metrics.
@@ -167,15 +179,6 @@ public final class InfluxDbSink extends HttpPostSink {
     }
 
     /**
-     * Private constructor.
-     *
-     * @param builder Instance of <code>Builder</code>.
-     */
-    private InfluxDbSink(final Builder builder) {
-        super(builder);
-    }
-
-    /**
      * Implementation of builder pattern for <code>InfluxDbSink</code>.
      *
      * @author Daniel Guerrero (dguerreromartin at groupon dot com)
@@ -189,10 +192,23 @@ public final class InfluxDbSink extends HttpPostSink {
             super(InfluxDbSink::new);
         }
 
+        /**
+         * Sets maximum lines per request. Optional. Defaults to 10000. Cannot be null or less than 1.
+         *
+         * @param value The lines per request.
+         * @return This instance of <code>Builder</code>.
+         */
+        public final Builder setLinesPerRequest(final long value) {
+            _linesPerRequest = value;
+            return self();
+        }
+
         @Override
         protected Builder self() {
             return this;
         }
+
+        private long _linesPerRequest;
     }
 
 }
