@@ -21,6 +21,8 @@ import com.arpnetworking.tsdcore.model.FQDSN;
 import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import net.sf.oval.constraint.Min;
+import net.sf.oval.constraint.NotNull;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.RequestBuilder;
@@ -28,8 +30,10 @@ import org.joda.time.format.ISOPeriodFormat;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
+import javax.annotation.Nonnull;
 
 /**
  * Publishes to a InfluxDB endpoint. This class is thread safe.
@@ -76,15 +80,25 @@ public final class InfluxDbSink extends HttpPostSink {
                     data.getFQDSN().getStatistic().getName(),
                     data.getValue().getValue()
             );
-            //TODO(dguerreromartin): include Conditional
         }
 
-        final StringJoiner dataList = new StringJoiner("\n");
-        for (MetricFormat metric : metrics.values()) {
-            dataList.add(metric.buildMetricString());
+        final List<byte[]> requests = Lists.newArrayList();
+        int currentRequestLineCount = 0;
+        StringJoiner currentRequestData = new StringJoiner("\n");
+        for (final MetricFormat metric : metrics.values()) {
+            currentRequestData.add(metric.buildMetricString());
+            ++currentRequestLineCount;
+            if (currentRequestLineCount >= _linesPerRequest) {
+                requests.add(currentRequestData.toString().getBytes(StandardCharsets.UTF_8));
+                currentRequestLineCount = 0;
+                currentRequestData = new StringJoiner("\n");
+            }
+        }
+        if (currentRequestLineCount > 0) {
+            requests.add(currentRequestData.toString().getBytes(StandardCharsets.UTF_8));
         }
 
-        return Lists.newArrayList(dataList.toString().getBytes(StandardCharsets.UTF_8));
+        return requests;
     }
 
 
@@ -94,6 +108,18 @@ public final class InfluxDbSink extends HttpPostSink {
                 .append(fqdsn.getMetric())
                 .toString();
     }
+
+    /**
+     * Private constructor.
+     *
+     * @param builder Instance of <code>Builder</code>.
+     */
+    private InfluxDbSink(final Builder builder) {
+        super(builder);
+        _linesPerRequest = builder._linesPerRequest;
+    }
+
+    private final long _linesPerRequest;
 
     /**
      * Implementation of output format for <code>InfluxDB</code> metrics.
@@ -156,15 +182,6 @@ public final class InfluxDbSink extends HttpPostSink {
     }
 
     /**
-     * Private constructor.
-     *
-     * @param builder Instance of <code>Builder</code>.
-     */
-    private InfluxDbSink(final Builder builder) {
-        super(builder);
-    }
-
-    /**
      * Implementation of builder pattern for <code>InfluxDbSink</code>.
      *
      * @author Daniel Guerrero (dguerreromartin at groupon dot com)
@@ -178,10 +195,25 @@ public final class InfluxDbSink extends HttpPostSink {
             super(InfluxDbSink::new);
         }
 
+        /**
+         * Sets maximum lines per request. Optional. Defaults to 10000. Cannot be null or less than 1.
+         *
+         * @param value The lines per request.
+         * @return This instance of <code>Builder</code>.
+         */
+        public Builder setLinesPerRequest(@Nonnull final Long value) {
+            _linesPerRequest = value;
+            return self();
+        }
+
         @Override
         protected Builder self() {
             return this;
         }
+
+        @NotNull
+        @Min(1)
+        private Long _linesPerRequest = 10000L;
     }
 
 }
