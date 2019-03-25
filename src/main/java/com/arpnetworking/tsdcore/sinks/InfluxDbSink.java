@@ -28,12 +28,12 @@ import org.asynchttpclient.Request;
 import org.asynchttpclient.RequestBuilder;
 import org.joda.time.format.ISOPeriodFormat;
 
-import javax.annotation.Nonnull;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
+import javax.annotation.Nonnull;
 
 /**
  * Publishes to a InfluxDB endpoint. This class is thread safe.
@@ -201,7 +201,7 @@ public final class InfluxDbSink extends HttpPostSink {
          * @param value The lines per request.
          * @return This instance of <code>Builder</code>.
          */
-        public final Builder setLinesPerRequest(@Nonnull final Long value) {
+        public Builder setLinesPerRequest(@Nonnull final Long value) {
             _linesPerRequest = value;
             return self();
         }
