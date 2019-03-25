@@ -213,7 +213,7 @@ public final class InfluxDbSink extends HttpPostSink {
 
         @NotNull
         @Min(1)
-        private Long _linesPerRequest;
+        private Long _linesPerRequest = 10000L;
     }
 
 }
