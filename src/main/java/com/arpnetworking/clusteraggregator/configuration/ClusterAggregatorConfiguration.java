@@ -77,6 +77,10 @@ public final class ClusterAggregatorConfiguration {
         return _httpStatusPath;
     }
 
+    public String getHttpVersionPath() {
+        return _httpVersionPath;
+    }
+
     public File getLogDirectory() {
         return _logDirectory;
     }
@@ -151,6 +155,7 @@ public final class ClusterAggregatorConfiguration {
                 .add("HttpPort", _httpPort)
                 .add("HttpHealthCheckPath", _httpHealthCheckPath)
                 .add("HttpStatusPath", _httpStatusPath)
+                .add("HttpVersionPath", _httpVersionPath)
                 .add("AggregatorHost", _aggregationHost)
                 .add("AggregatorPort", _aggregationPort)
                 .add("LogDirectory", _logDirectory)
@@ -178,6 +183,7 @@ public final class ClusterAggregatorConfiguration {
         _httpPort = builder._httpPort;
         _httpHealthCheckPath = builder._httpHealthCheckPath;
         _httpStatusPath = builder._httpStatusPath;
+        _httpVersionPath = builder._httpVersionPath;
         _aggregationHost = builder._aggregationHost;
         _aggregationPort = builder._aggregationPort;
         _logDirectory = builder._logDirectory;
@@ -205,6 +211,7 @@ public final class ClusterAggregatorConfiguration {
     private final int _httpPort;
     private final String _httpHealthCheckPath;
     private final String _httpStatusPath;
+    private final String _httpVersionPath;
     private final String _aggregationHost;
     private final int _aggregationPort;
     private final Map<String, ?> _akkaConfiguration;
@@ -346,6 +353,17 @@ public final class ClusterAggregatorConfiguration {
          */
         public Builder setHttpStatusPath(final String value) {
             _httpStatusPath = value;
+            return this;
+        }
+
+        /**
+         * The http version path. Cannot be null or empty. Optional. Default is "/version".
+         *
+         * @param value The version path.
+         * @return This instance of <code>Builder</code>.
+         */
+        public Builder setHttpVersionPath(final String value) {
+            _httpVersionPath = value;
             return this;
         }
 
@@ -541,6 +559,9 @@ public final class ClusterAggregatorConfiguration {
         @NotNull
         @NotEmpty
         private String _httpStatusPath = "/status";
+        @NotNull
+        @NotEmpty
+        private String _httpVersionPath = "/version";
         @NotNull
         @NotEmpty
         private String _aggregationHost = "0.0.0.0";

@@ -19,19 +19,13 @@ import akka.actor.Address;
 import akka.cluster.Member;
 import com.arpnetworking.clusteraggregator.ClusterStatusCache;
 import com.arpnetworking.commons.builder.OvalBuilder;
-import com.arpnetworking.commons.jackson.databind.ObjectMapperFactory;
-import com.arpnetworking.steno.Logger;
-import com.arpnetworking.steno.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
-import com.google.common.io.Resources;
-import net.sf.oval.constraint.NotEmpty;
-import net.sf.oval.constraint.NotNull;
 import org.joda.time.Period;
 import scala.collection.JavaConversions;
 
@@ -73,16 +67,9 @@ public final class StatusResponse {
         return _allocations.map(Collections::unmodifiableList);
     }
 
-    public String getVersion() {
-        return VERSION_INFO.getVersion();
-    }
-
-    public String getName() {
-        return VERSION_INFO.getName();
-    }
-
-    public String getSha() {
-        return VERSION_INFO.getSha();
+    @JsonUnwrapped
+    public VersionInfo getVersionInfo() {
+        return VersionInfo.getInstance();
     }
 
     private StatusResponse(final Builder builder) {
@@ -113,31 +100,6 @@ public final class StatusResponse {
     private final Iterable<Member> _members;
     private final Map<Period, PeriodMetrics> _localMetrics;
     private final Optional<List<ShardAllocation>> _allocations;
-
-    private static final VersionInfo VERSION_INFO;
-    private static final Logger LOGGER = LoggerFactory.getLogger(StatusResponse.class);
-
-    static {
-        StatusResponse.VersionInfo versionInfo = null;
-        try {
-            versionInfo =
-                    ObjectMapperFactory.getInstance().readValue(
-                            Resources.toString(Resources.getResource("status.json"), Charsets.UTF_8),
-                            StatusResponse.VersionInfo.class);
-        } catch (final IOException e) {
-            LOGGER.error()
-                    .setMessage("Resource load failure")
-                    .addData("resource", "status.json")
-                    .setThrowable(e)
-                    .log();
-            versionInfo = new StatusResponse.VersionInfo.Builder()
-                    .setVersion("UNKNOWN")
-                    .setName("UNKNOWN")
-                    .setSha("")
-                    .build();
-        }
-        VERSION_INFO = versionInfo;
-    }
 
     /**
      * Builder for a {@link StatusResponse}.
@@ -186,90 +148,6 @@ public final class StatusResponse {
         private ClusterStatusCache.StatusResponse _clusterState;
         private Address _localAddress;
         private Map<Period, PeriodMetrics> _localMetrics;
-    }
-
-    /**
-     * Represents the model for the version of the service currently running.
-     *
-     * @author Brandon Arp (brandon dot arp at smartsheet dot com)
-     */
-    private static final class VersionInfo {
-        public String getName() {
-            return _name;
-        }
-
-        public String getVersion() {
-            return _version;
-        }
-
-        public String getSha() {
-            return _sha;
-        }
-
-        private VersionInfo(final Builder builder) {
-            _name = builder._name;
-            _version = builder._version;
-            _sha = builder._sha;
-        }
-
-        private String _name;
-        private String _version;
-        private String _sha;
-
-        /**
-         * Builder for a {@link VersionInfo}.
-         */
-        private static final class Builder extends OvalBuilder<VersionInfo> {
-            /**
-             * Public constructor.
-             */
-            private Builder() {
-                super(VersionInfo::new);
-            }
-
-            /**
-             * Sets the name of the application. Required. Cannot be null. Cannot be empty.
-             *
-             * @param value The name of the application.
-             * @return This builder.
-             */
-            public Builder setName(final String value) {
-                _name = value;
-                return this;
-            }
-
-            /**
-             * Sets the name or tag of the version. Required. Cannot be null. Cannot be empty.
-             *
-             * @param value The name of the version.
-             * @return This builder.
-             */
-            public Builder setVersion(final String value) {
-                _version = value;
-                return this;
-            }
-
-            /**
-             * Sets the SHA. Required. Cannot be null. Cannot be empty.
-             *
-             * @param value The SHA.
-             * @return This builder.
-             */
-            public Builder setSha(final String value) {
-                _sha = value;
-                return this;
-            }
-
-            @NotNull
-            @NotEmpty
-            private String _name;
-            @NotNull
-            @NotEmpty
-            private String _version;
-            @NotNull
-            @NotEmpty
-            private String _sha;
-        }
     }
 
     private static final class MemberSerializer extends JsonSerializer<Member> {

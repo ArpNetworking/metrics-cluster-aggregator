@@ -114,6 +114,7 @@ public class GuiceModule extends AbstractModule {
 
         bind(String.class).annotatedWith(Names.named("health-check-path")).toInstance(_configuration.getHttpHealthCheckPath());
         bind(String.class).annotatedWith(Names.named("status-path")).toInstance(_configuration.getHttpStatusPath());
+        bind(String.class).annotatedWith(Names.named("version-path")).toInstance(_configuration.getHttpVersionPath());
         bind(ActorRef.class)
                 .annotatedWith(Names.named("http-ingest-v1"))
                 .toProvider(GuiceActorCreator.provider(HttpSourceActor.class, "http-ingest-v1"))
