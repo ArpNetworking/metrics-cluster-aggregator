@@ -207,7 +207,8 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
                                         .setThrowable(e)
                                         .log();
                                 return HttpResponse.create().withStatus(StatusCodes.INTERNAL_SERVER_ERROR);
-                            }});
+                            }
+                    });
             }
         } else if (HttpMethods.POST.equals(request.method())) {
             if (INCOMING_DATA_V1_PATH.equals(request.getUri().path())
