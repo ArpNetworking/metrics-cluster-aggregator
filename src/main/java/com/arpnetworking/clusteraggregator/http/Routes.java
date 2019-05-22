@@ -31,6 +31,7 @@ import akka.pattern.PatternsCS;
 import akka.util.ByteString;
 import com.arpnetworking.clusteraggregator.Status;
 import com.arpnetworking.clusteraggregator.models.StatusResponse;
+import com.arpnetworking.clusteraggregator.models.VersionInfo;
 import com.arpnetworking.commons.jackson.databind.ObjectMapperFactory;
 import com.arpnetworking.configuration.jackson.akka.AkkaModule;
 import com.arpnetworking.metrics.Metrics;
@@ -74,6 +75,7 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
      * @param metricsFactory Instance of <code>MetricsFactory</code>.
      * @param healthCheckPath The path for the health check.
      * @param statusPath The path for the status.
+     * @param versionPath The path for the version.
      */
     @Inject
     public Routes(
@@ -82,11 +84,14 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
             @Named("health-check-path")
             final String healthCheckPath,
             @Named("status-path")
-            final String statusPath) {
+            final String statusPath,
+            @Named("version-path")
+            final String versionPath) {
         _actorSystem = actorSystem;
         _metricsFactory = metricsFactory;
         _healthCheckPath = healthCheckPath;
         _statusPath = statusPath;
+        _versionPath = versionPath;
 
         _objectMapper = ObjectMapperFactory.createInstance();
         _objectMapper.registerModule(new SimpleModule().addSerializer(Member.class, new MemberSerializer()));
@@ -189,6 +194,21 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
                                         return HttpResponse.create().withStatus(StatusCodes.INTERNAL_SERVER_ERROR);
                                     }
                                 });
+            } else if (_versionPath.equals(request.getUri().path())) {
+                    return CompletableFuture.supplyAsync(() -> {
+                            try {
+                                return HttpResponse.create()
+                                        .withEntity(
+                                                JSON_CONTENT_TYPE,
+                                                ByteString.fromString(_objectMapper.writeValueAsString(VersionInfo.getInstance())));
+                            } catch (final IOException e) {
+                                LOGGER.error()
+                                        .setMessage("Failed to serialize version")
+                                        .setThrowable(e)
+                                        .log();
+                                return HttpResponse.create().withStatus(StatusCodes.INTERNAL_SERVER_ERROR);
+                            }
+                    });
             }
         } else if (HttpMethods.POST.equals(request.method())) {
             if (INCOMING_DATA_V1_PATH.equals(request.getUri().path())
@@ -238,6 +258,7 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
     private final MetricsFactory _metricsFactory;
     private final String _healthCheckPath;
     private final String _statusPath;
+    private final String _versionPath;
     private final ObjectMapper _objectMapper;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Routes.class);
