@@ -133,7 +133,6 @@
     <logback.version>1.2.3</logback.version>
     <logback.steno.version>1.18.0</logback.steno.version>
     <log4j.over.slf4j.version>1.7.22</log4j.over.slf4j.version>
-    <luaj.version>3.0.1</luaj.version>
     <kryo.version>4.0.0</kryo.version>
     <kryo.serializers.version>0.42</kryo.serializers.version>
     <metrics.client.version>0.10.0</metrics.client.version>
@@ -741,11 +740,6 @@
       <groupId>com.arpnetworking.commons</groupId>
       <artifactId>javassist-maven-core</artifactId>
       <version>${javassist.maven.core.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.luaj</groupId>
-      <artifactId>luaj-jse</artifactId>
-      <version>${luaj.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.code.findbugs</groupId>
