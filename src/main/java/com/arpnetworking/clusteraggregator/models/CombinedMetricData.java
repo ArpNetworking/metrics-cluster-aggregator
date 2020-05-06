@@ -28,13 +28,16 @@ import com.arpnetworking.tsdcore.statistics.HistogramStatistic;
 import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.arpnetworking.tsdcore.statistics.StatisticFactory;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import net.sf.oval.constraint.NotNull;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 /**
  * A metric-based aggregation model.  Holds all of the statistics and supporting for a metric on a host.
@@ -81,6 +84,72 @@ public final class CombinedMetricData {
     }
 
     /**
+     * Compute the population size for a metric from its statistic values.
+     *
+     * @param metricName the name of the metric
+     * @param statisticValues the statistic values for the metric.
+     * @return requires {@link com.arpnetworking.tsdcore.statistics.CountStatistic}
+     * or {@link HistogramStatistic} to return an accurate count otherwise
+     * returns 1
+     */
+    public static long computePopulationSize(
+            final String metricName,
+            final Map<Statistic, CombinedMetricData.StatisticValue> statisticValues) {
+        final ImmutableMap.Builder<Statistic, CalculatedValue<?>> requiredCalculatedValues = ImmutableMap.builder();
+        @Nullable final CombinedMetricData.StatisticValue countStatisticValue = statisticValues.get(COUNT_STATISTIC);
+        if (countStatisticValue != null) {
+            requiredCalculatedValues.put(COUNT_STATISTIC, countStatisticValue.getValue());
+        }
+        @Nullable final CombinedMetricData.StatisticValue histogramStatisticValue = statisticValues.get(HISTOGRAM_STATISTIC);
+        if (countStatisticValue != null) {
+            requiredCalculatedValues.put(HISTOGRAM_STATISTIC, histogramStatisticValue.getValue());
+        }
+        return computePopulationSizeFromCalculatedValues(
+                metricName,
+                requiredCalculatedValues.build());
+    }
+
+    /**
+     * Compute the population size for a metric from its calculated values.
+     *
+     * @param metricName the name of the metric
+     * @param calculatedValues the calculated values for the metric.
+     * @return requires {@link com.arpnetworking.tsdcore.statistics.CountStatistic}
+     * or {@link HistogramStatistic} to return an accurate count otherwise
+     * returns 1
+     */
+    public static long computePopulationSizeFromCalculatedValues(
+            final String metricName,
+            final Map<Statistic, CalculatedValue<?>> calculatedValues) {
+        // Compute the population size either via the count statistic or
+        // via histogram bin counting.
+        @Nullable final CalculatedValue<?> histogramCalculatedValue = calculatedValues.get(HISTOGRAM_STATISTIC);
+        @Nullable final CalculatedValue<?> countCalculatedValue = calculatedValues.get(COUNT_STATISTIC);
+
+        // Prefer using the histogram since it's value is always accurate
+        if (histogramCalculatedValue != null) {
+            if (histogramCalculatedValue.getData() instanceof HistogramStatistic.HistogramSupportingData) {
+                final HistogramStatistic.HistogramSupportingData supportingData =
+                        (HistogramStatistic.HistogramSupportingData) histogramCalculatedValue.getData();
+                return supportingData.getHistogramSnapshot().getEntriesCount();
+            }
+        }
+
+        // Fallback to using the count since it's value is a double
+        if (countCalculatedValue != null) {
+            return (long) countCalculatedValue.getValue().getValue();
+        }
+
+        // Take some backwards compatible default behavior, but let's log that
+        // it's a problem.
+        NO_POPULATION_SIZE_LOGGER.warn()
+                .setMessage("Unable to compute population size")
+                .addData("metric", metricName)
+                .log();
+        return 1L;
+    }
+
+    /**
      * The key used in dimensions to specify the host-dimension.
      */
     public static final String HOST_KEY = "host";
@@ -99,6 +168,12 @@ public final class CombinedMetricData {
     private final DateTime _periodStart;
     private final String _service;
     private final String _cluster;
+
+    private static final StatisticFactory STATISTIC_FACTORY = new StatisticFactory();
+    private static final Statistic COUNT_STATISTIC = STATISTIC_FACTORY.getStatistic("count");
+    private static final Statistic HISTOGRAM_STATISTIC = STATISTIC_FACTORY.getStatistic("histogram");
+    private static final Logger NO_POPULATION_SIZE_LOGGER =
+            LoggerFactory.getRateLimitLogger(CombinedMetricData.class, Duration.ofSeconds(30));
 
     /**
      * Implementation of builder pattern for {@link CombinedMetricData}.

@@ -19,7 +19,6 @@ package com.arpnetworking.clusteraggregator.test;
 import com.arpnetworking.metrics.Counter;
 import com.arpnetworking.metrics.Metrics;
 import com.arpnetworking.metrics.Timer;
-import com.arpnetworking.metrics.Unit;
 import org.mockito.Mockito;
 
 import java.time.Clock;
@@ -118,13 +117,6 @@ public class ThrowingMetrics implements Metrics {
     }
 
     @Override
-    public void setTimer(final String name, final long duration, final Unit unit) {
-        if (_throwOnRecord) {
-            throw new RuntimeException("boom");
-        }
-    }
-
-    @Override
     public void setGauge(final String name, final double value) {
         if (_throwOnRecord) {
             throw new RuntimeException("boom");
@@ -132,21 +124,7 @@ public class ThrowingMetrics implements Metrics {
     }
 
     @Override
-    public void setGauge(final String name, final double value, final Unit unit) {
-        if (_throwOnRecord) {
-            throw new RuntimeException("boom");
-        }
-    }
-
-    @Override
     public void setGauge(final String name, final long value) {
-        if (_throwOnRecord) {
-            throw new RuntimeException("boom");
-        }
-    }
-
-    @Override
-    public void setGauge(final String name, final long value, final Unit unit) {
         if (_throwOnRecord) {
             throw new RuntimeException("boom");
         }

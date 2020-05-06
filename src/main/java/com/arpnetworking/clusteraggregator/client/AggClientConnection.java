@@ -253,6 +253,10 @@ public class AggClientConnection extends AbstractActor {
 
         final ImmutableMap<String, String> dimensions = dimensionBuilder.build();
 
+        final long populationSize = CombinedMetricData.computePopulationSize(
+                setRecord.getMetric(),
+                combinedMetricData.getCalculatedValues());
+
         for (final Map.Entry<Statistic, CombinedMetricData.StatisticValue> record
                 : combinedMetricData.getCalculatedValues().entrySet()) {
             final AggregatedData aggregatedData = new AggregatedData.Builder()
@@ -265,7 +269,7 @@ public class AggClientConnection extends AbstractActor {
                     .setHost(host.get())
                     .setIsSpecified(record.getValue().getUserSpecified())
                     .setPeriod(combinedMetricData.getPeriod())
-                    .setPopulationSize(1L)
+                    .setPopulationSize(populationSize)
                     .setSamples(Collections.emptyList())
                     .setStart(combinedMetricData.getPeriodStart())
                     .setSupportingData(record.getValue().getValue().getData())
