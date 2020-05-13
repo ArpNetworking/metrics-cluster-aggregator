@@ -32,7 +32,6 @@ import org.mockito.Mockito;
 import org.mockito.hamcrest.MockitoHamcrest;
 
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Tests for the <code>PeriodicStatisticsSink</code> class.
@@ -142,6 +141,41 @@ public class PeriodicStatisticsSinkTest {
                 sink.getMappedDimensions());
     }
 
+    @Test(expected = ConstraintsViolatedException.class)
+    public void testDefaultDimensionNoSuchTarget() {
+        new PeriodicStatisticsSink.Builder()
+                .setMetricsFactory(_mockMetricsFactory)
+                .setName("testDefaultDimensionNoSuchTarget")
+                .setDimensions(
+                        ImmutableSet.of(
+                                "abc"))
+                .setMappedDimensions(
+                        ImmutableMap.of(
+                                "bar", "def"))
+                .setDefaultDimensionsValues(
+                        ImmutableMap.of(
+                                "foo", "bar"))
+                .build();
+    }
+
+    @Test
+    public void testValidationDefaultDimensionValues() {
+        new PeriodicStatisticsSink.Builder()
+                .setMetricsFactory(_mockMetricsFactory)
+                .setName("testValidationDefaultDimensionValues")
+                .setDimensions(
+                        ImmutableSet.of(
+                                "abc"))
+                .setMappedDimensions(
+                        ImmutableMap.of(
+                                "bar", "def"))
+                .setDefaultDimensionsValues(
+                        ImmutableMap.of(
+                                "abc", "default-value-for-abc",
+                                "bar", "default-value-for-bar-to-be-output-as-def"))
+                .build();
+    }
+
     @Test
     public void testCreateKey() {
         final ImmutableMap<String, String> k = ImmutableMap.of(
@@ -156,7 +190,8 @@ public class PeriodicStatisticsSinkTest {
                         k,
                         "_period",
                         Period.minutes(1),
-                        ImmutableMultimap.of()));
+                        ImmutableMultimap.of(),
+                        ImmutableMap.of()));
 
         Assert.assertEquals(
                 ImmutableMap.of(
@@ -168,8 +203,8 @@ public class PeriodicStatisticsSinkTest {
                         "_period",
                         Period.minutes(1),
                         ImmutableMultimap.of(
-                                "foo", "foo"
-                        )));
+                                "foo", "foo"),
+                        ImmutableMap.of()));
 
         Assert.assertEquals(
                 ImmutableMap.of(
@@ -181,8 +216,8 @@ public class PeriodicStatisticsSinkTest {
                         "_period",
                         Period.minutes(1),
                         ImmutableMultimap.of(
-                                "foo", "bar"
-                        )));
+                                "foo", "bar"),
+                        ImmutableMap.of()));
 
         Assert.assertEquals(
                 ImmutableMap.of(
@@ -196,7 +231,51 @@ public class PeriodicStatisticsSinkTest {
                         Period.minutes(1),
                         ImmutableMultimap.of(
                                 "foo", "bar",
-                                "bar", "foo"
+                                "bar", "foo"),
+                        ImmutableMap.of()));
+    }
+
+    @Test
+    public void testCreateKeyWithDefaults() {
+        final ImmutableMap<String, String> k = ImmutableMap.of(
+                "foo", "abc",
+                "bar", "def"
+        );
+
+        Assert.assertEquals(
+                ImmutableMap.of(
+                        "_period", "PT1M",
+                        "abc", "def",
+                        "missing", "default"
+                ),
+                PeriodicStatisticsSink.computeKey(
+                        k,
+                        "_period",
+                        Period.minutes(1),
+                        ImmutableMultimap.of(
+                                "bar", "abc",
+                                "missing", "missing"
+                        ),
+                        ImmutableMap.of(
+                                "missing", "default"
+                        )));
+
+        Assert.assertEquals(
+                ImmutableMap.of(
+                        "_period", "PT1M",
+                        "foo", "abc",
+                        "bar", "def"
+                ),
+                PeriodicStatisticsSink.computeKey(
+                        k,
+                        "_period",
+                        Period.minutes(1),
+                        ImmutableMultimap.of(
+                                "bar", "bar",
+                                "foo", "foo"
+                        ),
+                        ImmutableMap.of(
+                                "foo", "default"
                         )));
     }
 
@@ -217,7 +296,6 @@ public class PeriodicStatisticsSinkTest {
         // The metrics are created when data is received and then replaced on
         // flush (but the latter metrics instance is never closed or written to)
         Mockito.verify(_mockMetricsFactory, Mockito.times(2)).create();
-        Mockito.verify(_mockMetrics, Mockito.times(2)).resetCounter(COUNTER_NAME);
         Mockito.verify(_mockMetrics).incrementCounter(
                 Mockito.matches(COUNTER_NAME),
                 Mockito.anyLong());
@@ -225,7 +303,7 @@ public class PeriodicStatisticsSinkTest {
     }
 
     @Test
-    public void testPeriodicFlush() throws InterruptedException {
+    public void testPeriodicFlush() {
         final ScheduledExecutorService executor = Mockito.mock(ScheduledExecutorService.class);
         final ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
         final Sink statisticsSink = new PeriodicStatisticsSink(_statisticsSinkBuilder, executor);
@@ -233,7 +311,7 @@ public class PeriodicStatisticsSinkTest {
                 runnableCaptor.capture(),
                 Mockito.anyLong(),
                 Mockito.anyLong(),
-                Mockito.<TimeUnit>any());
+                Mockito.any());
 
         final Runnable periodicRunnable = runnableCaptor.getValue();
 
@@ -248,10 +326,9 @@ public class PeriodicStatisticsSinkTest {
         Mockito.verify(_mockMetrics, Mockito.times(2)).close();
 
         Mockito.verify(_mockMetricsFactory, Mockito.times(3)).create();
-        Mockito.verify(_mockMetrics, Mockito.times(3)).resetCounter(COUNTER_NAME);
 
         statisticsSink.close();
-        Mockito.verify(_mockMetrics, Mockito.times(3)).close();
+        Mockito.verify(_mockMetrics, Mockito.times(2)).close();
     }
 
     @Test

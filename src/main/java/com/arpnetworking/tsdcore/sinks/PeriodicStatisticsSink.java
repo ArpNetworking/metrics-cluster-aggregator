@@ -91,7 +91,8 @@ public final class PeriodicStatisticsSink extends BaseSink {
                 periodicData.getDimensions(),
                 _periodDimensionName,
                 periodicData.getPeriod(),
-                _mappedDimensions);
+                _mappedDimensions,
+                _defaultDimensionValues);
         _buckets.computeIfAbsent(bucketKey, k -> new Bucket(bucketKey))
                 .record(periodicData, now);
     }
@@ -120,7 +121,8 @@ public final class PeriodicStatisticsSink extends BaseSink {
             final ImmutableMap<String, String> parameters,
             final String periodDimensionName,
             final Period period,
-            final ImmutableMultimap<String, String> mappedDimensions) {
+            final ImmutableMultimap<String, String> mappedDimensions,
+            final ImmutableMap<String, String> defaultDimensionValues) {
         // Filter the input key's parameters by the ones we wish to dimension map
         // and then create a new parameter set from the target (values) of the
         // dimension keys and the corresponding value from parameters for the
@@ -135,10 +137,10 @@ public final class PeriodicStatisticsSink extends BaseSink {
 
         mappedDimensions.entries()
                 .stream()
-                .filter(e -> parameters.containsKey(e.getKey()))
+                .filter(e -> parameters.containsKey(e.getKey()) || defaultDimensionValues.containsKey(e.getKey()))
                 .forEach(e -> dimensionsBuilder.put(
                         e.getValue(),
-                        parameters.get(e.getKey())));
+                        parameters.getOrDefault(e.getKey(), defaultDimensionValues.get(e.getKey()))));
 
         return dimensionsBuilder.build();
     }
@@ -211,6 +213,7 @@ public final class PeriodicStatisticsSink extends BaseSink {
 
         // Initialize the metrics factory and metrics instance
         _mappedDimensions = dimensionsBuilder.build();
+        _defaultDimensionValues = builder._defaultDimensionValues;
         _metricsFactory = builder._metricsFactory;
         _buckets = Maps.newConcurrentMap();
         _periodDimensionName = builder._periodDimensionName;
@@ -236,6 +239,7 @@ public final class PeriodicStatisticsSink extends BaseSink {
     }
 
     private final ImmutableMultimap<String, String> _mappedDimensions;
+    private final ImmutableMap<String, String> _defaultDimensionValues;
     private final Map<ImmutableMap<String, String>, Bucket> _buckets;
     private final MetricsFactory _metricsFactory;
     private final Deque<Bucket> _bucketsToBeRemoved = new ConcurrentLinkedDeque<>();
@@ -330,7 +334,7 @@ public final class PeriodicStatisticsSink extends BaseSink {
                 if (!samplesCounted.contains(metricKey)) {
                     // This assumes that all AggregatedData instances have the
                     // population field set correctly (really they should).
-                    _metricSamples.accumulate(aggregatedDatum.getPopulationSize());
+                    _metricSamples.addAndGet(aggregatedDatum.getPopulationSize());
                     samplesCounted.add(metricKey);
                 }
             }
@@ -339,26 +343,32 @@ public final class PeriodicStatisticsSink extends BaseSink {
         }
 
         public boolean flushMetrics() {
-            // Rotate the metrics instance
-            final Metrics metrics = _metrics.getAndSet(createMetrics());
-
             // Gather and reset state
             final Set<String> oldUniqueMetrics = _uniqueMetrics.getAndSet(
                     createConcurrentSet(_uniqueMetrics.get()));
             final Set<MetricKey> oldUniqueStatistics = _uniqueStatistics.getAndSet(
                     createConcurrentSet(_uniqueStatistics.get()));
 
-            // Record statistics and close
-            metrics.incrementCounter(_aggregatedDataName, _aggregatedData.getAndSet(0));
-            metrics.incrementCounter(_uniqueMetricsName, oldUniqueMetrics.size());
-            metrics.incrementCounter(_uniqueStatisticsName, oldUniqueStatistics.size());
-            metrics.incrementCounter(_metricSamplesName, _metricSamples.getThenReset());
-            metrics.setTimer(_ageName, _age.getThenReset(), TimeUnit.MILLISECONDS);
-            metrics.close();
-
             // Use unique metrics as a proxy for whether data was added. See note in the sink's
             // flushMetrics method about how the race condition is resolved.
-            return !oldUniqueMetrics.isEmpty();
+            if (!oldUniqueMetrics.isEmpty()) {
+                // Rotate the metrics instance
+                final Metrics metrics = _metrics.getAndSet(createMetrics());
+
+                // Record statistics and close
+                metrics.incrementCounter(_aggregatedDataName, _aggregatedData.getAndSet(0));
+                metrics.incrementCounter(_uniqueMetricsName, oldUniqueMetrics.size());
+                metrics.incrementCounter(_uniqueStatisticsName, oldUniqueStatistics.size());
+                metrics.incrementCounter(_metricSamplesName, _metricSamples.getAndSet(0));
+                metrics.setTimer(_ageName, _age.getThenReset(), TimeUnit.MILLISECONDS);
+                metrics.close();
+
+                // Periodic data was flushed
+                return true;
+            }
+
+            // No periodic data was flushed; this bucket can be cleaned up
+            return false;
         }
 
         @LogValue
@@ -374,10 +384,6 @@ public final class PeriodicStatisticsSink extends BaseSink {
         private Metrics createMetrics() {
             final Metrics metrics = _metricsFactory.create();
             metrics.addAnnotations(_parameters);
-            metrics.resetCounter(_aggregatedDataName);
-            metrics.resetCounter(_uniqueMetricsName);
-            metrics.resetCounter(_uniqueStatisticsName);
-            metrics.resetCounter(_metricSamplesName);
             return metrics;
         }
 
@@ -390,7 +396,7 @@ public final class PeriodicStatisticsSink extends BaseSink {
         private final AtomicReference<Metrics> _metrics = new AtomicReference<>();
 
         private final LongAccumulator _age = new LongAccumulator(Math::max, 0);
-        private final LongAccumulator _metricSamples = new LongAccumulator(Long::sum, 0);
+        private final AtomicLong _metricSamples = new AtomicLong(0);
         private final AtomicLong _aggregatedData = new AtomicLong(0);
         private final AtomicReference<Set<String>> _uniqueMetrics = new AtomicReference<>(
                 ConcurrentHashMap.newKeySet());
@@ -472,6 +478,20 @@ public final class PeriodicStatisticsSink extends BaseSink {
         }
 
         /**
+         * Supply default dimension values by original dimension key. The keys
+         * in this map must also be specified either in {@link Builder#setDimensions(ImmutableSet)}
+         * or as keys in {@link Builder#setMappedDimensions(ImmutableMap)}. The
+         * key refers to the dimension name on the input {@link PeriodicData}.
+         *
+         * @param value The default dimension key-value pairs.
+         * @return This instance of <code>Builder</code>.
+         */
+        public Builder setDefaultDimensionsValues(final ImmutableMap<String, String> value) {
+            _defaultDimensionValues = value;
+            return this;
+        }
+
+        /**
          * The name of the outbound dimension for the periodicity of the data.
          * Cannot be null. Default is "_period".
          *
@@ -508,6 +528,9 @@ public final class PeriodicStatisticsSink extends BaseSink {
         private ImmutableSet<String> _dimensions = ImmutableSet.of();
         @NotNull
         private ImmutableMap<String, String> _mappedDimensions = ImmutableMap.of();
+        @NotNull
+        @CheckWith(value = CheckDefaultDimensionTargets.class)
+        private ImmutableMap<String, String> _defaultDimensionValues = ImmutableMap.of();
         @NotNull
         private String _periodDimensionName = "_period";
         @JacksonInject
@@ -582,6 +605,36 @@ public final class PeriodicStatisticsSink extends BaseSink {
                 //
                 // TODO(ville): Once we have a use case address this.
 
+
+                return true;
+            }
+        }
+
+        private static final class CheckDefaultDimensionTargets implements CheckWithCheck.SimpleCheck {
+
+            private static final long serialVersionUID = 5011108547193627318L;
+
+            @Override
+            public boolean isSatisfied(final Object validatedObject, final Object value) {
+                // TODO(ville): Find a way to throw validation exceptions instead of logging.
+
+                if (!(validatedObject instanceof PeriodicStatisticsSink.Builder)) {
+                    return false;
+                }
+                final PeriodicStatisticsSink.Builder builder = (PeriodicStatisticsSink.Builder) validatedObject;
+
+                for (final String keyToDefault : builder._defaultDimensionValues.keySet()) {
+                    if (!builder._dimensions.contains(keyToDefault) && !builder._mappedDimensions.containsKey(keyToDefault)) {
+                        LOGGER.warn()
+                                .setMessage("Invalid PeriodicStatisticsSink")
+                                .addData("reason", "Default dimensions key not specified in (unmapped) dimensions or mapped dimensions")
+                                .addData("dimensions", builder._dimensions)
+                                .addData("mappedDimensions.keySet", builder._mappedDimensions.keySet())
+                                .addData("defaultDimensionKey", keyToDefault)
+                                .log();
+                        return false;
+                    }
+                }
 
                 return true;
             }

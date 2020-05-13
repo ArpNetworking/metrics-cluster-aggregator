@@ -147,7 +147,7 @@ public class GuiceModule extends AbstractModule {
     private MetricsFactory provideMetricsFactory() throws URISyntaxException {
         final Sink sink = new ApacheHttpSink.Builder()
                 .setUri(new URI(String.format(
-                        "http://%s:%d/metrics/v2/application",
+                        "http://%s:%d/metrics/v3/application",
                         _configuration.getMonitoringHost(),
                         _configuration.getMonitoringPort())))
                 .build();
