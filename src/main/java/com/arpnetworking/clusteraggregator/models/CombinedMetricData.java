@@ -276,7 +276,7 @@ public final class CombinedMetricData {
                     final HistogramStatistic.Histogram histogram = new HistogramStatistic.Histogram();
                     for (final Messages.SparseHistogramEntry entry : supportingData.getEntriesList()) {
                         final double bucket = entry.getBucket();
-                        final int count = entry.getCount();
+                        final long count = entry.getCount();
                         histogram.recordValue(bucket, count);
                     }
 

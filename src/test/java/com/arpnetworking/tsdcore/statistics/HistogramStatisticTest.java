@@ -18,11 +18,11 @@ package com.arpnetworking.tsdcore.statistics;
 import com.arpnetworking.tsdcore.model.CalculatedValue;
 import com.arpnetworking.tsdcore.model.Quantity;
 import com.arpnetworking.tsdcore.model.Unit;
+import it.unimi.dsi.fastutil.doubles.Double2LongMap;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Collections;
-import java.util.Map;
 
 /**
  * Tests the HistogramStatistic class.
@@ -40,8 +40,8 @@ public class HistogramStatisticTest {
         final CalculatedValue<HistogramStatistic.HistogramSupportingData> value = accumulator.calculate(Collections.emptyMap());
         final HistogramStatistic.HistogramSupportingData supportingData = value.getData();
         final HistogramStatistic.HistogramSnapshot histogram = supportingData.getHistogramSnapshot();
-        for (final Map.Entry<Double, Integer> entry : histogram.getValues()) {
-            Assert.assertEquals(entry.getValue(), (Integer) 1);
+        for (final Double2LongMap.Entry entry : histogram.getValues()) {
+            Assert.assertEquals(entry.getLongValue(), 1L);
         }
     }
 
@@ -59,8 +59,8 @@ public class HistogramStatisticTest {
         final CalculatedValue<HistogramStatistic.HistogramSupportingData> value = merged.calculate(Collections.emptyMap());
         final HistogramStatistic.HistogramSupportingData supportingData = value.getData();
         final HistogramStatistic.HistogramSnapshot histogram = supportingData.getHistogramSnapshot();
-        for (final Map.Entry<Double, Integer> entry : histogram.getValues()) {
-            Assert.assertEquals(entry.getValue(), (Integer) 1);
+        for (final Double2LongMap.Entry entry : histogram.getValues()) {
+            Assert.assertEquals(entry.getLongValue(), 1L);
         }
     }
 
@@ -90,14 +90,14 @@ public class HistogramStatisticTest {
         final CalculatedValue<HistogramStatistic.HistogramSupportingData> value = merged.calculate(Collections.emptyMap());
         final HistogramStatistic.HistogramSupportingData supportingData = value.getData();
         final HistogramStatistic.HistogramSnapshot histogram = supportingData.getHistogramSnapshot();
-        for (final Map.Entry<Double, Integer> entry : histogram.getValues()) {
-            final int val = entry.getKey().intValue();
+        for (final Double2LongMap.Entry entry : histogram.getValues()) {
+            final int val = (int) entry.getDoubleKey();
             if (val < 50) {
-                Assert.assertEquals("incorrect value for key " + val, (Integer) 1, entry.getValue());
+                Assert.assertEquals("incorrect value for key " + val, 1L, entry.getLongValue());
             } else if (val <= 100) {
-                Assert.assertEquals("incorrect value for key " + val, (Integer) 2, entry.getValue());
+                Assert.assertEquals("incorrect value for key " + val, 2L, entry.getLongValue());
             } else { // val > 100
-                Assert.assertEquals("incorrect value for key " + val, (Integer) 1, entry.getValue());
+                Assert.assertEquals("incorrect value for key " + val, 1L, entry.getLongValue());
             }
         }
 
@@ -150,9 +150,9 @@ public class HistogramStatisticTest {
         final CalculatedValue<HistogramStatistic.HistogramSupportingData> value = merged.calculate(Collections.emptyMap());
         final HistogramStatistic.HistogramSupportingData supportingData = value.getData();
         final HistogramStatistic.HistogramSnapshot histogram = supportingData.getHistogramSnapshot();
-        for (final Map.Entry<Double, Integer> entry : histogram.getValues()) {
+        for (final Double2LongMap.Entry entry : histogram.getValues()) {
 
-            Assert.assertTrue(entry.getKey() <= 100);
+            Assert.assertTrue(entry.getDoubleKey() <= 100.0);
         }
 
         Assert.assertEquals(200, histogram.getEntriesCount());
@@ -168,8 +168,8 @@ public class HistogramStatisticTest {
         final CalculatedValue<HistogramStatistic.HistogramSupportingData> value = accumulator.calculate(Collections.emptyMap());
         final HistogramStatistic.HistogramSupportingData supportingData = value.getData();
         HistogramStatistic.HistogramSnapshot histogram = supportingData.getHistogramSnapshot();
-        for (final Map.Entry<Double, Integer> entry : histogram.getValues()) {
-            final int val = entry.getKey().intValue();
+        for (final Double2LongMap.Entry entry : histogram.getValues()) {
+            final int val = (int) entry.getDoubleKey();
             if (val < 990) {
                 Assert.fail("shouldn't see a key this small");
             }
@@ -177,8 +177,8 @@ public class HistogramStatisticTest {
 
         final HistogramStatistic.HistogramSupportingData converted = supportingData.toUnit(Unit.SECOND);
         histogram = converted.getHistogramSnapshot();
-        for (final Map.Entry<Double, Integer> entry : histogram.getValues()) {
-            final int val = entry.getKey().intValue();
+        for (final Double2LongMap.Entry entry : histogram.getValues()) {
+            final int val = (int) entry.getDoubleKey();
             if (val > 100) {
                 Assert.fail("shouldn't see a key this large after unit conversion");
             }

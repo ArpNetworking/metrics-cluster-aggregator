@@ -35,6 +35,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import it.unimi.dsi.fastutil.doubles.Double2LongMap;
 import net.sf.oval.constraint.Min;
 import net.sf.oval.constraint.NotNull;
 import org.joda.time.Period;
@@ -323,8 +324,8 @@ public final class KairosDbSink extends HttpPostSink {
                 chunkGenerator.writeNumberField("mean", additionalData.getMean());
                 chunkGenerator.writeNumberField("sum", additionalData.getSum());
                 chunkGenerator.writeObjectFieldStart("bins");
-                for (Map.Entry<Double, Integer> bin : bins.getValues()) {
-                    chunkGenerator.writeNumberField(bin.getKey().toString(), bin.getValue());
+                for (Double2LongMap.Entry bin : bins.getValues()) {
+                    chunkGenerator.writeNumberField(String.valueOf(bin.getDoubleKey()), bin.getLongValue());
                 }
 
                 chunkGenerator.writeEndObject();  //close bins
