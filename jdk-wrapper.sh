@@ -19,13 +19,13 @@
 
 log_err() {
   l_prefix=$(date  +'%H:%M:%S')
-  printf "[%s] %s\n" "${l_prefix}" "$@" 1>&2;
+  printf "[%s] %s\\n" "${l_prefix}" "$@" 1>&2;
 }
 
 log_out() {
   if [ -n "${JDKW_VERBOSE}" ]; then
     l_prefix=$(date  +'%H:%M:%S')
-    printf "[%s] %s\n" "${l_prefix}" "$@"
+    printf "[%s] %s\\n" "${l_prefix}" "$@"
   fi
 }
 
@@ -43,10 +43,12 @@ safe_command() {
 checksum() {
   l_file="$1"
   checksum_exec=""
+  checksum_args=""
   if command -v sha256sum > /dev/null; then
     checksum_exec="sha256sum"
   elif command -v shasum > /dev/null; then
-    checksum_exec="shasum -a 256"
+    checksum_exec="shasum"
+    checksum_args="-a 256"
   elif command -v sha1sum > /dev/null; then
     checksum_exec="sha1sum"
   elif command -v md5 > /dev/null; then
@@ -56,7 +58,7 @@ checksum() {
     log_err "ERROR: No supported checksum command found!"
     exit 1
   fi
-  cat "${l_file}" | ${checksum_exec}
+  ${checksum_exec} ${checksum_args} < "${l_file}"
 }
 
 rand() {
@@ -99,19 +101,17 @@ safe_command "rm \"${l_fifo}\""
 command=
 cmd_configuration=
 for arg in "$@"; do
-  if [ -z ${in_command} ]; then
-    jdkw_arg=$(echo "${arg}" | grep '^JDKW_.*')
-    jdkw_base_dir_arg=$(echo "${arg}" | grep '^JDKW_BASE_DIR.*')
-    if [ -n "${jdkw_base_dir_arg}" ]; then
-      eval ${arg}
-    fi
-    if [ -n "${jdkw_arg}" ]; then
-      cmd_configuration="${cmd_configuration}${arg} "
-    fi
+  jdkw_arg=$(echo "${arg}" | grep '^JDKW_.*')
+  jdkw_base_dir_arg=$(echo "${arg}" | grep '^JDKW_BASE_DIR.*')
+  if [ -n "${jdkw_base_dir_arg}" ]; then
+    eval ${arg}
+  fi
+  if [ -n "${jdkw_arg}" ]; then
+    cmd_configuration="${cmd_configuration}${arg} "
   fi
   case "${arg}" in
     *\'*)
-       arg=`printf "%s" "$arg" | sed "s/'/'\"'\"'/g"`
+       arg=$(printf "%s" "$arg" | sed "s/'/'\"'\"'/g")
        ;;
     *) : ;;
   esac
@@ -159,7 +159,7 @@ fi
 if [ "${JDKW_RELEASE}" = "latest" ]; then
   latest_version_json="${TMPDIR:-/tmp}/jdkw-latest-version-$$.$(rand)"
   safe_command "curl ${curl_options} -f -k -L -o \"${latest_version_json}\" -H 'Accept: application/json' \"${JDKW_BASE_URI}/releases/latest\""
-  JDKW_RELEASE=$(cat "${latest_version_json}" | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
+  JDKW_RELEASE=$(sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/' < "${latest_version_json}")
   rm -f "${latest_version_json}"
   log_out "Resolved latest version to ${JDKW_RELEASE}"
 fi
@@ -178,8 +178,26 @@ download_if_needed "${jdkw_impl}" "${jdkw_path}"
 download_if_needed "${jdkw_wrapper}" "${jdkw_path}"
 
 # Execute the provided command
-eval ${jdkw_path}/${jdkw_impl} ${command}
-result=$?
+
+# Run the command in the backround (with all the trouble that entails)
+# NOTE: Alternatively convert this to an exec if we don't need to output the
+# wrapper mismatch at the end; e.g. make that a hard precondition to running.
+set -m
+trap 'kill -TERM ${impl_pid}' TERM INT
+"${jdkw_path}/${jdkw_impl}" "$@" &
+impl_pid=$!
+fg
+wait ${impl_pid} > /dev/null 2>&1
+wait_result=$?
+if [ ${wait_result} -ne 127 ]; then
+  result=${wait_result}
+fi
+trap - TERM INT
+wait ${impl_pid} > /dev/null 2>&1
+wait_result=$?
+if [ ${wait_result} -ne 127 ]; then
+  result=${wait_result}
+fi
 
 # Check whether this wrapper is the one specified for this version
 jdkw_download="${jdkw_path}/${jdkw_wrapper}"
