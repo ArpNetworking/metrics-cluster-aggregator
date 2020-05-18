@@ -130,13 +130,16 @@ public class StreamingAggregator extends AbstractActorWithTimers {
                 })
                 .match(BucketCheck.class, message -> {
                     if (_initialized) {
-                        while (_aggBuckets.size() > 0) {
+                        while (!_aggBuckets.isEmpty()) {
                             final StreamingAggregationBucket bucket = _aggBuckets.getFirst();
                             if (bucket.getPeriodStart().plus(_period).plus(_aggregatorTimeout).isBeforeNow()) {
                                 _aggBuckets.removeFirst();
 
                                 // Walk over every statistic in the bucket
                                 final Map<Statistic, CalculatedValue<?>> values = bucket.compute();
+                                final long populationSize = CombinedMetricData.computePopulationSizeFromCalculatedValues(
+                                            _metric,
+                                            values);
                                 final ImmutableList.Builder<AggregatedData> builder = ImmutableList.builder();
                                 for (final Map.Entry<Statistic, CalculatedValue<?>> entry : values.entrySet()) {
                                     _statistics.add(entry.getKey());
@@ -151,7 +154,7 @@ public class StreamingAggregator extends AbstractActorWithTimers {
                                             .setStart(bucket.getPeriodStart())
                                             .setValue(entry.getValue().getValue())
                                             .setSupportingData(entry.getValue().getData())
-                                            .setPopulationSize(0L)
+                                            .setPopulationSize(populationSize)
                                             .setIsSpecified(bucket.isSpecified(entry.getKey()))
                                             .build();
                                     LOGGER.debug()

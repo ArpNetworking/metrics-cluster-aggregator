@@ -37,7 +37,6 @@ import com.arpnetworking.configuration.jackson.akka.AkkaModule;
 import com.arpnetworking.metrics.Metrics;
 import com.arpnetworking.metrics.MetricsFactory;
 import com.arpnetworking.metrics.Timer;
-import com.arpnetworking.metrics.Units;
 import com.arpnetworking.steno.LogBuilder;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
@@ -104,8 +103,7 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
         final Timer timer = metrics.createTimer(createMetricName(request, REQUEST_METRIC));
         metrics.setGauge(
                 createMetricName(request, BODY_SIZE_METRIC),
-                request.entity().getContentLengthOption().orElse(0L),
-                Units.BYTE);
+                request.entity().getContentLengthOption().orElse(0L));
         final UUID requestId = UUID.randomUUID();
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace()

@@ -244,7 +244,7 @@ public class HttpSourceActor extends AbstractActor {
             }
         }
         final ImmutableList<AggregationMessage> records = recordsBuilder.build();
-        if (records.size() == 0) {
+        if (records.isEmpty()) {
             throw new NoRecordsException();
         }
         return new AggregationRequest.Builder()
@@ -286,6 +286,10 @@ public class HttpSourceActor extends AbstractActor {
 
         final ImmutableMap<String, String> dimensions = dimensionBuilder.build();
 
+        final long populationSize = CombinedMetricData.computePopulationSize(
+                setRecord.getMetric(),
+                combinedMetricData.getCalculatedValues());
+
         for (final Map.Entry<Statistic, CombinedMetricData.StatisticValue> record
                 : combinedMetricData.getCalculatedValues().entrySet()) {
             final AggregatedData aggregatedData = new AggregatedData.Builder()
@@ -298,7 +302,7 @@ public class HttpSourceActor extends AbstractActor {
                     .setHost(host.get())
                     .setIsSpecified(record.getValue().getUserSpecified())
                     .setPeriod(combinedMetricData.getPeriod())
-                    .setPopulationSize(1L)
+                    .setPopulationSize(populationSize)
                     .setSamples(Collections.emptyList())
                     .setStart(combinedMetricData.getPeriodStart())
                     .setSupportingData(record.getValue().getValue().getData())
@@ -321,7 +325,7 @@ public class HttpSourceActor extends AbstractActor {
     private final Graph<FlowShape<HttpRequest, AggregationRequest>, NotUsed> _processGraph;
 
     private static final Logger BAD_REQUEST_LOGGER =
-                LoggerFactory.getRateLimitLogger(HttpSourceActor.class, Duration.ofSeconds(30));
+            LoggerFactory.getRateLimitLogger(HttpSourceActor.class, Duration.ofSeconds(30));
 
 
     private static class NoRecordsException extends IOException {
