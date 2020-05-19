@@ -340,7 +340,9 @@ public final class PeriodicStatisticsSink extends BaseSink {
                 }
             }
 
-            _age.accumulate(now - periodicData.getStart().plus(periodicData.getPeriod()).toInstant().getMillis());
+            _age.accumulate(
+                    now - periodicData.getMinRequestTime().orElse(
+                            periodicData.getStart().plus(periodicData.getPeriod())).toInstant().getMillis());
         }
 
         public boolean flushMetrics() {
