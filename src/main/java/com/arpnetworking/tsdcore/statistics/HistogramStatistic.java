@@ -20,13 +20,15 @@ import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.CalculatedValue;
 import com.arpnetworking.tsdcore.model.Quantity;
 import com.arpnetworking.tsdcore.model.Unit;
+import it.unimi.dsi.fastutil.doubles.Double2LongAVLTreeMap;
+import it.unimi.dsi.fastutil.doubles.Double2LongMap;
+import it.unimi.dsi.fastutil.doubles.Double2LongSortedMap;
+import it.unimi.dsi.fastutil.objects.ObjectSortedSet;
 import net.sf.oval.constraint.NotNull;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.TreeMap;
 
 /**
  * Histogram statistic. This is a supporting statistic and does not produce
@@ -59,6 +61,7 @@ public final class HistogramStatistic extends BaseStatistic {
 
     private HistogramStatistic() { }
 
+    private static final int DEFAULT_PRECISION = 7;
     private static final long serialVersionUID = 7060886488604176233L;
 
     /**
@@ -183,9 +186,9 @@ public final class HistogramStatistic extends BaseStatistic {
         public HistogramSupportingData toUnit(final Unit newUnit) {
             if (_unit.isPresent()) {
                 final Histogram newHistogram = new Histogram();
-                for (final Map.Entry<Double, Integer> entry : _histogramSnapshot.getValues()) {
-                    final Double newBucket = newUnit.convert(entry.getKey(), _unit.get());
-                    newHistogram.recordValue(newBucket, entry.getValue());
+                for (final Double2LongMap.Entry entry : _histogramSnapshot.getValues()) {
+                    final double newBucket = newUnit.convert(entry.getDoubleKey(), _unit.get());
+                    newHistogram.recordValue(newBucket, entry.getLongValue());
                 }
                 return new HistogramSupportingData.Builder()
                         .setHistogramSnapshot(newHistogram.getSnapshot())
@@ -249,14 +252,15 @@ public final class HistogramStatistic extends BaseStatistic {
      */
     public static final class Histogram {
 
+
         /**
          * Records a value into the histogram.
          *
          * @param value The value of the entry.
          * @param count The number of entries at this value.
          */
-        public void recordValue(final double value, final int count) {
-            _data.merge(truncate(value), count, (i, j) -> i + j);
+        public void recordValue(final double value, final long count) {
+            _data.merge(truncateToDouble(value), count, Long::sum);
             _entriesCount += count;
         }
 
@@ -270,28 +274,82 @@ public final class HistogramStatistic extends BaseStatistic {
         }
 
         /**
+         * Records a packed value into the histogram. The packed values must be at the
+         * precision that this {@link Histogram} was declared with!
+         *
+         * @param packed The packed bucket key.
+         * @param count The number of entries at this value.
+         */
+        public void recordPacked(final long packed, final long count) {
+            recordValue(unpack(packed), count);
+        }
+
+        /**
          * Adds a histogram snapshot to this one.
          *
          * @param histogramSnapshot The histogram snapshot to add to this one.
          */
         public void add(final HistogramSnapshot histogramSnapshot) {
-            for (final Map.Entry<Double, Integer> entry : histogramSnapshot._data.entrySet()) {
-                _data.merge(entry.getKey(), entry.getValue(), (i, j) -> i + j);
+            for (final Double2LongMap.Entry entry : histogramSnapshot._data.double2LongEntrySet()) {
+                _data.merge(entry.getDoubleKey(), entry.getLongValue(), Long::sum);
             }
             _entriesCount += histogramSnapshot._entriesCount;
         }
 
         public HistogramSnapshot getSnapshot() {
-            return new HistogramSnapshot(_data, _entriesCount);
+            return new HistogramSnapshot(_data, _entriesCount, _precision);
         }
 
-        private static double truncate(final double val) {
-            final long mask = 0xffffe00000000000L;
-            return Double.longBitsToDouble(Double.doubleToRawLongBits(val) & mask);
+        long truncateToLong(final double val) {
+            return Double.doubleToRawLongBits(val) & _truncateMask;
+        }
+
+        double truncateToDouble(final double val) {
+            return Double.longBitsToDouble(truncateToLong(val));
+        }
+
+        long pack(final double val) {
+            final long truncated = truncateToLong(val);
+            final long shifted = truncated >> (MANTISSA_BITS - _precision);
+            return shifted & _packMask;
+        }
+
+        double unpack(final long packed) {
+            return Double.longBitsToDouble(packed << (MANTISSA_BITS - _precision));
+        }
+
+        /**
+         * Public constructor.
+         */
+        public Histogram() {
+            this(DEFAULT_PRECISION);
+        }
+
+        /**
+         * Public constructor.
+         *
+         * @param precision the bits of mantissa precision in the bucket key
+         */
+        public Histogram(final int precision) {
+            // TODO(ville): Support variable precision histograms end-to-end.
+            if (precision != DEFAULT_PRECISION) {
+                throw new IllegalArgumentException("The stack does not fully support variable precision histograms.");
+            }
+
+            _precision = precision;
+            _truncateMask = BASE_MASK >> _precision;
+            _packMask = (1 << (_precision + EXPONENT_BITS + 1)) - 1;
         }
 
         private int _entriesCount = 0;
-        private final TreeMap<Double, Integer> _data = new TreeMap<>();
+        private final Double2LongSortedMap _data = new Double2LongAVLTreeMap();
+        private final int _precision;
+        private final long _truncateMask;
+        private final int _packMask;
+
+        private static final int MANTISSA_BITS = 52;
+        private static final int EXPONENT_BITS = 11;
+        private static final long BASE_MASK = (1L << (MANTISSA_BITS + EXPONENT_BITS)) >> EXPONENT_BITS;
     }
 
     /**
@@ -300,7 +358,8 @@ public final class HistogramStatistic extends BaseStatistic {
      * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
      */
     public static final class HistogramSnapshot {
-        private HistogramSnapshot(final TreeMap<Double, Integer> data, final int entriesCount) {
+        private HistogramSnapshot(final Double2LongSortedMap data, final long entriesCount, final int precision) {
+            _precision = precision;
             _entriesCount = entriesCount;
             _data.putAll(data);
         }
@@ -316,24 +375,30 @@ public final class HistogramStatistic extends BaseStatistic {
             // The Math.min is for the case where the computation may be just
             // slightly larger than the _entriesCount and prevents an index out of range.
             final int target = (int) Math.min(Math.ceil(_entriesCount * percentile / 100.0D), _entriesCount);
-            int accumulated = 0;
-            for (final Map.Entry<Double, Integer> next : _data.entrySet()) {
-                accumulated += next.getValue();
+            long accumulated = 0;
+            for (final Double2LongMap.Entry next : _data.double2LongEntrySet()) {
+                accumulated += next.getLongValue();
                 if (accumulated >= target) {
-                    return next.getKey();
+                    return next.getDoubleKey();
                 }
             }
             return 0D;
         }
 
-        public int getEntriesCount() {
+        public int getPrecision() {
+            return _precision;
+        }
+
+        public long getEntriesCount() {
             return _entriesCount;
         }
 
-        public Set<Map.Entry<Double, Integer>> getValues() {
-            return _data.entrySet();
+        public ObjectSortedSet<Double2LongMap.Entry> getValues() {
+            return _data.double2LongEntrySet();
         }
-        private int _entriesCount = 0;
-        private final TreeMap<Double, Integer> _data = new TreeMap<>();
+
+        private long _entriesCount = 0;
+        private final Double2LongSortedMap _data = new Double2LongAVLTreeMap();
+        private final int _precision;
     }
 }

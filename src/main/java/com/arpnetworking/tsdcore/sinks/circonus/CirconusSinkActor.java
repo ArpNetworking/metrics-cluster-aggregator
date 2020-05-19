@@ -34,6 +34,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import it.unimi.dsi.fastutil.doubles.Double2LongMap;
 import org.joda.time.Period;
 import org.joda.time.format.ISOPeriodFormat;
 import play.libs.ws.StandaloneWSResponse;
@@ -287,9 +288,9 @@ public final class CirconusSinkActor extends AbstractActor {
                 final HistogramStatistic.HistogramSupportingData histogramSupportingData = (HistogramStatistic.HistogramSupportingData)
                         aggregatedData.getSupportingData();
                 final HistogramStatistic.HistogramSnapshot histogram = histogramSupportingData.getHistogramSnapshot();
-                final ArrayList<String> valueList = new ArrayList<>(histogram.getEntriesCount());
+                final List<String> valueList = new ArrayList<>((int) histogram.getEntriesCount());
                 final MathContext context = new MathContext(2, RoundingMode.DOWN);
-                for (final Map.Entry<Double, Integer> entry : histogram.getValues()) {
+                for (final Double2LongMap.Entry entry : histogram.getValues()) {
                     for (int i = 0; i < entry.getValue(); i++) {
                         final BigDecimal decimal = new BigDecimal(entry.getKey(), context);
                         final String bucketString = String.format("H[%s]=%d", decimal.toPlainString(), entry.getValue());
