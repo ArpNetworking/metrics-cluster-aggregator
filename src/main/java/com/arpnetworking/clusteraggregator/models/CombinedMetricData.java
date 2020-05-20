@@ -38,7 +38,6 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nullable;
-import javax.swing.text.html.Option;
 
 /**
  * A metric-based aggregation model.  Holds all of the statistics and supporting for a metric on a host.
@@ -56,7 +55,7 @@ public final class CombinedMetricData {
         _period = builder._period;
         _calculatedValues = builder._calculatedValues;
         _periodStart = builder._periodStart;
-        _minRequestTime = builder._minRequestTime;
+        _minRequestTime = Optional.ofNullable(builder._minRequestTime);
         _service = builder._service;
         _cluster = builder._cluster;
     }
@@ -251,12 +250,12 @@ public final class CombinedMetricData {
         }
 
         /**
-         * Set the minimum request time (or set to "no value present")
+         * Set the minimum request time. May be null.
          *
          * @param minRequestTime The value to set
          * @return This <code>Builder</code> instance.
          */
-        public Builder setMinRequestTime(final Optional<DateTime> minRequestTime) {
+        public Builder setMinRequestTime(@Nullable final DateTime minRequestTime) {
             _minRequestTime = minRequestTime;
             return this;
         }
@@ -280,7 +279,7 @@ public final class CombinedMetricData {
                     .setMetricName(record.getMetric())
                     .setPeriod(Period.parse(record.getPeriod()))
                     .setPeriodStart(DateTime.parse(record.getPeriodStart()))
-                    .setMinRequestTime(maybeParseMinRequestTime(record.getMinRequestTime()))
+                    .setMinRequestTime(maybeParseMinRequestTime(record.getMinRequestTime()).orElse(null))
                     .setCluster(record.getCluster())
                     .setService(record.getService());
             for (final Messages.StatisticRecord statisticRecord : record.getStatisticsList()) {
@@ -362,9 +361,8 @@ public final class CombinedMetricData {
         private Period _period;
         @NotNull
         private DateTime _periodStart;
-
-        private Optional<DateTime> _minRequestTime;
-
+        @Nullable
+        private DateTime _minRequestTime;
         @NotNull
         private String _service;
         @NotNull

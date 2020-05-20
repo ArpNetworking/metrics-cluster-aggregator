@@ -27,6 +27,7 @@ import net.sf.oval.constraint.NotNull;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
+import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -127,7 +128,7 @@ public final class PeriodicData {
     private PeriodicData(final Builder builder) {
         _period = builder._period;
         _start = builder._start;
-        _minRequestTime = builder._minRequestTime;
+        _minRequestTime = Optional.ofNullable(builder._minRequestTime);
         _dimensions = builder._dimensions;
         _data = builder._data;
         _conditions = builder._conditions;
@@ -171,12 +172,12 @@ public final class PeriodicData {
         }
 
         /**
-         * Set the minimum request time. Can be "no value".
+         * Set the minimum request time. Can be null.
          *
          * @param minRequestTime The minimum request time.
          * @return This <code>BUilder</code> instance.
          */
-        public Builder setMinRequestTime(final Optional<DateTime> minRequestTime) {
+        public Builder setMinRequestTime(@Nullable final DateTime minRequestTime) {
             _minRequestTime = minRequestTime;
             return this;
         }
@@ -229,7 +230,8 @@ public final class PeriodicData {
         private Period _period;
         @NotNull
         private DateTime _start;
-        private Optional<DateTime> _minRequestTime;
+        @Nullable
+        private DateTime _minRequestTime;
         @NotNull
         private ImmutableMap<String, String> _dimensions = ImmutableMap.of();
         @NotNull
