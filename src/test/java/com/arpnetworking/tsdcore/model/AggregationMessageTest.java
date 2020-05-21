@@ -19,10 +19,8 @@ import akka.util.ByteString;
 import akka.util.ByteStringBuilder;
 import com.arpnetworking.metrics.aggregation.protocol.Messages;
 import com.google.protobuf.GeneratedMessageV3;
-import com.google.protobuf.UnknownFieldSet;
 import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import java.nio.ByteOrder;
 import java.util.Optional;
@@ -67,9 +65,9 @@ public class AggregationMessageTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testSerializedUnsupportedMessage() {
-        final GeneratedMessageV3 mockMessage = Mockito.mock(GeneratedMessageV3.class);
-        Mockito.doReturn(UnknownFieldSet.getDefaultInstance()).when(mockMessage).getUnknownFields();
-        AggregationMessage.create(mockMessage).serialize();
+        final GeneratedMessageV3 message = Messages.SparseHistogramEntry.newBuilder()
+                .build();
+        AggregationMessage.create(message).serialize();
     }
 
     @Test
