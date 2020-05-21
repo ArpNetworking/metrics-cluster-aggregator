@@ -279,7 +279,7 @@ public final class CombinedMetricData {
                     .setMetricName(record.getMetric())
                     .setPeriod(Period.parse(record.getPeriod()))
                     .setPeriodStart(DateTime.parse(record.getPeriodStart()))
-                    .setMinRequestTime(maybeParseMinRequestTime(record.getMinRequestTime()).orElse(null))
+                    .setMinRequestTime(maybeParseMinRequestTime(record.getClientMinimumRequestTime()).orElse(null))
                     .setCluster(record.getCluster())
                     .setService(record.getService());
             for (final Messages.StatisticRecord statisticRecord : record.getStatisticsList()) {
