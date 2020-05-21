@@ -19,19 +19,14 @@ import com.arpnetworking.commons.builder.OvalBuilder;
 import com.arpnetworking.logback.annotations.Loggable;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import net.sf.oval.constraint.NotNull;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
-import javax.annotation.Nullable;
-import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
 /**
  * Contains the data for a specific period in time.
@@ -63,26 +58,6 @@ public final class PeriodicData {
 
     public ImmutableList<Condition> getConditions() {
         return _conditions;
-    }
-
-    /**
-     * Retrieve <code>AggregatedData</code> instance by <code>FQDSN</code>.
-     *
-     * @param fqdsn The <code>FQDSN</code> to query for.
-     * @return Tbe <code>Optional</code> instance of <code>AggregatedData</code>.
-     */
-    public Optional<AggregatedData> getDatumByFqdsn(final FQDSN fqdsn) {
-        return Optional.ofNullable(_dataByFqdsn.get().get(fqdsn));
-    }
-
-    /**
-     * Retrieve <code>Condition</code> instance by <code>FQDSN</code>.
-     *
-     * @param fqdsn The <code>FQDSN</code> to query for.
-     * @return Tbe <code>Optional</code> instance of <code>Condition</code>.
-     */
-    public Optional<Condition> getConditionByFqdsn(final FQDSN fqdsn) {
-        return Optional.ofNullable(_conditionsByFqdsn.get().get(fqdsn));
     }
 
     @Override
@@ -132,11 +107,6 @@ public final class PeriodicData {
         _dimensions = builder._dimensions;
         _data = builder._data;
         _conditions = builder._conditions;
-
-        _dataByFqdsn = Suppliers.memoize(
-                () -> _data.stream().collect(Collectors.toMap(AggregatedData::getFQDSN, Function.identity())));
-        _conditionsByFqdsn = Suppliers.memoize(
-                () -> _conditions.stream().collect(Collectors.toMap(Condition::getFQDSN, Function.identity())));
     }
 
     private final Period _period;
@@ -145,8 +115,6 @@ public final class PeriodicData {
     private final ImmutableMap<String, String> _dimensions;
     private final ImmutableList<AggregatedData> _data;
     private final ImmutableList<Condition> _conditions;
-    private final Supplier<Map<FQDSN, AggregatedData>> _dataByFqdsn;
-    private final Supplier<Map<FQDSN, Condition>> _conditionsByFqdsn;
 
     /**
      * <code>Builder</code> implementation for <code>PeriodicData</code>.
