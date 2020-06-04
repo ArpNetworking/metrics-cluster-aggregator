@@ -316,6 +316,7 @@ public class HttpSourceActor extends AbstractActor {
                 .setDimensions(dimensions)
                 .setPeriod(combinedMetricData.getPeriod())
                 .setStart(combinedMetricData.getPeriodStart())
+                .setMinRequestTime(combinedMetricData.getMinRequestTime().orElse(null))
                 .build());
     }
 
