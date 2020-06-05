@@ -55,6 +55,7 @@ public final class CombinedMetricData {
         _period = builder._period;
         _calculatedValues = builder._calculatedValues;
         _periodStart = builder._periodStart;
+        _minRequestTime = Optional.ofNullable(builder._minRequestTime);
         _service = builder._service;
         _cluster = builder._cluster;
     }
@@ -73,6 +74,10 @@ public final class CombinedMetricData {
 
     public DateTime getPeriodStart() {
         return _periodStart;
+    }
+
+    public Optional<DateTime> getMinRequestTime() {
+        return _minRequestTime;
     }
 
     public String getService() {
@@ -166,6 +171,7 @@ public final class CombinedMetricData {
     private final Period _period;
     private final Map<Statistic, StatisticValue> _calculatedValues;
     private final DateTime _periodStart;
+    private final Optional<DateTime> _minRequestTime;
     private final String _service;
     private final String _cluster;
 
@@ -244,6 +250,25 @@ public final class CombinedMetricData {
         }
 
         /**
+         * Set the minimum request time. May be null.
+         *
+         * @param minRequestTime The value to set
+         * @return This <code>Builder</code> instance.
+         */
+        public Builder setMinRequestTime(@Nullable final DateTime minRequestTime) {
+            _minRequestTime = minRequestTime;
+            return this;
+        }
+
+        private static Optional<DateTime> maybeParseMinRequestTime(final String minRequestTime) {
+            if (minRequestTime.isEmpty()) {
+                return Optional.empty();
+            }
+
+            return Optional.of(DateTime.parse(minRequestTime));
+        }
+
+        /**
          * Initializes the builder with fields from a {@link com.arpnetworking.metrics.aggregation.protocol.Messages.StatisticSetRecord}.
          *
          * @param record The record.
@@ -254,6 +279,7 @@ public final class CombinedMetricData {
                     .setMetricName(record.getMetric())
                     .setPeriod(Period.parse(record.getPeriod()))
                     .setPeriodStart(DateTime.parse(record.getPeriodStart()))
+                    .setMinRequestTime(maybeParseMinRequestTime(record.getClientMinimumRequestTime()).orElse(null))
                     .setCluster(record.getCluster())
                     .setService(record.getService());
             for (final Messages.StatisticRecord statisticRecord : record.getStatisticsList()) {
@@ -335,6 +361,8 @@ public final class CombinedMetricData {
         private Period _period;
         @NotNull
         private DateTime _periodStart;
+        @Nullable
+        private DateTime _minRequestTime;
         @NotNull
         private String _service;
         @NotNull

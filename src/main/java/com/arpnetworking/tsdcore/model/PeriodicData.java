@@ -25,6 +25,9 @@ import net.sf.oval.constraint.NotNull;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
+import java.util.Optional;
+import javax.annotation.Nullable;
+
 /**
  * Contains the data for a specific period in time.
  *
@@ -39,6 +42,10 @@ public final class PeriodicData {
 
     public DateTime getStart() {
         return _start;
+    }
+
+    public Optional<DateTime> getMinRequestTime() {
+        return _minRequestTime;
     }
 
     public ImmutableMap<String, String> getDimensions() {
@@ -96,6 +103,7 @@ public final class PeriodicData {
     private PeriodicData(final Builder builder) {
         _period = builder._period;
         _start = builder._start;
+        _minRequestTime = Optional.ofNullable(builder._minRequestTime);
         _dimensions = builder._dimensions;
         _data = builder._data;
         _conditions = builder._conditions;
@@ -103,6 +111,7 @@ public final class PeriodicData {
 
     private final Period _period;
     private final DateTime _start;
+    private final Optional<DateTime> _minRequestTime;
     private final ImmutableMap<String, String> _dimensions;
     private final ImmutableList<AggregatedData> _data;
     private final ImmutableList<Condition> _conditions;
@@ -127,6 +136,17 @@ public final class PeriodicData {
          */
         public Builder setPeriod(final Period value) {
             _period = value;
+            return this;
+        }
+
+        /**
+         * Set the minimum request time. Can be null.
+         *
+         * @param minRequestTime The minimum request time.
+         * @return This <code>BUilder</code> instance.
+         */
+        public Builder setMinRequestTime(@Nullable final DateTime minRequestTime) {
+            _minRequestTime = minRequestTime;
             return this;
         }
 
@@ -178,6 +198,8 @@ public final class PeriodicData {
         private Period _period;
         @NotNull
         private DateTime _start;
+        @Nullable
+        private DateTime _minRequestTime;
         @NotNull
         private ImmutableMap<String, String> _dimensions = ImmutableMap.of();
         @NotNull
