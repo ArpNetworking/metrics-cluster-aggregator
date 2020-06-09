@@ -4,7 +4,7 @@ cache:
   - "$HOME/.jdk"
 sudo: false
 services:
-  - docker
+- docker
 addons:
   apt:
     packages:
@@ -22,14 +22,14 @@ before_script:
 - gpg --import arpnetworking.key
 - if [ \( -n "${TRAVIS_TAG}" \) -a  "${TRAVIS_PULL_REQUEST}" = "false" ]; then export TARGET="deploy -P release --settings settings.xml"; fi;
 script:
-- ./jdk-wrapper.sh ./mvnw clean ${TARGET} -P rpm -U -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+- "./jdk-wrapper.sh ./mvnw clean ${TARGET} -P rpm -U -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn"
 deploy:
   provider: releases
   api_key:
-    secure: EtkLgBxZUi2rY59+fiYkaKDZIw9BYQisch0qcFGPU4g7XnJP/vfklHQsF5NZEEwW0eXOggaNWv9LhDHoz3laNdYnAsBknr4APX6UnU66fUdAaTuKCuN/7kYtJ0LC0b5TR9O5L/LaRoYUma5vxB7lGnDfazrCgQiOxK5J28dpobJZ/07z7X8VyOwzGa2i3dFMUgZs6FwGW59fp35jICZ4VYqsAwBfayGp4Egz+GXNcQ4YyJ2VaMP5qze/57cPAsunwy0rHxPvXu8JIC/DsQV03O7+jLISevZS92bWQM9GV7x0zTYd8hlNHhrorf1w+Hn8sm8eSU6aPB1ZGhkCzKrpnB+WB7AcYPf2A//Eg0CasucMCgwtUJlZ2RKtCJxMYgI90gC5CrSEnT6QbnytOdZR9bMTZxC7NXC1/oeZK+660UOdxTrBXysAKHG4S+LGmtGWaYk7Q8jV25WMGPXts4O4CsStV56yfujidU0+192VnHSpzZS0Oua5mhzoijtNi0pe2Is8glU/XFoqXNaclD6xshVr6vXeEUGzngSrDEibhcg355im9iBwhLDnwOZAexnEKg3e2Oy2liP6zheIl0X5t/Pc5uyoYTGFST4thn/P7NZEMNrBMGAwvb02CJzZV62khnODbidR8YNNUnXlQdZFK0m/iYDlllp5CEJEi66yOvc=
+    secure: b2leds8Bz8jkAoIeTww/JuRnc/8IYvGQZS0pxglz3VV5QF+4S/RDkLsSWsXnH/gTUnVFohcQ3JwMEaVEGvHe2Mn9fhpC3SMKEiLjC/DLtRKlaXKqjDaposHw7zxubNkV1kh8Nnmd2pXwIvfO/+yU0cXlSt08puOeaZc0q4u//PzyMf5Da9qZl/95gmshXiMLqoKpe28DRdVcKsWvMPvo3EkPi/+o2xyI+8ypfpt+UVQGw6GN1coazwGG0v+o6AkoMu1ZlnPreu3qE+ZFMUQG6LFsWcwrFwvTcL4j5zoZzqyrjMtcnzzaaLyWweCIjBsbYbbmUcP6+wszoBBttbglXZlpCWDLBhOM1oNs3HBrDrOwYYna5fCyl1mzf/K5ResM7cAZIcGylOMcusIFW2GJDOfC3WwdSAsr4QNmULD46MIih7ZDti7DAT80YAt0zxkaQA9gSyDYlqv85A/aTVqyCPuKRNaCTmSIreElN6crYs8JAXx+eD35XQPapR4bHZ0RbdqDh67kbrX5BYbHGHwpkX4iYdvi2vm9Xp0gsMnHWcVAdnQGAg8izPDa1kMDHsUbJhUVNlX9VGsZJRJqIMZm9sUuHvKryyTnhtCldoWmsS6lbzrFS/HTgK2do+3jeX+ds/vCWSgJPbDWJVjD2A/gnWpnAP8aRmNwVFv68yBHUVo=
   file:
-    - target/rpm/cluster-aggregator/RPMS/noarch/cluster-aggregator*.rpm
-    - target/metrics-cluster-aggregator*-bin.tgz
+  - target/rpm/cluster-aggregator/RPMS/noarch/cluster-aggregator*.rpm
+  - target/metrics-cluster-aggregator*-bin.tgz
   file_glob: true
   skip_cleanup: true
   on:
