@@ -17,6 +17,8 @@ package com.arpnetworking.tsdcore.sinks;
 
 import akka.http.javadsl.model.MediaTypes;
 import com.arpnetworking.commons.jackson.databind.ObjectMapperFactory;
+import com.arpnetworking.metrics.MetricsFactory;
+import com.arpnetworking.metrics.impl.TsdMetricsFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.Condition;
 import com.arpnetworking.tsdcore.model.FQDSN;
@@ -59,7 +61,8 @@ public class KairosDbSinkTest extends BaseActorTest {
         _kairosDbSinkBuilder = new KairosDbSink.Builder()
                 .setName("kairosdb_sink_test")
                 .setActorSystem(getSystem())
-                .setUri(URI.create("http://localhost:" + _wireMockServer.port() + PATH));
+                .setUri(URI.create("http://localhost:" + _wireMockServer.port() + PATH))
+                .setMetricsFactory(METRICS_FACTORY);
     }
 
     @After
@@ -137,4 +140,7 @@ public class KairosDbSinkTest extends BaseActorTest {
     private static final String PATH = "/kairos/post/path";
     private static final StatisticFactory STATISTIC_FACTORY = new StatisticFactory();
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.getInstance();
+    private static final MetricsFactory METRICS_FACTORY = TsdMetricsFactory.newInstance(
+                "mock_metrics_factory",
+                "mock_metrics_factory");
 }
