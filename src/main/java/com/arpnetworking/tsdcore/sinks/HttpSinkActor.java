@@ -20,6 +20,7 @@ import akka.actor.Props;
 import akka.http.javadsl.model.StatusCodes;
 import akka.pattern.PatternsCS;
 import com.arpnetworking.logback.annotations.LogValue;
+import com.arpnetworking.metrics.Metrics;
 import com.arpnetworking.steno.LogValueMapFactory;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
@@ -200,6 +201,9 @@ public class HttpSinkActor extends AbstractActor {
             }
 
             if (evicted > 0) {
+                final Metrics metrics = _sink.getMetricsFactory().create();
+                metrics.incrementCounter(_sink.getEvictedRequestName(), evicted);
+                metrics.close();
                 EVICTED_LOGGER.warn()
                         .setMessage("Evicted data from HTTP sink queue")
                         .addData("sink", _sink)
