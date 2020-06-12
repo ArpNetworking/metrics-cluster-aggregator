@@ -104,7 +104,7 @@ public final class RrdSink extends BaseSink {
     private static final Logger LOGGER = LoggerFactory.getLogger(RrdSink.class);
 
     /**
-     * Implementation of builder pattern for <code>RrdClusterSink</code>.
+     * Implementation of builder pattern for {@link RrdSink}.
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
@@ -121,7 +121,7 @@ public final class RrdSink extends BaseSink {
          * The path to the RRD root. Cannot be null or empty.
          *
          * @param value The path to the RRD root.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setPath(final String value) {
             _path = value;
@@ -132,7 +132,7 @@ public final class RrdSink extends BaseSink {
          * The RRD tool to use. Cannot be null or empty. Default is "rrdtool".
          *
          * @param value The RRD tool to use.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setRrdTool(final String value) {
             _rrdTool = value;

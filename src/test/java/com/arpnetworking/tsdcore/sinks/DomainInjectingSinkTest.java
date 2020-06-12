@@ -29,7 +29,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 /**
- * Tests for the <code>DomainInjectingSink</code> class.
+ * Tests for the {@link DomainInjectingSink} class.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */

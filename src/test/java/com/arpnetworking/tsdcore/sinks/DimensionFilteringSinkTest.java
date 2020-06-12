@@ -26,7 +26,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 /**
- * Tests for the <code>DimensionFilteringSink</code> class.
+ * Tests for the {@link DimensionFilteringSink} class.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */

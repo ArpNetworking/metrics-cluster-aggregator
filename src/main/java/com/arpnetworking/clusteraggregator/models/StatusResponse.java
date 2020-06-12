@@ -102,7 +102,8 @@ public final class StatusResponse {
     private final Optional<List<ShardAllocation>> _allocations;
 
     /**
-     * Builder for a {@link StatusResponse}.
+     * {@link com.arpnetworking.commons.builder.Builder} implementation for
+     * {@link StatusResponse}.
      */
     public static class Builder extends OvalBuilder<StatusResponse> {
         /**

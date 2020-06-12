@@ -117,7 +117,8 @@ public final class PeriodicData {
     private final ImmutableList<Condition> _conditions;
 
     /**
-     * <code>Builder</code> implementation for <code>PeriodicData</code>.
+     * {@link com.arpnetworking.commons.builder.Builder} implementation for
+     * {@link PeriodicData}.
      */
     public static final class Builder extends OvalBuilder<PeriodicData> {
 
@@ -132,7 +133,7 @@ public final class PeriodicData {
          * Set the period. Required. Cannot be null.
          *
          * @param value The period.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setPeriod(final Period value) {
             _period = value;
@@ -143,7 +144,7 @@ public final class PeriodicData {
          * Set the minimum request time. Can be null.
          *
          * @param minRequestTime The minimum request time.
-         * @return This <code>BUilder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setMinRequestTime(@Nullable final DateTime minRequestTime) {
             _minRequestTime = minRequestTime;
@@ -154,7 +155,7 @@ public final class PeriodicData {
          * Set the start. Required. Cannot be null.
          *
          * @param value The start.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setStart(final DateTime value) {
             _start = value;
@@ -162,10 +163,10 @@ public final class PeriodicData {
         }
 
         /**
-         * Set the dimensions. Optional. Cannot be null. Defaults to an empty <code>Map</code>.
+         * Set the dimensions. Optional. Cannot be null. Defaults to an empty {@link ImmutableMap}.
          *
          * @param value The dimensions.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setDimensions(final ImmutableMap<String, String> value) {
             _dimensions = value;
@@ -173,10 +174,10 @@ public final class PeriodicData {
         }
 
         /**
-         * Set the data. Optional. Cannot be null. Defaults to an empty <code>List</code>.
+         * Set the data. Optional. Cannot be null. Defaults to an empty {@link ImmutableList}.
          *
          * @param value The data.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setData(final ImmutableList<AggregatedData> value) {
             _data = value;
@@ -184,10 +185,10 @@ public final class PeriodicData {
         }
 
         /**
-         * Set the conditions. Optional. Cannot be null. Defaults to an empty <code>List</code>.
+         * Set the conditions. Optional. Cannot be null. Defaults to an empty {@link ImmutableList}.
          *
          * @param value The conditions.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setConditions(final ImmutableList<Condition> value) {
             _conditions = value;

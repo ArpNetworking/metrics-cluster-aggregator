@@ -83,7 +83,7 @@ public class AggMessageExtractor implements ShardRegion.MessageExtractor {
      * Sort and de-dupe the dimensions in a consistent manner. Will log an error if any duplicate keys are found and select the
      * lexicographically-smaller value.
      *
-     * @param metricData The <code>StatisticSetRecord</code> from which to pull dimensions.
+     * @param metricData The {@link Messages.StatisticSetRecord} from which to pull dimensions.
      * @return A sorted, de-duped TreeMap of the dimensions.
      */
     private TreeMap<String, String> dimensionsToMap(final Messages.StatisticSetRecord metricData) {

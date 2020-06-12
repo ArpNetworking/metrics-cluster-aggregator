@@ -40,20 +40,20 @@ public final class AggregationMessage {
      * Static factory.
      *
      * @param message The message.
-     * @return New <code>AggregationMessage</code> instance.
+     * @return New {@link AggregationMessage} instance.
      */
     public static AggregationMessage create(final GeneratedMessageV3 message) {
         return new AggregationMessage(message);
     }
 
     /**
-     * Deserialize message from <code>Buffer</code>.
+     * Deserialize message from {@link ByteString}.
      *
      * TODO(vkoskela): The header and message need to be versioned [MAI-133].
      *
-     * @param data The <code>Buffer</code> containing the serialized message.
-     * @return The deserialized <code>AggregationMessage</code> or absent if
-     * the <code>Buffer</code> could not be deserialized.
+     * @param data The {@link ByteString} containing the serialized message.
+     * @return The deserialized {@link AggregationMessage} or absent if
+     * the {@link ByteString} could not be deserialized.
      */
     public static Optional<AggregationMessage> deserialize(final ByteString data) {
         int position = 0;
@@ -131,9 +131,9 @@ public final class AggregationMessage {
     }
 
     /**
-     * Serialize the message into a <code>Buffer</code>.
+     * Serialize the message into a {@link ByteString}.
      *
-     * @return <code>Buffer</code> containing serialized message.
+     * @return {@link ByteString} containing serialized message.
      */
     public ByteString serialize() {
         return AggregationMessage.serialize(_message);

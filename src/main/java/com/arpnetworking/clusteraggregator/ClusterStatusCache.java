@@ -56,7 +56,7 @@ public class ClusterStatusCache extends AbstractActor {
      * Creates a {@link akka.actor.Props} for use in Akka.
      *
      * @param cluster The cluster to reference.
-     * @param metricsFactory A <code>MetricsFactory</code> to use for metrics creation.
+     * @param metricsFactory A {@link MetricsFactory} to use for metrics creation.
      * @return A new {@link akka.actor.Props}
      */
     public static Props props(final Cluster cluster, final MetricsFactory metricsFactory) {
@@ -67,7 +67,7 @@ public class ClusterStatusCache extends AbstractActor {
      * Public constructor.
      *
      * @param cluster {@link akka.cluster.Cluster} whose state is cached
-     * @param metricsFactory A <code>MetricsFactory</code> to use for metrics creation.
+     * @param metricsFactory A {@link MetricsFactory} to use for metrics creation.
      */
     public ClusterStatusCache(final Cluster cluster, final MetricsFactory metricsFactory) {
         _cluster = cluster;

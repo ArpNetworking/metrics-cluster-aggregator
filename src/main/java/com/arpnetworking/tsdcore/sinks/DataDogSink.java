@@ -169,7 +169,7 @@ public final class DataDogSink extends HttpPostSink {
     }
 
     /**
-     * Implementation of builder pattern for <code>DataDogSink</code>.
+     * Implementation of builder pattern for {@link DataDogSink}.
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
@@ -186,7 +186,7 @@ public final class DataDogSink extends HttpPostSink {
          * The API key. Required. Cannot be null or empty.
          *
          * @param value API key.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setApiKey(final String value) {
             _apiKey = value;

@@ -34,7 +34,7 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * Tests for the <code>RrdSink</code> class.
+ * Tests for the {@link RrdSink} class.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */

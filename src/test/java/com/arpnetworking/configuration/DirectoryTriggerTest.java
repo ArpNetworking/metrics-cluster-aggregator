@@ -28,7 +28,7 @@ import java.nio.file.Files;
 import java.util.regex.Pattern;
 
 /**
- * Tests for the <code>DirectoryTrigger</code> class.
+ * Tests for the {@link DirectoryTrigger} class.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */

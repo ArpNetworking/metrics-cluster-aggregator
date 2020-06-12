@@ -25,7 +25,7 @@ import org.mockito.Mockito;
 import java.util.Collections;
 
 /**
- * Tests for the <code>FilteringSink</code> class.
+ * Tests for the {@link ServiceNameFilteringSink} class.
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */

@@ -39,7 +39,7 @@ public final class ClusterAggregatorConfiguration {
     /**
      * Create an {@link com.fasterxml.jackson.databind.ObjectMapper} for cluster aggregator configuration.
      *
-     * @return An <code>ObjectMapper</code> for TsdAggregator configuration.
+     * @return An {@link ObjectMapper} for TsdAggregator configuration.
      */
     public static ObjectMapper createObjectMapper() {
         return ObjectMapperFactory.getInstance();
@@ -229,7 +229,8 @@ public final class ClusterAggregatorConfiguration {
     private final Map<String, DatabaseConfiguration> _databaseConfigurations;
 
     /**
-     * Implementation of builder pattern for {@link com.arpnetworking.clusteraggregator.configuration.ClusterAggregatorConfiguration}.
+     * {@link com.arpnetworking.commons.builder.Builder} implementation for
+     * {@link com.arpnetworking.clusteraggregator.configuration.ClusterAggregatorConfiguration}.
      *
      * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
      */
@@ -245,7 +246,7 @@ public final class ClusterAggregatorConfiguration {
          * The monitoring cluster. Cannot be null or empty.
          *
          * @param value The monitoring cluster.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setMonitoringCluster(final String value) {
             _monitoringCluster = value;
@@ -257,7 +258,7 @@ public final class ClusterAggregatorConfiguration {
          * is cluster_aggregator.
          *
          * @param value The monitoring service.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setMonitoringService(final String value) {
             _monitoringService = value;
@@ -269,7 +270,7 @@ public final class ClusterAggregatorConfiguration {
          * is 'localhost'.
          *
          * @param value The monitoring endpoint uri.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setMonitoringHost(final String value) {
             _monitoringHost = value;
@@ -281,7 +282,7 @@ public final class ClusterAggregatorConfiguration {
          * 65535 (inclusive). Defaults to 7090.
          *
          * @param value The port to listen on.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setMonitoringPort(final Integer value) {
             _monitoringPort = value;
@@ -292,7 +293,7 @@ public final class ClusterAggregatorConfiguration {
          * The http host address to bind to. Cannot be null or empty.
          *
          * @param value The host address to bind to.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setHttpHost(final String value) {
             _httpHost = value;
@@ -304,7 +305,7 @@ public final class ClusterAggregatorConfiguration {
          * Cannot be null.  Default is the empty string.
          *
          * @param value The host suffix to append.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setClusterHostSuffix(final String value) {
             _clusterHostSuffix = value;
@@ -315,7 +316,7 @@ public final class ClusterAggregatorConfiguration {
          * The aggregation server host address to bind to. Cannot be null or empty.
          *
          * @param value The host address to bind to.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setAggregationHost(final String value) {
             _aggregationHost = value;
@@ -327,7 +328,7 @@ public final class ClusterAggregatorConfiguration {
          * 65535 (inclusive).
          *
          * @param value The port to listen on.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setHttpPort(final Integer value) {
             _httpPort = value;
@@ -338,7 +339,7 @@ public final class ClusterAggregatorConfiguration {
          * The http health check path. Cannot be null or empty. Optional. Default is "/ping".
          *
          * @param value The health check path.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setHttpHealthCheckPath(final String value) {
             _httpHealthCheckPath = value;
@@ -349,7 +350,7 @@ public final class ClusterAggregatorConfiguration {
          * The http status path. Cannot be null or empty. Optional. Default is "/status".
          *
          * @param value The status path.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setHttpStatusPath(final String value) {
             _httpStatusPath = value;
@@ -360,7 +361,7 @@ public final class ClusterAggregatorConfiguration {
          * The http version path. Cannot be null or empty. Optional. Default is "/version".
          *
          * @param value The version path.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setHttpVersionPath(final String value) {
             _httpVersionPath = value;
@@ -372,7 +373,7 @@ public final class ClusterAggregatorConfiguration {
          * 65535 (inclusive). Defaults to 7065.
          *
          * @param value The port to listen on.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setAggregationPort(final Integer value) {
             _aggregationPort = value;
@@ -389,7 +390,7 @@ public final class ClusterAggregatorConfiguration {
          * NOTE: No validation is performed on the Akka configuration itself.
          *
          * @param value The Akka configuration.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setAkkaConfiguration(final Map<String, ?> value) {
             _akkaConfiguration = value;
@@ -400,7 +401,7 @@ public final class ClusterAggregatorConfiguration {
          * The log directory. Cannot be null.
          *
          * @param value The log directory.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setLogDirectory(final File value) {
             _logDirectory = value;
@@ -411,7 +412,7 @@ public final class ClusterAggregatorConfiguration {
          * The minimum connection cycling time for a client.  Required.  Cannot be null.
          *
          * @param value The minimum time before cycling a connection.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setMinConnectionTimeout(final Period value) {
             _minConnectionTimeout = value;
@@ -422,7 +423,7 @@ public final class ClusterAggregatorConfiguration {
          * The maximum connection cycling time for a client.  Required.  Cannot be null.
          *
          * @param value The maximum time before cycling a connection.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setMaxConnectionTimeout(final Period value) {
             _maxConnectionTimeout = value;
@@ -432,8 +433,8 @@ public final class ClusterAggregatorConfiguration {
         /**
          * Period for collecting JVM metrics.
          *
-         * @param value A <code>Period</code> value.
-         * @return This instance of <code>Builder</code>.
+         * @param value A {@link Period} value.
+         * @return This instance of {@link Builder}.
          */
         public Builder setJvmMetricsCollectionInterval(final Period value) {
             _jvmMetricsCollectionInterval = value;
@@ -444,7 +445,7 @@ public final class ClusterAggregatorConfiguration {
          * The cluster pipeline configuration file. Cannot be null.
          *
          * @param value The cluster pipeline configuration file.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setClusterPipelineConfiguration(final File value) {
             _clusterPipelineConfiguration = value;
@@ -455,7 +456,7 @@ public final class ClusterAggregatorConfiguration {
          * The host pipeline configuration file. Cannot be null.
          *
          * @param value The host pipeline configuration file.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setHostPipelineConfiguration(final File value) {
             _hostPipelineConfiguration = value;
@@ -467,7 +468,7 @@ public final class ClusterAggregatorConfiguration {
          * {@code host}. Cannot be null.
          *
          * @param value The regaggregation dimensions.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setReaggregationDimensions(final ImmutableSet<String> value) {
             _reaggregationDimensions = value;
@@ -480,7 +481,7 @@ public final class ClusterAggregatorConfiguration {
          * Cannot be null.
          *
          * @param value Whether to inject {@code host} derived from {@code cluster}.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setReaggregationInjectClusterAsHost(final Boolean value) {
             _reaggregationInjectClusterAsHost = value;
@@ -494,7 +495,7 @@ public final class ClusterAggregatorConfiguration {
          * is {@code PT1M}. Cannot be null.
          *
          * @param value Timeout from period start to wait for all data to arrive.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setReaggregationTimeout(final Period value) {
             _reaggregationTimeout = value;
@@ -505,7 +506,7 @@ public final class ClusterAggregatorConfiguration {
          * Configuration for the shard rebalance settings.
          *
          * @param value The rebalacing configuration.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setRebalanceConfiguration(final RebalanceConfiguration value) {
             _rebalanceConfiguration = value;
@@ -516,7 +517,7 @@ public final class ClusterAggregatorConfiguration {
          * Configuration for the databases.
          *
          * @param value The database configurations.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setDatabaseConfigurations(final Map<String, DatabaseConfiguration> value) {
             _databaseConfigurations = value;
@@ -528,7 +529,7 @@ public final class ClusterAggregatorConfiguration {
          * native histograms, turning this off will reduce cpu cost. Optional. Defaults to true.
          *
          * @param value true to perform cluster aggregations, false to just forward host data.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setCalculateClusterAggregations(final Boolean value) {
             _calculateClusterAggregations = value;

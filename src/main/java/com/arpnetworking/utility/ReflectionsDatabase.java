@@ -23,16 +23,16 @@ import java.lang.annotation.Annotation;
 import java.util.Set;
 
 /**
- * Default implementation of <code>InterfaceDatabase</code>.
+ * Default implementation of {@link InterfaceDatabase}.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
 public final class ReflectionsDatabase implements InterfaceDatabase, AnnotationDatabase {
 
     /**
-     * Create a new instance of <code>InterfaceDatabase</code>.
+     * Create a new instance of {@link InterfaceDatabase}.
      *
-     * @return New instance of <code>InterfaceDatabase</code>.
+     * @return New instance of {@link InterfaceDatabase}.
      */
     public static ReflectionsDatabase newInstance() {
         return new ReflectionsDatabase(REFLECTIONS);

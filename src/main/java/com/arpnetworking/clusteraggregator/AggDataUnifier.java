@@ -37,8 +37,8 @@ public final class AggDataUnifier {
     private AggDataUnifier() {}
 
     /**
-     * Unifies <code>AggregatedData</code> units.
-     * @param aggData List of <code>AggregatedData</code> to unify.
+     * Unifies {@link AggregatedData} units.
+     * @param aggData List of {@link AggregatedData} to unify.
      * @return A new {@code List<AggregatedData>} with unified units.
      */
     public static List<AggregatedData> unify(final Collection<AggregatedData> aggData) {

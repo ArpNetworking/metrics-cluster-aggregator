@@ -37,11 +37,11 @@ import java.util.concurrent.TimeUnit;
 public final class JvmMetricsCollector extends AbstractActor {
 
     /**
-     * Creates a <code>Props</code> for construction in Akka.
+     * Creates a {@link Props} for construction in Akka.
      *
-     * @param interval An instance of <code>Period</code>.
-     * @param metricsFactory A <code>MetricsFactory</code> to use for metrics creation.
-     * @return A new <code>Props</code>.
+     * @param interval An instance of {@link Period}.
+     * @param metricsFactory A {@link MetricsFactory} to use for metrics creation.
+     * @return A new {@link Props}.
      */
     public static Props props(
             final Period interval,
@@ -90,8 +90,8 @@ public final class JvmMetricsCollector extends AbstractActor {
     /**
      * Package private constructor. Strictly for testing.
      *
-     * @param interval An instance of <code>FiniteDuration</code>.
-     * @param runnable An instance of <code>Runnable</code>.
+     * @param interval An instance of {@link FiniteDuration}.
+     * @param runnable An instance of {@link Runnable}.
      */
     /* package private */ JvmMetricsCollector(
             final FiniteDuration interval,

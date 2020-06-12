@@ -39,10 +39,10 @@ import java.util.List;
  */
 public final class EmitterConfiguration {
     /**
-     * Create an <code>ObjectMapper</code> for Emitter configuration.
+     * Create an {@link ObjectMapper} for Emitter configuration.
      *
-     * @param injector The Guice <code>Injector</code> instance.
-     * @return An <code>ObjectMapper</code> for Pipeline configuration.
+     * @param injector The Guice {@link Injector} instance.
+     * @return An {@link ObjectMapper} for Pipeline configuration.
      */
     public static ObjectMapper createObjectMapper(final Injector injector) {
         final ObjectMapper objectMapper = ObjectMapperFactory.createInstance();
@@ -75,7 +75,8 @@ public final class EmitterConfiguration {
     private final int _poolSize;
 
     /**
-     * Implementation of builder pattern for {@link EmitterConfiguration}.
+     * {@link com.arpnetworking.commons.builder.Builder} implementation for
+     * {@link EmitterConfiguration}.
      *
      * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
      */
@@ -91,7 +92,7 @@ public final class EmitterConfiguration {
          * The sinks. Required. Cannot be null or empty.
          *
          * @param value The sinks.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setSinks(final List<Sink> value) {
             _sinks = value;
@@ -103,7 +104,7 @@ public final class EmitterConfiguration {
          * Cannot be null or empty.
          *
          * @param value The poolSize.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setPoolSize(final Integer value) {
             _poolSize = value;

@@ -24,7 +24,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- * Tests for the <code>FQSN</code> class.
+ * Tests for the {@link FQSN} class.
  *
  * TODO(vkoskela): Enable dimensions. [MAI-449]
  *

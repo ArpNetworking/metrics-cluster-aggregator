@@ -58,7 +58,7 @@ public class CarbonSink extends TcpSink {
     private static final Logger LOGGER = LoggerFactory.getLogger(CarbonSink.class);
 
     /**
-     * Implementation of builder pattern for <code>CarbonSink</code>.
+     * Implementation of builder pattern for {@link CarbonSink}.
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */

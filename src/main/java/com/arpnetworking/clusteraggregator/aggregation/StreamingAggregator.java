@@ -60,7 +60,7 @@ import javax.annotation.Nullable;
 public class StreamingAggregator extends AbstractActorWithTimers {
 
     /**
-     * Creates a <code>Props</code> for use in Akka.
+     * Creates a {@link Props} for use in Akka.
      *
      * @param metricsListener Where to send metrics about aggregation computations.
      * @param emitter Where to send the metrics data.
@@ -68,7 +68,7 @@ public class StreamingAggregator extends AbstractActorWithTimers {
      * @param reaggregationDimensions The dimensions to reaggregate over.
      * @param injectClusterAsHost Whether to inject a host dimension based on cluster.
      * @param aggregatorTimeout The time to wait from the start of the period for all data.
-     * @return A new <code>Props</code>.
+     * @return A new {@link Props}.
      */
     public static Props props(
             final ActorRef metricsListener,

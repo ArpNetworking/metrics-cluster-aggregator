@@ -68,12 +68,12 @@ public class Status extends AbstractActor {
     }
 
     /**
-     * Creates a <code>Props</code> for use in Akka.
+     * Creates a {@link Props} for use in Akka.
      *
      * @param cluster The instance of the Clustering extension.
      * @param clusterStatusCache The actor holding the cached cluster status.
      * @param localMetrics The actor holding the local node metrics.
-     * @return A new <code>Props</code>.
+     * @return A new {@link Props}.
      */
     public static Props props(
             final Cluster cluster,

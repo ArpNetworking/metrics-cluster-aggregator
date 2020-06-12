@@ -182,7 +182,8 @@ public final class CombinedMetricData {
             LoggerFactory.getRateLimitLogger(CombinedMetricData.class, Duration.ofSeconds(30));
 
     /**
-     * Implementation of builder pattern for {@link CombinedMetricData}.
+     * {@link com.arpnetworking.commons.builder.Builder} implementationfor
+     * {@link CombinedMetricData}.
      *
      * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
      */
@@ -198,7 +199,7 @@ public final class CombinedMetricData {
          * Set the name of the service. Required. Cannot be null.
          *
          * @param value The value.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setService(final String value) {
             _service = value;
@@ -209,7 +210,7 @@ public final class CombinedMetricData {
          * Set the name of the metric. Required. Cannot be null.
          *
          * @param value The value.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setMetricName(final String value) {
             _metricName = value;
@@ -220,7 +221,7 @@ public final class CombinedMetricData {
          * Set the name of the cluster. Required. Cannot be null.
          *
          * @param value The value.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setCluster(final String value) {
             _cluster = value;
@@ -231,7 +232,7 @@ public final class CombinedMetricData {
          * Set the start of the period. Required. Cannot be null.
          *
          * @param value The value.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setPeriodStart(final DateTime value) {
             _periodStart = value;
@@ -242,7 +243,7 @@ public final class CombinedMetricData {
          * Set the period. Required. Cannot be null.
          *
          * @param value The value.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setPeriod(final Period value) {
             _period = value;
@@ -253,7 +254,7 @@ public final class CombinedMetricData {
          * Set the minimum request time. May be null.
          *
          * @param minRequestTime The value to set
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setMinRequestTime(@Nullable final DateTime minRequestTime) {
             _minRequestTime = minRequestTime;

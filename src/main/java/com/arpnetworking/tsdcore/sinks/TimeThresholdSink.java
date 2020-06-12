@@ -149,7 +149,7 @@ public final class TimeThresholdSink extends BaseSink {
     }
 
     /**
-     * Base <code>Builder</code> implementation.
+     * Base {@link Builder} implementation.
      *
      * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
      */
@@ -165,7 +165,7 @@ public final class TimeThresholdSink extends BaseSink {
          * The aggregated data sink to filter. Cannot be null.
          *
          * @param value The aggregated data sink to filter.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setSink(final Sink value) {
             _sink = value;
@@ -177,7 +177,7 @@ public final class TimeThresholdSink extends BaseSink {
          * Cannot be null. Default is no excluded services.
          *
          * @param value The excluded services.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setExcludedServices(final Set<String> value) {
             _excludedServices = value;
@@ -188,7 +188,7 @@ public final class TimeThresholdSink extends BaseSink {
          * Flag to only log violations instead of dropping data. Optional. Defaults to false.
          *
          * @param value true to log violations, but still pass data
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setLogOnly(final Boolean value) {
             _logOnly = value;
@@ -199,7 +199,7 @@ public final class TimeThresholdSink extends BaseSink {
          * The freshness threshold to log or drop data. Required. Cannot be null.
          *
          * @param value The threshold for accepted data.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setThreshold(final Period value) {
             _threshold = value;

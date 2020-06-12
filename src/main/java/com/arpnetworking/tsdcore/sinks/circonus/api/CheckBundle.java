@@ -142,7 +142,8 @@ public final class CheckBundle {
     private final String _status;
 
     /**
-     * Implementation of the builder pattern for {@link CheckBundle}.
+     * {@link com.arpnetworking.commons.builder.Builder} implementation for
+     * {@link CheckBundle}.
      */
     public static class Builder extends OvalBuilder<CheckBundle> {
         /**

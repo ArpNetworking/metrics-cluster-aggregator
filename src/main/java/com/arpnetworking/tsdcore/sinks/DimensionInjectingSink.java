@@ -53,7 +53,7 @@ public final class DimensionInjectingSink extends BaseSink {
     private final ImmutableMap<String, String> _dimensions;
 
     /**
-     * Implementation of builder pattern for <code>DimensionInjectingSink</code>.
+     * Implementation of builder pattern for {@link DimensionInjectingSink}.
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
@@ -70,7 +70,7 @@ public final class DimensionInjectingSink extends BaseSink {
          * Sets the dimensions to inject.
          *
          * @param value The dimensions to inject.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setDimensions(final ImmutableMap<String, String> value) {
             _dimensions = value;
@@ -81,7 +81,7 @@ public final class DimensionInjectingSink extends BaseSink {
          * The sink to wrap. Cannot be null.
          *
          * @param value The sink to wrap.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setSink(final Sink value) {
             _sink = value;

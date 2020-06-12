@@ -164,7 +164,7 @@ public final class SignalFxSink extends HttpPostSink {
     private final int _maxMetricDimensions;
 
     /**
-     * Implementation of builder pattern for <code>SignalFxSink</code>.
+     * Implementation of builder pattern for {@link SignalFxSink}.
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
@@ -181,7 +181,7 @@ public final class SignalFxSink extends HttpPostSink {
          * The source name. Optional.
          *
          * @param value Organization identifier.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setSource(final String value) {
             _source = value;
@@ -193,7 +193,7 @@ public final class SignalFxSink extends HttpPostSink {
          * www.signalfx.com. Required. Cannot be null or empty.
          *
          * @param value Organization identifier.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setOrganizationId(final String value) {
             _organizationId = value;
@@ -205,7 +205,7 @@ public final class SignalFxSink extends HttpPostSink {
          * www.signalfx.com. Required. Cannot be null or empty.
          *
          * @param value API token.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setApiToken(final String value) {
             _apiToken = value;

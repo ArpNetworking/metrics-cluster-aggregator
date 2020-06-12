@@ -34,7 +34,7 @@ import org.mockito.Mockito;
 import java.util.function.Consumer;
 
 /**
- * Tests for the <code>CarbonSink</code> class.
+ * Tests for the {@link CarbonSink} class.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */

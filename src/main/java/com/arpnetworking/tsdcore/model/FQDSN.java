@@ -33,7 +33,7 @@ import java.io.Serializable;
  *
  * The FQDSN is composed of the cluster name, service name, metric name, and
  * statistic. To refer to a specific value in the data space or hypercube of
- * a metric you should use a fully qualified statistic name (<code>FQSN</code>).
+ * a metric you should use a fully qualified statistic name ({@link FQSN}).
  *
  * The identified data space is a time series by period.
  *
@@ -110,7 +110,8 @@ public final class FQDSN implements Serializable {
     private static final long serialVersionUID = 3250912975329607150L;
 
     /**
-     * Implementation of builder pattern for <code>FQDSN</code>.
+     * {@link com.arpnetworking.commons.builder.Builder} implementation for
+     * {@link FQDSN}.
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
@@ -127,7 +128,7 @@ public final class FQDSN implements Serializable {
          * The cluster. Cannot be null or empty.
          *
          * @param value The cluster.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setCluster(final String  value) {
             _cluster = value;
@@ -138,7 +139,7 @@ public final class FQDSN implements Serializable {
          * The service. Cannot be null or empty.
          *
          * @param value The service.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setService(final String value) {
             _service = value;
@@ -149,7 +150,7 @@ public final class FQDSN implements Serializable {
          * The metric. Cannot be null or empty.
          *
          * @param value The metric.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setMetric(final String value) {
             _metric = value;
@@ -160,7 +161,7 @@ public final class FQDSN implements Serializable {
          * The statistic. Cannot be null.
          *
          * @param value The statistic.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setStatistic(final Statistic value) {
             _statistic = value;

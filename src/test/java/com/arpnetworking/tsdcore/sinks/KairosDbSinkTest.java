@@ -50,7 +50,7 @@ import java.net.URI;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Tests for the <code>KairosDbSink</code> class.
+ * Tests for the {@link KairosDbSink} class.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */

@@ -76,7 +76,8 @@ public final class ShardAllocation {
     private final Set<String> _outgoingShards;
 
     /**
-     * Implementation of builder pattern for {@link ShardAllocation}.
+     * {@link com.arpnetworking.commons.builder.Builder} implementation for
+     * {@link ShardAllocation}.
      *
      * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
      */
@@ -92,7 +93,7 @@ public final class ShardAllocation {
          * The shards currently on the node. Required. Cannot be null.
          *
          * @param value The shards.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setCurrentShards(final Set<String> value) {
             _currentShards = value;
@@ -103,7 +104,7 @@ public final class ShardAllocation {
          * The shards in the process of being rebalanced away from this node. Required. Cannot be null.
          *
          * @param value The shards.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setOutgoingShards(final Set<String> value) {
             _outgoingShards = value;
@@ -114,7 +115,7 @@ public final class ShardAllocation {
          * The shards in the process of being rebalanced to this node. Required. Cannot be null.
          *
          * @param value The shards.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setIncomingShards(final Set<String> value) {
             _incomingShards = value;
@@ -125,7 +126,7 @@ public final class ShardAllocation {
          * The shard region owning the shards. Required. Cannot be null.
          *
          * @param value The shard region.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setShardRegion(final ActorRef value) {
             _shardRegion = value;
@@ -136,7 +137,7 @@ public final class ShardAllocation {
          * The name of the host. Required. Cannot be null.
          *
          * @param value The host.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setHost(final String value) {
             _host = value;

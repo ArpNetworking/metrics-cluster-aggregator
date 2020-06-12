@@ -206,7 +206,7 @@ public final class KMonDSink extends HttpPostSink {
     private final int _unknownSeverityStatus;
 
     /**
-     * Implementation of builder pattern for <code>MonitordSink</code>.
+     * Implementation of builder pattern for {@link MonitordSink}.
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
@@ -221,7 +221,7 @@ public final class KMonDSink extends HttpPostSink {
 
         /**
          * Set severity to status map. Optional. Cannot be null. By default is
-         * an <code>Map</code> containing the following:
+         * an {@link Map} containing the following:
          *
          * {@code
          * "warning" => 1
@@ -229,7 +229,7 @@ public final class KMonDSink extends HttpPostSink {
          * }
          *
          * @param value Map of severity to status.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setSeverityToStatus(final Map<String, Integer> value) {
             _severityToStatus = value;
@@ -237,12 +237,12 @@ public final class KMonDSink extends HttpPostSink {
         }
 
         /**
-         * The status for unknown <code>Condition</code> severities; e.g. those
+         * The status for unknown {@link Condition} severities; e.g. those
          * not found in the severity to status map. Optional. Cannot be null.
-         * By default the status for a <code>Condition</code> is <code>2</code>.
+         * By default the status for a {@link Condition} is {@code 2}.
          *
          * @param value Default status.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setUnknownSeverityStatus(final Integer value) {
             _unknownSeverityStatus = value;

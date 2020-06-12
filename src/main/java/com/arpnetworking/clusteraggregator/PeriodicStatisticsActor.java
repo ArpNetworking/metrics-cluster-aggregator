@@ -34,10 +34,10 @@ import java.util.Map;
  */
 public class PeriodicStatisticsActor extends AbstractActor {
     /**
-     * Creates a <code>Props</code> for construction in Akka.
+     * Creates a {@link Props} for construction in Akka.
      *
-     * @param metricsFactory A <code>MetricsFactory</code> to use for metrics creation.
-     * @return A new <code>Props</code>.
+     * @param metricsFactory A {@link MetricsFactory} to use for metrics creation.
+     * @return A new {@link Props}.
      */
     public static Props props(final MetricsFactory metricsFactory) {
         return Props.create(PeriodicStatisticsActor.class, metricsFactory);
@@ -46,7 +46,7 @@ public class PeriodicStatisticsActor extends AbstractActor {
     /**
      * Public constructor.
      *
-     * @param metricsFactory A <code>MetricsFactory</code> to use for metrics creation.
+     * @param metricsFactory A {@link MetricsFactory} to use for metrics creation.
      */
     public PeriodicStatisticsActor(final MetricsFactory metricsFactory) {
         _metricsFactory = metricsFactory;

@@ -44,38 +44,38 @@ public interface Statistic extends Serializable {
     Set<String> getAliases();
 
     /**
-     * Create a <code>Calculator</code> for this statistic.
+     * Create a {@link Calculator} for this statistic.
      *
-     * @return The new <code>Calculator</code> instance.
+     * @return The new {@link Calculator} instance.
      */
     Calculator<?> createCalculator();
 
     /**
      * Accessor for any dependencies.
      *
-     * @return The <code>Set</code> of <code>Statistic</code> dependencies.
+     * @return The {@link Set} of {@link Statistic} dependencies.
      */
     Set<Statistic> getDependencies();
 
     /**
-     * Compute the statistic from the <code>list</code> of <code>Quantity</code>
-     * instances. By default the <code>List</code> of samples is not assumed to
-     * be in any particular order. However, any <code>Statistic</code> subclass
-     * may implement the marker interface <code>OrderedStatistic</code>
+     * Compute the statistic from the {@link List} of {@link Quantity}
+     * instances. By default the {@link List} of samples is not assumed to
+     * be in any particular order. However, any {@link Statistic} subclass
+     * may implement the marker interface {@link OrderedStatistic}
      * indicating a requirement to be provided with samples that are sorted from
      * smallest to largest. In all cases the samples are required to be unified
      * into the same unit (or no unit).
      *
-     * @param values <code>List</code> of samples <code>Quantity</code> instances.
-     * @return Computed statistic <code>Quantity</code> instance.
+     * @param values {@link List} of samples {@link Quantity} instances.
+     * @return Computed statistic {@link Quantity} instance.
      */
     Quantity calculate(List<Quantity> values);
 
     /**
-     * Compute the statistic from the <code>List</code> of <code>AggregatedData</code>
-     * instances. By default the <code>List</code> of samples is not assumed to be in
-     * any particular order. However, any <code>Statistic</code> subclass may implement
-     * the marker interface <code>OrderedStatistic</code> indicating a requirement to
+     * Compute the statistic from the {@link List} of {@link AggregatedData}
+     * instances. By default the {@link List} of samples is not assumed to be in
+     * any particular order. However, any {@link Statistic} subclass may implement
+     * the marker interface {@link OrderedStatistic} indicating a requirement to
      * be provided with samples that are sorted from smallest to largest. In all cases
      * the samples are required to be unified into the same unit (or no unit).
      *

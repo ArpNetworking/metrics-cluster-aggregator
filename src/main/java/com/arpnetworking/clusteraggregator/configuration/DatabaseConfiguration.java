@@ -106,7 +106,8 @@ public final class DatabaseConfiguration {
     private final ImmutableList<String> _modelPackages;
 
     /**
-     * Implementation of builder pattern for {@link DatabaseConfiguration}.
+     * {@link com.arpnetworking.commons.builder.Builder} implementation for
+     * {@link DatabaseConfiguration}.
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
@@ -123,7 +124,7 @@ public final class DatabaseConfiguration {
          * Database JDBC url. Required. Cannot be null or empty.
          *
          * @param value JDBC url.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setJdbcUrl(final String value) {
             _jdbcUrl = value;
@@ -134,7 +135,7 @@ public final class DatabaseConfiguration {
          * Data driver name. Required. Cannot be null or empty.
          *
          * @param value Driver class name.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setDriverName(final String value) {
             _driverName = value;
@@ -145,7 +146,7 @@ public final class DatabaseConfiguration {
          * Database username. Required. Cannot be null or empty.
          *
          * @param value Username.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setUsername(final String value) {
             _username = value;
@@ -156,7 +157,7 @@ public final class DatabaseConfiguration {
          * Database password. Required. Cannot be null or empty.
          *
          * @param value Password.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setPassword(final String value) {
             _password = value;
@@ -168,7 +169,7 @@ public final class DatabaseConfiguration {
          * schema migrations.
          *
          * @param value Migration location(s).
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setMigrationLocations(final List<String> value) {
             _migrationLocations = value;
@@ -181,7 +182,7 @@ public final class DatabaseConfiguration {
          *
          *
          * @param value Migration schema(s).
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setMigrationSchemas(final List<String> value) {
             _migrationSchemas = value;
@@ -192,7 +193,7 @@ public final class DatabaseConfiguration {
          * Maximum pool size. Required. Cannot be null. Must be at least 1.
          *
          * @param value Maximum pool size.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setMaximumPoolSize(final Integer value) {
             _maximumPoolSize = value;
@@ -203,7 +204,7 @@ public final class DatabaseConfiguration {
          * Minimum idle connections. Required. Cannot be null. Must be at least 0.
          *
          * @param value Minimum idle connections.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setMinimumIdle(final Integer value) {
             _minimumIdle = value;
@@ -214,7 +215,7 @@ public final class DatabaseConfiguration {
          * Idle timeout in milliseconds. Required. Cannot be null. Must be at least 1.
          *
          * @param value Idle timeout in milliseconds.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setIdleTimeout(final Integer value) {
             _idleTimeout = value;
@@ -225,7 +226,7 @@ public final class DatabaseConfiguration {
          * Model package(s). Optional. Cannot be null. Default is an empty list.
          *
          * @param value Model package(s).
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setModelPackages(final List<String> value) {
             _modelPackages = value;

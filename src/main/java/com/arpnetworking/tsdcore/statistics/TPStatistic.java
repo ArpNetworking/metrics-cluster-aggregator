@@ -138,7 +138,7 @@ public class TPStatistic extends BaseStatistic implements OrderedStatistic {
         /**
          * Public constructor.
          *
-         * @param statistic The <code>TPStatistic</code>.
+         * @param statistic The {@link TPStatistic}.
          */
         public PercentileCalculator(final TPStatistic statistic) {
             super(statistic);

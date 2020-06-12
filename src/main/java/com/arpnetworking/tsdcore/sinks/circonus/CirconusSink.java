@@ -251,9 +251,9 @@ public final class CirconusSink extends BaseSink {
 
         /**
          * Called by setters to always return appropriate subclass of
-         * <code>Builder</code>, even from setters of base class.
+         * {@link Builder}, even from setters of base class.
          *
-         * @return instance with correct <code>Builder</code> class type.
+         * @return instance with correct {@link Builder} class type.
          */
         @Override
         protected Builder self() {

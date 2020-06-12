@@ -22,7 +22,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- * Tests for the <code>FQDSN</code> class.
+ * Tests for the {@link FQDSN} class.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */

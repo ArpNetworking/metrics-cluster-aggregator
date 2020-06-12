@@ -112,7 +112,7 @@ public final class InfluxDbSink extends HttpPostSink {
     /**
      * Private constructor.
      *
-     * @param builder Instance of <code>Builder</code>.
+     * @param builder Instance of {@link Builder}.
      */
     private InfluxDbSink(final Builder builder) {
         super(builder);
@@ -122,10 +122,11 @@ public final class InfluxDbSink extends HttpPostSink {
     private final long _linesPerRequest;
 
     /**
-     * Implementation of output format for <code>InfluxDB</code> metrics.
+     * Implementation of output format for InfluxDB metrics.
      * The format follow the pattern (https://docs.influxdata.com/influxdb/v0.10/write_protocols/write_syntax/):
+     * {@code
      *      measurement[,tag_key1=tag_value1...] field_key=field_value[,field_key2=field_value2] [timestamp]
-     *
+     * }
      * The spaces, comma and = will be escaped from the measurement,tags and fields
      *
      * @author Daniel Guerrero (dguerreromartin at groupon dot com)
@@ -182,7 +183,7 @@ public final class InfluxDbSink extends HttpPostSink {
     }
 
     /**
-     * Implementation of builder pattern for <code>InfluxDbSink</code>.
+     * Implementation of builder pattern for {@link InfluxDbSink}.
      *
      * @author Daniel Guerrero (dguerreromartin at groupon dot com)
      */
@@ -199,7 +200,7 @@ public final class InfluxDbSink extends HttpPostSink {
          * Sets maximum lines per request. Optional. Defaults to 10000. Cannot be null or less than 1.
          *
          * @param value The lines per request.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setLinesPerRequest(@Nonnull final Long value) {
             _linesPerRequest = value;

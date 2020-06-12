@@ -90,9 +90,9 @@ public class StreamingAggregationBucket {
     }
 
     /**
-     * Add <code>AggregatedData</code> instance.
+     * Add {@link CombinedMetricData} instance.
      *
-     * @param datum The <code>AggregatedData</code> instance.
+     * @param datum The {@link CombinedMetricData} instance.
      */
     @SuppressWarnings(value = { "unchecked", "rawtypes" })
     public void update(final CombinedMetricData datum) {

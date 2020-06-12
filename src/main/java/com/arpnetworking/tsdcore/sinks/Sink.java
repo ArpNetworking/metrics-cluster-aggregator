@@ -19,7 +19,7 @@ import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
- * Interface to describe a class that publishes <code>AggregatedData</code>.
+ * Interface to describe a class that publishes {@link PeriodicData}.
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
@@ -30,11 +30,10 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 public interface Sink {
 
     /**
-     * Called when additional <code>AggregatedData</code> instances are
+     * Called when additional {@link PeriodicData} instances are
      * available for publication.
      *
-     * @param data The <code>List</code> of <code>AggregatedData</code> to be
-     * published.
+     * @param data The {{@link PeriodicData} to be published.
      */
     void recordAggregateData(PeriodicData data);
 

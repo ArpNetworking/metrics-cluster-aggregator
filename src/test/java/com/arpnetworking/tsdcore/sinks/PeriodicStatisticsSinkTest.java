@@ -37,7 +37,7 @@ import org.mockito.hamcrest.MockitoHamcrest;
 import java.util.concurrent.ScheduledExecutorService;
 
 /**
- * Tests for the <code>PeriodicStatisticsSink</code> class.
+ * Tests for the {@link PeriodicStatisticsSink} class.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */

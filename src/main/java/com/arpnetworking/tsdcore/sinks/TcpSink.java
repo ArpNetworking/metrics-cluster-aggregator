@@ -90,7 +90,7 @@ public abstract class TcpSink extends BaseSink {
     /**
      * Protected constructor.
      *
-     * @param builder Instance of <code>Builder</code>.
+     * @param builder Instance of {@link Builder}.
      */
     protected TcpSink(final Builder<?, ?> builder) {
         super(builder);
@@ -108,7 +108,7 @@ public abstract class TcpSink extends BaseSink {
     private static final Logger LOGGER = LoggerFactory.getLogger(TcpSink.class);
 
     /**
-     * Implementation of base builder pattern for <code>VertxSink</code>.
+     * Implementation of base builder pattern for {@link TcpSink}.
      *
      * @param <B> type of the builder
      * @param <S> type of the object to be built
@@ -120,7 +120,7 @@ public abstract class TcpSink extends BaseSink {
          * The server host name. Cannot be null or empty.
          *
          * @param value The aggregation server host name.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public B setServerAddress(final String value) {
             _serverAddress = value;
@@ -131,7 +131,7 @@ public abstract class TcpSink extends BaseSink {
          * The server port. Cannot be null; must be between 1 and 65535.
          *
          * @param value The server port.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public B setServerPort(final Integer value) {
             _serverPort = value;
@@ -142,7 +142,7 @@ public abstract class TcpSink extends BaseSink {
          * The maximum queue size. Cannot be null. Default is 10000.
          *
          * @param value The maximum queue size.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public B setMaxQueueSize(final Integer value) {
             _maxQueueSize = value;
@@ -153,7 +153,7 @@ public abstract class TcpSink extends BaseSink {
          * The actor system to run the actors in. Required. Cannot be null.
          *
          * @param value An actor system
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public B setActorSystem(final ActorSystem value) {
             _actorSystem = value;

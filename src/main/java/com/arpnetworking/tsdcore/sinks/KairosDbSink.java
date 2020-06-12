@@ -461,7 +461,7 @@ public final class KairosDbSink extends HttpPostSink {
     }
 
     /**
-     * Implementation of builder pattern for <code>KairosDbSink</code>.
+     * Implementation of builder pattern for {@link KairosDbSink}.
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */

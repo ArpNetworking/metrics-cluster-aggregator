@@ -35,10 +35,10 @@ import com.google.inject.Provider;
  */
 public class GuiceActorCreator implements IndirectActorProducer {
     /**
-     * Creates a <code>Props</code> for this creator.
+     * Creates a {@link Props} for this creator.
      * @param injector the Guice injector to create actors from
      * @param clazz the class to create
-     * @return a new <code>Props</code>
+     * @return a new {@link Props}
      */
     public static Props props(final Injector injector, final Class<? extends Actor> clazz) {
         return Props.create(GuiceActorCreator.class, injector, clazz);
@@ -69,7 +69,7 @@ public class GuiceActorCreator implements IndirectActorProducer {
     /**
      * Public constructor.
      *
-     * @param injector <code>The Guice injector to use to construct the actor</code>.
+     * @param injector The Guice injector to use to construct the actor.
      * @param clazz Class to create.
      */
     public GuiceActorCreator(final Injector injector, final Class<? extends Actor> clazz) {

@@ -47,7 +47,8 @@ public final class AggregationRequest {
     private final AggregationMode _aggregationMode;
 
     /**
-     * {@code Builder} implementation for {@link AggregationRequest}.
+     * {@link com.arpnetworking.commons.builder.Builder} implementation for
+     * {@link AggregationRequest}.
      */
     public static final class Builder extends OvalBuilder<AggregationRequest> {
 
@@ -62,7 +63,7 @@ public final class AggregationRequest {
          * Set the aggregation messages. Required. Cannot be null.
          *
          * @param aggregationMessages The aggregation messages.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setAggregationMessages(final ImmutableList<AggregationMessage> aggregationMessages) {
             _aggregationMessages = aggregationMessages;
@@ -73,7 +74,7 @@ public final class AggregationRequest {
          * Set the aggregation mode. Required. Cannot be null.
          *
          * @param aggregationMode The aggregation mode.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setAggregationMode(final AggregationMode aggregationMode) {
             _aggregationMode = aggregationMode;

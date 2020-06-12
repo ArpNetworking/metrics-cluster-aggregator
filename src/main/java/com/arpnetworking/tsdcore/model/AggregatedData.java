@@ -101,7 +101,7 @@ public final class AggregatedData implements Serializable {
     /**
      * Create a fully qualified statistic name (FQSN).
      *
-     * @param data The <code>AggregatedData</code> instance.
+     * @param data The {@link AggregatedData} instance.
      * @return The FQSN.
      */
     public static FQSN createFQSN(final AggregatedData data) {
@@ -119,7 +119,7 @@ public final class AggregatedData implements Serializable {
     /**
      * Create a fully qualified data space name (FQDSN).
      *
-     * @param data The <code>AggregatedData</code> instance.
+     * @param data The {@link AggregatedData} instance.
      * @return The FQDSN.
      */
     public static FQDSN createFQDSN(final AggregatedData data) {
@@ -224,7 +224,8 @@ public final class AggregatedData implements Serializable {
     private static final long serialVersionUID = 9124136139360447095L;
 
     /**
-     * Implementation of builder pattern for <code>AggregatedData</code>.
+     * {@link com.arpnetworking.commons.builder.Builder} implementation for
+     * {@link AggregatedData}.
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
@@ -238,10 +239,10 @@ public final class AggregatedData implements Serializable {
         }
 
         /**
-         * The fully qualified data space name (<code>FQDSN</code>). Required. Cannot be null.
+         * The fully qualified data space name ({@link FQDSN}). Required. Cannot be null.
          *
-         * @param value The <code>FQDSN</code>.
-         * @return This instance of <code>Builder</code>.
+         * @param value The {@link FQDSN}.
+         * @return This instance of {@link Builder}.
          */
         public Builder setFQDSN(final FQDSN value) {
             _fqdsn = value;
@@ -252,7 +253,7 @@ public final class AggregatedData implements Serializable {
          * The value. Required. Cannot be null.
          *
          * @param value The value.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setValue(final Quantity value) {
             _value = value;
@@ -263,7 +264,7 @@ public final class AggregatedData implements Serializable {
          * The samples. Required. Cannot be null.
          *
          * @param value The samples.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setSamples(final Collection<Quantity> value) {
             _samples = value;
@@ -274,7 +275,7 @@ public final class AggregatedData implements Serializable {
          * The population size. Required. Cannot be null.
          *
          * @param value The samples.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setPopulationSize(final Long value) {
             _populationSize = value;
@@ -285,7 +286,7 @@ public final class AggregatedData implements Serializable {
          * The period start. Required. Cannot be null.
          *
          * @param value The period start.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setStart(final DateTime value) {
             _start = value;
@@ -296,7 +297,7 @@ public final class AggregatedData implements Serializable {
          * The period. Required. Cannot be null.
          *
          * @param value The period.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setPeriod(final Period value) {
             _period = value;
@@ -307,7 +308,7 @@ public final class AggregatedData implements Serializable {
          * The host. Required. Cannot be null or empty.
          *
          * @param value The host.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setHost(final String value) {
             _host = value;
@@ -318,7 +319,7 @@ public final class AggregatedData implements Serializable {
          * The aggregated data was specified. Required. Cannot be null.
          *
          * @param value The metric type.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setIsSpecified(final Boolean value) {
             _isSpecified = value;
@@ -329,7 +330,7 @@ public final class AggregatedData implements Serializable {
          * The supporting data.
          *
          * @param value The supporting data.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setSupportingData(final Object value) {
             _supportingData = value;

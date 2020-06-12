@@ -31,7 +31,7 @@ import java.net.URI;
 import java.util.Collection;
 
 /**
- * Tests for the <code>KMonDSink</code> class.
+ * Tests for the {@link KMonDSink} class.
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)

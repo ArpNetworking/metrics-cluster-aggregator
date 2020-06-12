@@ -39,7 +39,7 @@ import java.net.URI;
 import java.util.List;
 
 /**
- * Tests for the <code>SignalFxSink</code> class.
+ * Tests for the {@link SignalFxSink} class.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */

@@ -48,12 +48,12 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
     }
 
     /**
-     * Add this <code>Quantity</code> to the specified one returning the
-     * result. Both <code>Quantity</code> instances must either not have a
-     * <code>Unit</code> or the <code>Unit</code> must be of the same type.
+     * Add this {@link Quantity} to the specified one returning the
+     * result. Both {@link Quantity} instances must either not have a
+     * {@link Unit} or the {@link Unit} must be of the same type.
      *
-     * @param otherQuantity The other <code>Quantity</code>.
-     * @return The resulting sum <code>Quantity</code>.
+     * @param otherQuantity The other {@link Quantity}.
+     * @return The resulting sum {@link Quantity}.
      */
     public Quantity add(final Quantity otherQuantity) {
         if (_unit.isPresent() != otherQuantity._unit.isPresent()) {
@@ -73,12 +73,12 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
     }
 
     /**
-     * Subtract the specified <code>Quantity</code> from this one returning
-     * the result. Both <code>Quantity</code> instances must either not have
-     * a <code>Unit</code> or the <code>Unit</code> must be of the same type.
+     * Subtract the specified {@link Quantity} from this one returning
+     * the result. Both {@link Quantity} instances must either not have
+     * a {@link Unit} or the {@link Unit} must be of the same type.
      *
-     * @param otherQuantity The other <code>Quantity</code>.
-     * @return The resulting difference <code>Quantity</code>.
+     * @param otherQuantity The other {@link Quantity}.
+     * @return The resulting difference {@link Quantity}.
      */
     public Quantity subtract(final Quantity otherQuantity) {
         if (_unit.isPresent() != otherQuantity._unit.isPresent()) {
@@ -98,11 +98,11 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
     }
 
     /**
-     * Multiply this <code>Quantity</code> with the specified one returning
+     * Multiply this {@link Quantity} with the specified one returning
      * the result.
      *
-     * @param otherQuantity The other <code>Quantity</code>.
-     * @return The resulting product <code>Quantity</code>.
+     * @param otherQuantity The other {@link Quantity}.
+     * @return The resulting product {@link Quantity}.
      */
     public Quantity multiply(final Quantity otherQuantity) {
         // TODO(vkoskela): Support division by quantity with unit [2F].
@@ -118,11 +118,11 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
     }
 
     /**
-     * Divide this <code>Quantity</code> by the specified one returning
+     * Divide this {@link Quantity} by the specified one returning
      * the result.
      *
-     * @param otherQuantity The other <code>Quantity</code>.
-     * @return The resulting quotient <code>Quantity</code>.
+     * @param otherQuantity The other {@link Quantity}.
+     * @return The resulting quotient {@link Quantity}.
      */
     public Quantity divide(final Quantity otherQuantity) {
         // TODO(vkoskela): Support division by quantity with unit [2F].
@@ -138,12 +138,12 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
     }
 
     /**
-     * Convert this <code>Quantity</code> to one in the specified unit. This
-     * <code>Quantity</code> must also have a <code>Unit</code> and it must
+     * Convert this {@link Quantity} to one in the specified unit. This
+     * {@link Quantity} must also have a {@link Unit} and it must
      * be in the same domain as the provided unit.
      *
-     * @param unit <code>Unit</code> to convert to.
-     * @return <code>Quantity</code> in specified unit.
+     * @param unit {@link Unit} to convert to.
+     * @return {@link Quantity} in specified unit.
      */
     public Quantity convertTo(final Unit unit) {
         if (!_unit.isPresent()) {
@@ -160,12 +160,12 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
     }
 
     /**
-     * Convert this <code>Quantity</code> to one in the specified optional unit.
-     * Either this <code>Quantity</code> also has a <code>Unit</code> in the
+     * Convert this {@link Quantity} to one in the specified optional unit.
+     * Either this {@link Quantity} also has a {@link Unit} in the
      * same domain as the provided unit or both units are absent.
      *
-     * @param unit <code>Optional</code> <code>Unit</code> to convert to.
-     * @return <code>Quantity</code> in specified unit.
+     * @param unit {@link Optional} {@link Unit} to convert to.
+     * @return {@link Quantity} in specified unit.
      */
     public Quantity convertTo(final Optional<Unit> unit) {
         if (_unit.isPresent() != unit.isPresent()) {
@@ -228,12 +228,12 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
     }
 
     /**
-     * Ensures all <code>Quantity</code> instances have the same (including no)
-     * <code>Unit</code>.
+     * Ensures all {@link Quantity} instances have the same (including no)
+     * {@link Unit}.
      *
-     * @param quantities <code>Quantity</code> instances to convert.
-     * @return <code>List</code> of <code>Quantity</code> instances with the
-     * same <code>Unit</code> (or no <code>Unit</code>).
+     * @param quantities {@link Quantity} instances to convert.
+     * @return {@link List} of {@link Quantity} instances with the
+     * same {@link Unit} (or no {@link Unit}).
      */
     public static List<Quantity> unify(final Collection<Quantity> quantities) {
         // This is a 2-pass operation:
@@ -305,7 +305,8 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
     }
 
     /**
-     * <code>Builder</code> implementation for <code>Quantity</code>.
+     * {@link com.arpnetworking.commons.builder.Builder} implementation for
+     * {@link Quantity}.
      */
     public static final class Builder extends OvalBuilder<Quantity> {
 
@@ -320,7 +321,7 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
          * Set the value. Required. Cannot be null.
          *
          * @param value The value.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setValue(final Double value) {
             _value = value;
@@ -331,7 +332,7 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
          * Set the unit. Optional. Default is no unit.
          *
          * @param value The unit.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setUnit(final Unit value) {
             _unit = value;

@@ -32,7 +32,7 @@ import java.net.URI;
 import java.util.Collection;
 
 /**
- * Tests for the <code>MonitordSink</code> class.
+ * Tests for the {@link MonitordSink} class.
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */

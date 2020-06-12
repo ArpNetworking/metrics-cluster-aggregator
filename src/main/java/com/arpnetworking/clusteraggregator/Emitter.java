@@ -36,10 +36,10 @@ import org.joda.time.Period;
  */
 public class Emitter extends AbstractActor {
     /**
-     * Creates a <code>Props</code> for construction in Akka.
+     * Creates a {@link Props} for construction in Akka.
      *
      * @param config Config describing the sinks to write to
-     * @return A new <code>Props</code>.
+     * @return A new {@link Props}.
      */
     public static Props props(final EmitterConfiguration config) {
         return Props.create(Emitter.class, config);

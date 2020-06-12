@@ -79,7 +79,8 @@ public final class Condition {
     private final ImmutableMap<String, Object> _extensions;
 
     /**
-     * <code>Builder</code> implementation for <code>Condition</code>.
+     * {@link com.arpnetworking.commons.builder.Builder} implementation for
+     * {@link Condition}.
      */
     public static final class Builder extends OvalBuilder<Condition> {
 
@@ -94,7 +95,7 @@ public final class Condition {
          * Set the name.
          *
          * @param value The name.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setName(final String value) {
             _name = value;
@@ -105,7 +106,7 @@ public final class Condition {
          * Set the fully qualified data space name (FQDSN).
          *
          * @param value The fully qualified data space name (FQDSN).
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setFQDSN(final FQDSN value) {
             _fqdsn = value;
@@ -116,7 +117,7 @@ public final class Condition {
          * Set the threshold.
          *
          * @param value The threshopld.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setThreshold(final Quantity value) {
             _threshold = value;
@@ -127,7 +128,7 @@ public final class Condition {
          * Set the whether it was triggered.
          *
          * @param value Whether it was triggered.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setTriggered(final Boolean value) {
             _triggered = value;
@@ -136,10 +137,10 @@ public final class Condition {
 
         /**
          * Set supporting data. Optional. Cannot be null. Default is an empty
-         * <code>Map</code>.
+         * {@link ImmutableMap}.
          *
          * @param value The supporting data.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setExtensions(final ImmutableMap<String, Object> value) {
             _extensions = value;

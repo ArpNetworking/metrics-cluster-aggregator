@@ -133,7 +133,8 @@ public final class FQSN {
     private final Map<String, String> _dimensions;
 
     /**
-     * Implementation of builder pattern for <code>FQSN</code>.
+     * {@link com.arpnetworking.commons.builder.Builder} implementation for
+     * {@link FQSN}.
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
@@ -151,7 +152,7 @@ public final class FQSN {
          * metric and statistic. Cannot be null.
          *
          * @param value The fully qualified metric name.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder fromFQDSN(final FQDSN value) {
             setCluster(value.getCluster());
@@ -165,7 +166,7 @@ public final class FQSN {
          * The cluster. Cannot be null or empty.
          *
          * @param value The cluster.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setCluster(final String value) {
             _fqdsn.setCluster(value);
@@ -176,7 +177,7 @@ public final class FQSN {
          * The service. Cannot be null or empty.
          *
          * @param value The service.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setService(final String value) {
             _fqdsn.setService(value);
@@ -187,7 +188,7 @@ public final class FQSN {
          * The metric. Cannot be null or empty.
          *
          * @param value The metric.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setMetric(final String value) {
             _fqdsn.setMetric(value);
@@ -195,10 +196,10 @@ public final class FQSN {
         }
 
         /**
-         * The <code>Statistic</code> instance. Cannot be null.
+         * The {@link Statistic} instance. Cannot be null.
          *
-         * @param value The <code>Statistic</code> instance.
-         * @return This instance of <code>Builder</code>.
+         * @param value The {@link Statistic} instance.
+         * @return This instance of {@link Builder}.
          */
         public Builder setStatistic(final Statistic value) {
             _fqdsn.setStatistic(value);
@@ -209,7 +210,7 @@ public final class FQSN {
          * The period. Cannot be null.
          *
          * @param value The period.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setPeriod(final Period value) {
             _period = value;
@@ -221,7 +222,7 @@ public final class FQSN {
          * The period start. Cannot be null.
          *
          * @param value The period start.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setStart(final DateTime value) {
             _start = value;
@@ -230,10 +231,10 @@ public final class FQSN {
 
         /**
          * The dimensions. Optional. Cannot be null. Default is an empty
-         * <code>Map</code>.
+         * {@link Map}.
          *
          * @param value The dimensions.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         /*
         // TODO(vkoskela): Enable dimensions. [MAI-449]
@@ -245,11 +246,11 @@ public final class FQSN {
 
         /**
          * Add dimension. Optional. Cannot be null. Default is an empty
-         * <code>Map</code>.
+         * {@link Map}.
          *
          * @param dimension The dimension.
          * @param value The value .
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         /*
         // TODO(vkoskela): Enable dimensions. [MAI-449]
