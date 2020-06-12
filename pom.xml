@@ -265,7 +265,11 @@
       <!-- Project Specific Plugins -->
       <plugin>
         <artifactId>maven-clean-plugin</artifactId>
-        <version>${maven.clean.plugin.version}</version>
+        <!-- TODO(ville): Cannot upgrade parent pom to latest without some major
+             cleanup in this project (which is underway separately) but fixing
+             the docker build in the short-term is more important. -->
+       <!--<version>${maven.clean.plugin.version}</version>-->
+        <version>3.1.0</version>
         <executions>
           <execution>
             <id>clean-assemblies</id>
