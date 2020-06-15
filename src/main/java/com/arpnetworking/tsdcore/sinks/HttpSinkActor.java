@@ -21,6 +21,7 @@ import akka.http.javadsl.model.StatusCodes;
 import akka.pattern.PatternsCS;
 import com.arpnetworking.logback.annotations.LogValue;
 import com.arpnetworking.metrics.Metrics;
+import com.arpnetworking.metrics.MetricsFactory;
 import com.arpnetworking.steno.LogValueMapFactory;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
@@ -58,6 +59,7 @@ public class HttpSinkActor extends AbstractActor {
      * @param maximumConcurrency Maximum number of concurrent requests.
      * @param maximumQueueSize Maximum number of pending requests.
      * @param spreadPeriod Maximum time to delay sending new aggregates to spread load.
+     * @param metricsFactory metrics factory to record metrics.
      * @return A new Props
      */
     public static Props props(
@@ -65,8 +67,9 @@ public class HttpSinkActor extends AbstractActor {
             final HttpPostSink sink,
             final int maximumConcurrency,
             final int maximumQueueSize,
-            final Period spreadPeriod) {
-        return Props.create(HttpSinkActor.class, client, sink, maximumConcurrency, maximumQueueSize, spreadPeriod);
+            final Period spreadPeriod,
+            final MetricsFactory metricsFactory) {
+        return Props.create(HttpSinkActor.class, client, sink, maximumConcurrency, maximumQueueSize, spreadPeriod, metricsFactory);
     }
 
     /**
@@ -77,22 +80,27 @@ public class HttpSinkActor extends AbstractActor {
      * @param maximumConcurrency Maximum number of concurrent requests.
      * @param maximumQueueSize Maximum number of pending requests.
      * @param spreadPeriod Maximum time to delay sending new aggregates to spread load.
+     * @param metricsFactory metrics factory to record metrics.
      */
     public HttpSinkActor(
             final AsyncHttpClient client,
             final HttpPostSink sink,
             final int maximumConcurrency,
             final int maximumQueueSize,
-            final Period spreadPeriod) {
+            final Period spreadPeriod,
+            final MetricsFactory metricsFactory) {
         _client = client;
         _sink = sink;
         _maximumConcurrency = maximumConcurrency;
         _pendingRequests = EvictingQueue.create(maximumQueueSize);
+        _metricsFactory = metricsFactory;
         if (Period.ZERO.equals(spreadPeriod)) {
             _spreadingDelayMillis = 0;
         } else {
             _spreadingDelayMillis = new Random().nextInt((int) spreadPeriod.toStandardDuration().getMillis());
         }
+
+        _evictedRequestsName = "sinks/http_post/" + _sink.getMetricSafeName() + "/evicted_requests";
     }
 
     /**
@@ -201,8 +209,8 @@ public class HttpSinkActor extends AbstractActor {
             }
 
             if (evicted > 0) {
-                final Metrics metrics = _sink.getMetricsFactory().create();
-                metrics.incrementCounter(_sink.getEvictedRequestName(), evicted);
+                final Metrics metrics = _metricsFactory.create();
+                metrics.incrementCounter(_evictedRequestsName, evicted);
                 metrics.close();
                 EVICTED_LOGGER.warn()
                         .setMessage("Evicted data from HTTP sink queue")
@@ -276,6 +284,9 @@ public class HttpSinkActor extends AbstractActor {
     private final AsyncHttpClient _client;
     private final HttpPostSink _sink;
     private final int _spreadingDelayMillis;
+    private final MetricsFactory _metricsFactory;
+
+    private final String _evictedRequestsName;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpPostSink.class);
     private static final Logger EVICTED_LOGGER = LoggerFactory.getRateLimitLogger(HttpPostSink.class, Duration.ofSeconds(30));
