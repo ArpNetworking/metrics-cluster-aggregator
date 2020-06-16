@@ -209,9 +209,10 @@ public class HttpSinkActor extends AbstractActor {
             }
 
             if (evicted > 0) {
-                final Metrics metrics = _metricsFactory.create();
-                metrics.incrementCounter(_evictedRequestsName, evicted);
-                metrics.close();
+                // TODO(qinyanl): Convert to periodic metric in the future.
+                try (Metrics metrics = _metricsFactory.create()) {
+                    metrics.incrementCounter(_evictedRequestsName, evicted);
+                }
                 EVICTED_LOGGER.warn()
                         .setMessage("Evicted data from HTTP sink queue")
                         .addData("sink", _sink)
