@@ -117,6 +117,7 @@ public class HttpSinkActor extends AbstractActor {
                 .put("waiting", _waiting)
                 .put("inflightRequestsCount", _inflightRequestsCount)
                 .put("pendingRequestsCount", _pendingRequests.size())
+                .put("metricsFactory", _metricsFactory)
                 .build();
     }
 
