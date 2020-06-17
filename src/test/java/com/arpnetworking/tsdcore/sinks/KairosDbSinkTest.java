@@ -44,6 +44,7 @@ import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Tests for the <code>KairosDbSink</code> class.
@@ -132,6 +133,18 @@ public class KairosDbSinkTest extends BaseActorTest {
         final JsonNode actual = OBJECT_MAPPER.readTree(_wireMock.find(requestPattern).get(0).getBody());
         final JsonNode expected = OBJECT_MAPPER.readTree(getClass().getResource(getClass().getSimpleName() + ".testPost.expected.json"));
         Assert.assertEquals(expected, actual);
+
+        // Verify that metrics has been recorded.
+        Mockito.verify(_mockMetricsFactory, Mockito.times(2)).create();
+        Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/success", 1);
+        Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/status/2xx", 1);
+        Mockito.verify(_mockMetrics, Mockito.times(1)).setTimer(
+                Mockito.matches("sinks/http_post/kairosdb_sink_test/queue_time"),
+                Mockito.anyLong(),
+                Mockito.any());
+        Mockito.verify(_mockMetrics, Mockito.times(1)).startTimer("sinks/http_post/kairosdb_sink_test/request_latency");
+        Mockito.verify(_mockMetrics, Mockito.times(1)).stopTimer("sinks/http_post/kairosdb_sink_test/request_latency");
+        Mockito.verify(_mockMetrics, Mockito.times(2)).close();
     }
 
     private KairosDbSink.Builder _kairosDbSinkBuilder;
