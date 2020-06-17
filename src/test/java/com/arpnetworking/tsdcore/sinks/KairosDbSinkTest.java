@@ -17,6 +17,8 @@ package com.arpnetworking.tsdcore.sinks;
 
 import akka.http.javadsl.model.MediaTypes;
 import com.arpnetworking.commons.jackson.databind.ObjectMapperFactory;
+import com.arpnetworking.metrics.Metrics;
+import com.arpnetworking.metrics.MetricsFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.Condition;
 import com.arpnetworking.tsdcore.model.FQDSN;
@@ -37,6 +39,8 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.net.URI;
@@ -55,11 +59,12 @@ public class KairosDbSinkTest extends BaseActorTest {
         _wireMockServer = new WireMockServer(0);
         _wireMockServer.start();
         _wireMock = new WireMock(_wireMockServer.port());
-
         _kairosDbSinkBuilder = new KairosDbSink.Builder()
                 .setName("kairosdb_sink_test")
                 .setActorSystem(getSystem())
-                .setUri(URI.create("http://localhost:" + _wireMockServer.port() + PATH));
+                .setUri(URI.create("http://localhost:" + _wireMockServer.port() + PATH))
+                .setMetricsFactory(_mockMetricsFactory);
+        Mockito.doReturn(_mockMetrics).when(_mockMetricsFactory).create();
     }
 
     @After
@@ -113,7 +118,6 @@ public class KairosDbSinkTest extends BaseActorTest {
                         .setPeriod(Period.minutes(1))
                         .setStart(start)
                         .build());
-
         // Allow the request/response to complete
         Thread.sleep(1000);
 
@@ -137,4 +141,9 @@ public class KairosDbSinkTest extends BaseActorTest {
     private static final String PATH = "/kairos/post/path";
     private static final StatisticFactory STATISTIC_FACTORY = new StatisticFactory();
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.getInstance();
+
+    @Mock
+    private Metrics _mockMetrics;
+    @Mock
+    private MetricsFactory _mockMetricsFactory;
 }

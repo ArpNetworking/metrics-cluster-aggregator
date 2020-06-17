@@ -21,6 +21,7 @@ import akka.actor.PoisonPill;
 import akka.http.javadsl.model.HttpMethods;
 import akka.http.javadsl.model.MediaTypes;
 import com.arpnetworking.logback.annotations.LogValue;
+import com.arpnetworking.metrics.MetricsFactory;
 import com.arpnetworking.steno.LogValueMapFactory;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
@@ -153,7 +154,13 @@ public abstract class HttpPostSink extends BaseSink {
         _aysncHttpClientUri = Uri.create(_uri.toString());
 
         _sinkActor = builder._actorSystem.actorOf(
-                HttpSinkActor.props(CLIENT, this, builder._maximumConcurrency, builder._maximumQueueSize, builder._spreadPeriod));
+                HttpSinkActor.props(
+                        CLIENT,
+                        this,
+                        builder._maximumConcurrency,
+                        builder._maximumQueueSize,
+                        builder._spreadPeriod,
+                        builder._metricsFactory));
     }
 
     private final URI _uri;
@@ -198,6 +205,18 @@ public abstract class HttpPostSink extends BaseSink {
          */
         public B setActorSystem(final ActorSystem value) {
             _actorSystem = value;
+            return self();
+        }
+
+        /**
+         * Instance of <code>MetricsFactory</code>. Cannot be null. This field
+         * may be injected automatically by Jackson/Guice if setup to do so.
+         *
+         * @param value Instance of <code>MetricsFactory</code>.
+         * @return This instance of <code>Builder</code>.
+         */
+        public B setMetricsFactory(final MetricsFactory value) {
+            _metricsFactory = value;
             return self();
         }
 
@@ -259,5 +278,8 @@ public abstract class HttpPostSink extends BaseSink {
         private Integer _maximumQueueSize = 25000;
         @NotNull
         private Period _spreadPeriod = Period.ZERO;
+        @JacksonInject
+        @NotNull
+        private MetricsFactory _metricsFactory;
     }
 }
