@@ -28,6 +28,8 @@ import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.google.common.base.Charsets;
 import com.google.common.collect.EvictingQueue;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import org.asynchttpclient.AsyncCompletionHandler;
 import org.asynchttpclient.AsyncHttpClient;
@@ -38,6 +40,7 @@ import scala.concurrent.duration.FiniteDuration;
 
 import java.time.Duration;
 import java.util.Collection;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
@@ -101,6 +104,10 @@ public class HttpSinkActor extends AbstractActor {
         }
 
         _evictedRequestsName = "sinks/http_post/" + _sink.getMetricSafeName() + "/evicted_requests";
+        _requestLatencyName = "sinks/http_post/" + _sink.getMetricSafeName() + "/request_latency";
+        _inQueueLatencyName = "sinks/http_post/" + _sink.getMetricSafeName() + "/queue_time";
+        _requestSuccessName = "sinks/http_post/" + _sink.getMetricSafeName() + "/success";
+        _responseStatusName = "sinks/http_post/" + _sink.getMetricSafeName() + "/status";
     }
 
     /**
@@ -164,6 +171,16 @@ public class HttpSinkActor extends AbstractActor {
         _inflightRequestsCount--;
         final Response response = complete.getResponse();
         final int responseStatusCode = response.getStatusCode();
+
+        try (Metrics metrics = _metricsFactory.create()) {
+            final int responseStatusClass = responseStatusCode / 100;
+            for (final int i : STATUS_CLASSES) {
+                metrics.incrementCounter(
+                        String.format("%s/%dxx", _responseStatusName, i),
+                        responseStatusClass == i ? 1 : 0);
+            }
+        }
+
         if (ACCEPTED_STATUS_CODES.contains(responseStatusCode)) {
             LOGGER.debug()
                     .setMessage("Post accepted")
@@ -206,7 +223,7 @@ public class HttpSinkActor extends AbstractActor {
             for (final Request request : requests) {
                 // TODO(vkoskela): Add logging to client [MAI-89]
                 // TODO(vkoskela): Add instrumentation to client [MAI-90]
-                _pendingRequests.offer(request);
+                _pendingRequests.offer(ImmutableMap.of(request, System.currentTimeMillis()));
             }
 
             if (evicted > 0) {
@@ -257,12 +274,22 @@ public class HttpSinkActor extends AbstractActor {
     }
 
     private void fireNextRequest() {
-        final Request request = _pendingRequests.poll();
+        final Entry<Request, Long> requestEntry = _pendingRequests.poll().entrySet().asList().get(0);
+        final Metrics metrics = _metricsFactory.create();
+        metrics.setTimer(_inQueueLatencyName, requestEntry.getValue() - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+
+        final Request request = requestEntry.getKey();
         _inflightRequestsCount++;
 
         final CompletableFuture<Response> promise = new CompletableFuture<>();
+        metrics.startTimer(_requestLatencyName);
         _client.executeRequest(request, new ResponseAsyncCompletionHandler(promise));
         final CompletionStage<Object> responsePromise = promise
+                .whenComplete((result, err) -> {
+                        metrics.stopTimer(_requestLatencyName);
+                        metrics.incrementCounter(_requestSuccessName, err == null ? 1 : 0);
+                        metrics.close();
+                })
                 .<Object>thenApply(response -> new PostComplete(request, response))
                 .exceptionally(PostFailure::new);
         PatternsCS.pipe(responsePromise, context().dispatcher()).to(self());
@@ -282,17 +309,22 @@ public class HttpSinkActor extends AbstractActor {
     private long _postRequests = 0;
     private boolean _waiting = false;
     private final int _maximumConcurrency;
-    private final EvictingQueue<Request> _pendingRequests;
+    private final EvictingQueue<ImmutableMap<Request, Long>> _pendingRequests;
     private final AsyncHttpClient _client;
     private final HttpPostSink _sink;
     private final int _spreadingDelayMillis;
     private final MetricsFactory _metricsFactory;
 
     private final String _evictedRequestsName;
+    private final String _requestLatencyName;
+    private final String _inQueueLatencyName;
+    private final String _requestSuccessName;
+    private final String _responseStatusName;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpPostSink.class);
     private static final Logger EVICTED_LOGGER = LoggerFactory.getRateLimitLogger(HttpPostSink.class, Duration.ofSeconds(30));
     private static final Set<Integer> ACCEPTED_STATUS_CODES = Sets.newHashSet();
+    private static final ImmutableList<Integer> STATUS_CLASSES = com.google.common.collect.ImmutableList.of(2, 3, 4, 5);
 
     static {
         // TODO(vkoskela): Make accepted status codes configurable [AINT-682]
