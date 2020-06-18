@@ -26,6 +26,7 @@ import com.google.common.collect.Maps;
 import org.joda.time.DateTime;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Container class that holds aggregation pending records.
@@ -84,6 +85,10 @@ public class StreamingAggregationBucket {
         return _specified.getOrDefault(statistic, false);
     }
 
+    public Optional<DateTime> getMinRequestTime() {
+        return _minRequestTime;
+    }
+
     /**
      * Add <code>AggregatedData</code> instance.
      *
@@ -122,9 +127,23 @@ public class StreamingAggregationBucket {
                         .log();
             }
         }
+
+        updateMinRequestTime(datum);
+    }
+
+    private void updateMinRequestTime(final CombinedMetricData datum) {
+        if (datum.getMinRequestTime().isPresent()) {
+            if (!_minRequestTime.isPresent()) {
+                _minRequestTime = datum.getMinRequestTime();
+            }
+            if (datum.getMinRequestTime().get().isBefore(_minRequestTime.get())) {
+                _minRequestTime = datum.getMinRequestTime();
+            }
+        }
     }
 
     private final DateTime _periodStart;
+    private Optional<DateTime> _minRequestTime = Optional.empty();
     private final Map<Statistic, Calculator<?>> _data = Maps.newHashMap();
     private final Map<Statistic, Boolean> _specified = Maps.newHashMap();
 
