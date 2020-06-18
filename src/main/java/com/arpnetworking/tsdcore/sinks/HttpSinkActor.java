@@ -29,7 +29,6 @@ import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.google.common.base.Charsets;
 import com.google.common.collect.EvictingQueue;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import org.asynchttpclient.AsyncCompletionHandler;
 import org.asynchttpclient.AsyncHttpClient;
@@ -40,7 +39,6 @@ import scala.concurrent.duration.FiniteDuration;
 
 import java.time.Duration;
 import java.util.Collection;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
@@ -174,6 +172,7 @@ public class HttpSinkActor extends AbstractActor {
 
         try (Metrics metrics = _metricsFactory.create()) {
             final int responseStatusClass = responseStatusCode / 100;
+            metrics.incrementCounter(_requestSuccessName, responseStatusClass == 2 ? 1 : 0);
             for (final int i : STATUS_CLASSES) {
                 metrics.incrementCounter(
                         String.format("%s/%dxx", _responseStatusName, i),
@@ -223,7 +222,7 @@ public class HttpSinkActor extends AbstractActor {
             for (final Request request : requests) {
                 // TODO(vkoskela): Add logging to client [MAI-89]
                 // TODO(vkoskela): Add instrumentation to client [MAI-90]
-                _pendingRequests.offer(ImmutableMap.of(request, System.currentTimeMillis()));
+                _pendingRequests.offer(new RequestEntry(request, System.currentTimeMillis()));
             }
 
             if (evicted > 0) {
@@ -274,11 +273,11 @@ public class HttpSinkActor extends AbstractActor {
     }
 
     private void fireNextRequest() {
-        final Entry<Request, Long> requestEntry = _pendingRequests.poll().entrySet().asList().get(0);
+        final RequestEntry requestEntry = _pendingRequests.poll();
         final Metrics metrics = _metricsFactory.create();
-        metrics.setTimer(_inQueueLatencyName, requestEntry.getValue() - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+        metrics.setTimer(_inQueueLatencyName, requestEntry.getEnterTime() - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
 
-        final Request request = requestEntry.getKey();
+        final Request request = requestEntry.getRequest();
         _inflightRequestsCount++;
 
         final CompletableFuture<Response> promise = new CompletableFuture<>();
@@ -287,7 +286,9 @@ public class HttpSinkActor extends AbstractActor {
         final CompletionStage<Object> responsePromise = promise
                 .whenComplete((result, err) -> {
                         metrics.stopTimer(_requestLatencyName);
-                        metrics.incrementCounter(_requestSuccessName, err == null ? 1 : 0);
+                        if (err != null) {
+                            metrics.incrementCounter(_requestSuccessName, 0);
+                        }
                         metrics.close();
                 })
                 .<Object>thenApply(response -> new PostComplete(request, response))
@@ -309,7 +310,7 @@ public class HttpSinkActor extends AbstractActor {
     private long _postRequests = 0;
     private boolean _waiting = false;
     private final int _maximumConcurrency;
-    private final EvictingQueue<ImmutableMap<Request, Long>> _pendingRequests;
+    private final EvictingQueue<RequestEntry> _pendingRequests;
     private final AsyncHttpClient _client;
     private final HttpPostSink _sink;
     private final int _spreadingDelayMillis;
@@ -414,5 +415,23 @@ public class HttpSinkActor extends AbstractActor {
         }
 
         private final CompletableFuture<Response> _promise;
+    }
+
+    private static final class RequestEntry {
+        private RequestEntry(final Request request, final Long enterTime) {
+            _request = request;
+            _enterTime = enterTime;
+        }
+
+        public Request getRequest() {
+            return _request;
+        }
+
+        public Long getEnterTime() {
+            return _enterTime;
+        }
+
+        private final Request _request;
+        private final Long _enterTime;
     }
 }
