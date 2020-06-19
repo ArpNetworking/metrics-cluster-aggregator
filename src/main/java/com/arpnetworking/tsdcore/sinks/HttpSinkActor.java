@@ -135,8 +135,12 @@ public class HttpSinkActor extends AbstractActor {
     public Receive createReceive() {
         return receiveBuilder()
                 .match(EmitAggregation.class, this::processEmitAggregation)
-                .match(PostComplete.class, complete -> {
-                    processCompletedRequest(complete);
+                .match(PostSuccess.class, success -> {
+                    processSuccessRequest(success);
+                    dispatchPending();
+                })
+                .match(PostRejected.class, rejected -> {
+                    processRejectedRequest(rejected);
                     dispatchPending();
                 })
                 .match(PostFailure.class, failure -> {
@@ -164,43 +168,35 @@ public class HttpSinkActor extends AbstractActor {
                 .log();
     }
 
-    private void processCompletedRequest(final PostComplete complete) {
+    private void processRejectedRequest(final PostRejected rejected) {
         _postRequests++;
         _inflightRequestsCount--;
-        final Response response = complete.getResponse();
-        final int responseStatusCode = response.getStatusCode();
+        final Response response = rejected.getResponse();
+        final Optional<String> responseBody = Optional.ofNullable(response.getResponseBody());
 
-        try (Metrics metrics = _metricsFactory.create()) {
-            final int responseStatusClass = responseStatusCode / 100;
-            metrics.incrementCounter(_requestSuccessName, responseStatusClass == 2 ? 1 : 0);
-            for (final int i : STATUS_CLASSES) {
-                metrics.incrementCounter(
-                        String.format("%s/%dxx", _responseStatusName, i),
-                        responseStatusClass == i ? 1 : 0);
-            }
-        }
+        LOGGER.warn()
+                .setMessage("Post rejected")
+                .addData("sink", _sink)
+                .addData("status", response.getStatusCode())
+                // CHECKSTYLE.OFF: IllegalInstantiation - This is ok for String from byte[]
+                .addData("request", new String(rejected.getRequest().getByteData(), Charsets.UTF_8))
+                // CHECKSTYLE.ON: IllegalInstantiation
+                .addData("response", responseBody)
+                .addContext("actor", self())
+                .log();
+    }
 
-        if (ACCEPTED_STATUS_CODES.contains(responseStatusCode)) {
-            LOGGER.debug()
-                    .setMessage("Post accepted")
-                    .addData("sink", _sink)
-                    .addData("status", responseStatusCode)
-                    .addContext("actor", self())
-                    .log();
-        } else {
-            final Optional<String> responseBody = Optional.ofNullable(response.getResponseBody());
+    private void processSuccessRequest(final PostSuccess success) {
+        _postRequests++;
+        _inflightRequestsCount--;
+        final Response response = success.getResponse();
 
-            LOGGER.warn()
-                    .setMessage("Post rejected")
-                    .addData("sink", _sink)
-                    .addData("status", responseStatusCode)
-                    // CHECKSTYLE.OFF: IllegalInstantiation - This is ok for String from byte[]
-                    .addData("request", new String(complete.getRequest().getByteData(), Charsets.UTF_8))
-                    // CHECKSTYLE.ON: IllegalInstantiation
-                    .addData("response", responseBody)
-                    .addContext("actor", self())
-                    .log();
-        }
+        LOGGER.debug()
+                .setMessage("Post accepted")
+                .addData("sink", _sink)
+                .addData("status", response.getStatusCode())
+                .addContext("actor", self())
+                .log();
     }
 
     private void processEmitAggregation(final EmitAggregation emitMessage) {
@@ -275,7 +271,7 @@ public class HttpSinkActor extends AbstractActor {
     private void fireNextRequest() {
         final RequestEntry requestEntry = _pendingRequests.poll();
         final Metrics metrics = _metricsFactory.create();
-        metrics.setTimer(_inQueueLatencyName, requestEntry.getEnterTime() - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+        metrics.setTimer(_inQueueLatencyName, System.currentTimeMillis() - requestEntry.getEnterTime(), TimeUnit.MILLISECONDS);
 
         final Request request = requestEntry.getRequest();
         _inflightRequestsCount++;
@@ -284,15 +280,26 @@ public class HttpSinkActor extends AbstractActor {
         metrics.startTimer(_requestLatencyName);
         _client.executeRequest(request, new ResponseAsyncCompletionHandler(promise));
         final CompletionStage<Object> responsePromise = promise
-                .whenComplete((result, err) -> {
+                .handle((result, err) -> {
                         metrics.stopTimer(_requestLatencyName);
+                        final int responseStatusCode = result.getStatusCode();
+                        final boolean requestSuccess = err == null && ACCEPTED_STATUS_CODES.contains(responseStatusCode);
+                        metrics.incrementCounter(_requestSuccessName, requestSuccess ? 1 : 0);
+
                         if (err != null) {
-                            metrics.incrementCounter(_requestSuccessName, 0);
+                            metrics.close();
+                            return new PostFailure(err);
+                        } else {
+                            final int responseStatusClass = responseStatusCode / 100;
+                            for (final int i : STATUS_CLASSES) {
+                                metrics.incrementCounter(
+                                        String.format("%s/%dxx", _responseStatusName, i),
+                                        responseStatusClass == i ? 1 : 0);
+                            }
+                            metrics.close();
+                            return requestSuccess ? new PostSuccess(result) : new PostRejected(request, result);
                         }
-                        metrics.close();
-                })
-                .<Object>thenApply(response -> new PostComplete(request, response))
-                .exceptionally(PostFailure::new);
+                });
         PatternsCS.pipe(responsePromise, context().dispatcher()).to(self());
     }
 
@@ -357,7 +364,7 @@ public class HttpSinkActor extends AbstractActor {
     }
 
     /**
-     * Message class to wrap a completed HTTP request.
+     * Message class to wrap an errored HTTP request.
      */
     private static final class PostFailure {
         private PostFailure(final Throwable throwable) {
@@ -372,20 +379,35 @@ public class HttpSinkActor extends AbstractActor {
     }
 
     /**
-     * Message class to wrap an errored HTTP request.
+     * Message class to wrap a success HTTP request.
      */
-    private static final class PostComplete {
-        private PostComplete(final Request request, final Response response) {
+    private static final class PostSuccess {
+        private PostSuccess(final Response response) {
+            _response = response;
+        }
+
+        public Response getResponse() {
+            return _response;
+        }
+
+        private final Response _response;
+    }
+
+    /**
+     * Message class to wrap a rejected HTTP request.
+     */
+    private static final class PostRejected {
+        private PostRejected(final Request request, final Response response) {
             _request = request;
             _response = response;
         }
 
         public Request getRequest() {
-            return _request;
+            return   _request;
         }
 
         public Response getResponse() {
-            return _response;
+            return   _response;
         }
 
         private final Request _request;
@@ -418,7 +440,7 @@ public class HttpSinkActor extends AbstractActor {
     }
 
     private static final class RequestEntry {
-        private RequestEntry(final Request request, final Long enterTime) {
+        private RequestEntry(final Request request, final long enterTime) {
             _request = request;
             _enterTime = enterTime;
         }
@@ -427,11 +449,11 @@ public class HttpSinkActor extends AbstractActor {
             return _request;
         }
 
-        public Long getEnterTime() {
+        public long getEnterTime() {
             return _enterTime;
         }
 
         private final Request _request;
-        private final Long _enterTime;
+        private final long _enterTime;
     }
 }
