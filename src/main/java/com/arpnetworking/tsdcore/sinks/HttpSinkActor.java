@@ -282,23 +282,26 @@ public class HttpSinkActor extends AbstractActor {
         final CompletionStage<Object> responsePromise = promise
                 .handle((result, err) -> {
                         metrics.stopTimer(_requestLatencyName);
-                        final int responseStatusCode = result.getStatusCode();
-                        final boolean requestSuccess = err == null && ACCEPTED_STATUS_CODES.contains(responseStatusCode);
-                        metrics.incrementCounter(_requestSuccessName, requestSuccess ? 1 : 0);
-
-                        if (err != null) {
-                            metrics.close();
-                            return new PostFailure(err);
-                        } else {
+                        final Object returnValue;
+                        if (err == null) {
+                            final int responseStatusCode = result.getStatusCode();
                             final int responseStatusClass = responseStatusCode / 100;
                             for (final int i : STATUS_CLASSES) {
                                 metrics.incrementCounter(
                                         String.format("%s/%dxx", _responseStatusName, i),
                                         responseStatusClass == i ? 1 : 0);
                             }
-                            metrics.close();
-                            return requestSuccess ? new PostSuccess(result) : new PostRejected(request, result);
+                            if (ACCEPTED_STATUS_CODES.contains(responseStatusCode)) {
+                                 returnValue = new PostSuccess(result);
+                            } else {
+                                 returnValue = new PostRejected(request, result);
+                            }
+                        } else {
+                            returnValue = new PostFailure(request, err);
                         }
+                        metrics.incrementCounter(_requestSuccessName, (returnValue instanceof PostSuccess) ? 1 : 0);
+                        metrics.close();
+                        return returnValue;
                 });
         PatternsCS.pipe(responsePromise, context().dispatcher()).to(self());
     }
@@ -367,14 +370,20 @@ public class HttpSinkActor extends AbstractActor {
      * Message class to wrap an errored HTTP request.
      */
     private static final class PostFailure {
-        private PostFailure(final Throwable throwable) {
+        private PostFailure(final Request request, final Throwable throwable) {
             _throwable = throwable;
+            _request = request;
+        }
+
+        public Request getRequest() {
+            return _request;
         }
 
         public Throwable getCause() {
             return _throwable;
         }
 
+        private final Request _request;
         private final Throwable _throwable;
     }
 
