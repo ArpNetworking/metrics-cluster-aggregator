@@ -92,7 +92,7 @@ public class Status extends AbstractActor {
                         _quarantined = true;
                         LOGGER.error()
                                 .setMessage("This node is quarantined.")
-                                .addData("error", error)
+                                .setThrowable(error.cause())
                                 .log();
                     }
                 })
