@@ -172,6 +172,7 @@ public class StreamingAggregator extends AbstractActorWithTimers {
                                         .setConditions(ImmutableList.of())
                                         .setPeriod(_period)
                                         .setStart(bucket.getPeriodStart())
+                                        .setMinRequestTime(bucket.getMinRequestTime().orElse(null))
                                         .build();
                                 _emitter.tell(periodicData, getSelf());
                             } else {
