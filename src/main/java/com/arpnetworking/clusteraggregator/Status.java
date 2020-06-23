@@ -26,6 +26,8 @@ import akka.remote.AssociationErrorEvent;
 import com.arpnetworking.clusteraggregator.models.MetricsRequest;
 import com.arpnetworking.clusteraggregator.models.PeriodMetrics;
 import com.arpnetworking.clusteraggregator.models.StatusResponse;
+import com.arpnetworking.steno.Logger;
+import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.utility.CastMapper;
 import org.joda.time.Period;
 
@@ -88,6 +90,10 @@ public class Status extends AbstractActor {
                 .match(AssociationErrorEvent.class, error -> {
                     if (error.cause().getMessage().contains("quarantined this system")) {
                         _quarantined = true;
+                        LOGGER.error()
+                                .setMessage("This node is quarantined.")
+                                .addData("error", error)
+                                .log();
                     }
                 })
                 .match(HealthRequest.class, message -> {
@@ -137,6 +143,7 @@ public class Status extends AbstractActor {
     private final ActorRef _localMetrics;
 
     private static final CastMapper<Object, ClusterStatusCache.StatusResponse> CAST_MAPPER = new CastMapper<>();
+    private static final Logger LOGGER = LoggerFactory.getLogger(Status.class);
 
     private static class AsNullRecovery<T> implements Function<Throwable, T> {
         @Override
