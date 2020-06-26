@@ -63,7 +63,8 @@ public class KairosDbSinkTest extends BaseActorTest {
                 .setName("kairosdb_sink_test")
                 .setActorSystem(getSystem())
                 .setUri(URI.create("http://localhost:" + _wireMockServer.port() + PATH))
-                .setMetricsFactory(_mockMetricsFactory);
+                .setMetricsFactory(_mockMetricsFactory)
+                .setMaxRetries(5);
         Mockito.doReturn(_mockMetrics).when(_mockMetricsFactory).create();
     }
 
@@ -134,7 +135,8 @@ public class KairosDbSinkTest extends BaseActorTest {
         Assert.assertEquals(expected, actual);
 
         // Verify that metrics has been recorded.
-        Mockito.verify(_mockMetricsFactory, Mockito.times(1)).create();
+        Mockito.verify(_mockMetricsFactory, Mockito.times(2)).create();
+        Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/attempts", 0);
         Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/success", 1);
         Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/status/2xx", 1);
         Mockito.verify(_mockMetrics, Mockito.times(1)).setTimer(
@@ -143,7 +145,7 @@ public class KairosDbSinkTest extends BaseActorTest {
                 Mockito.any());
         Mockito.verify(_mockMetrics, Mockito.times(1)).startTimer("sinks/http_post/kairosdb_sink_test/request_latency");
         Mockito.verify(_mockMetrics, Mockito.times(1)).stopTimer("sinks/http_post/kairosdb_sink_test/request_latency");
-        Mockito.verify(_mockMetrics, Mockito.times(1)).close();
+        Mockito.verify(_mockMetrics, Mockito.times(2)).close();
     }
 
     private KairosDbSink.Builder _kairosDbSinkBuilder;

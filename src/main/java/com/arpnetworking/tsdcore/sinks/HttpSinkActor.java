@@ -45,6 +45,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Actor that sends HTTP requests via a Ning HTTP client.
@@ -61,6 +62,7 @@ public class HttpSinkActor extends AbstractActor {
      * @param maximumQueueSize Maximum number of pending requests.
      * @param spreadPeriod Maximum time to delay sending new aggregates to spread load.
      * @param metricsFactory metrics factory to record metrics.
+     * @param maxRetries Maximum number of retries for the http requests.
      * @return A new Props
      */
     public static Props props(
@@ -69,8 +71,17 @@ public class HttpSinkActor extends AbstractActor {
             final int maximumConcurrency,
             final int maximumQueueSize,
             final Period spreadPeriod,
-            final MetricsFactory metricsFactory) {
-        return Props.create(HttpSinkActor.class, client, sink, maximumConcurrency, maximumQueueSize, spreadPeriod, metricsFactory);
+            final MetricsFactory metricsFactory,
+            final int maxRetries) {
+        return Props.create(
+                HttpSinkActor.class,
+                client,
+                sink,
+                maximumConcurrency,
+                maximumQueueSize,
+                spreadPeriod,
+                metricsFactory,
+                maxRetries);
     }
 
     /**
@@ -82,6 +93,7 @@ public class HttpSinkActor extends AbstractActor {
      * @param maximumQueueSize Maximum number of pending requests.
      * @param spreadPeriod Maximum time to delay sending new aggregates to spread load.
      * @param metricsFactory metrics factory to record metrics.
+     * @param maxRetries Maximum number of retries for the http requests.
      */
     public HttpSinkActor(
             final AsyncHttpClient client,
@@ -89,12 +101,14 @@ public class HttpSinkActor extends AbstractActor {
             final int maximumConcurrency,
             final int maximumQueueSize,
             final Period spreadPeriod,
-            final MetricsFactory metricsFactory) {
+            final MetricsFactory metricsFactory,
+            final int maxRetries) {
         _client = client;
         _sink = sink;
         _maximumConcurrency = maximumConcurrency;
         _pendingRequests = EvictingQueue.create(maximumQueueSize);
         _metricsFactory = metricsFactory;
+        _maxRetries = maxRetries;
         if (Period.ZERO.equals(spreadPeriod)) {
             _spreadingDelayMillis = 0;
         } else {
@@ -106,6 +120,8 @@ public class HttpSinkActor extends AbstractActor {
         _inQueueLatencyName = "sinks/http_post/" + _sink.getMetricSafeName() + "/queue_time";
         _requestSuccessName = "sinks/http_post/" + _sink.getMetricSafeName() + "/success";
         _responseStatusName = "sinks/http_post/" + _sink.getMetricSafeName() + "/status";
+        _httpSinkAttemptsName = "sinks/http_post/" + _sink.getMetricSafeName() + "/attempts";
+        _samplesDroppedName = "sinks/http_post/" + _sink.getMetricSafeName() + "/samples_dropped";
     }
 
     /**
@@ -276,9 +292,9 @@ public class HttpSinkActor extends AbstractActor {
         final Request request = requestEntry.getRequest();
         _inflightRequestsCount++;
 
-        final CompletableFuture<Response> promise = new CompletableFuture<>();
+        final AtomicReference<Integer> attempt = new AtomicReference<>(0);
         metrics.startTimer(_requestLatencyName);
-        _client.executeRequest(request, new ResponseAsyncCompletionHandler(promise));
+        final CompletableFuture<Response> promise = sendHttpRequest(request, attempt);
         final CompletionStage<Object> responsePromise = promise
                 .handle((result, err) -> {
                         metrics.stopTimer(_requestLatencyName);
@@ -295,15 +311,36 @@ public class HttpSinkActor extends AbstractActor {
                                  returnValue = new PostSuccess(result);
                             } else {
                                  returnValue = new PostRejected(request, result);
+                                 metrics.incrementCounter(_samplesDroppedName);
                             }
                         } else {
                             returnValue = new PostFailure(request, err);
+                            metrics.incrementCounter(_samplesDroppedName);
                         }
                         metrics.incrementCounter(_requestSuccessName, (returnValue instanceof PostSuccess) ? 1 : 0);
                         metrics.close();
                         return returnValue;
                 });
         PatternsCS.pipe(responsePromise, context().dispatcher()).to(self());
+    }
+
+    private CompletableFuture<Response> sendHttpRequest(
+            final Request request,
+            final AtomicReference<Integer> attempt) {
+        final CompletableFuture<Response> promise = new CompletableFuture<>();
+        _client.executeRequest(request, new ResponseAsyncCompletionHandler(promise));
+        promise.handle((result, err) -> {
+            if (err == null && ACCEPTED_STATUS_CODES.contains(result.getStatusCode())) {
+                try (Metrics metrics = _metricsFactory.create()) {
+                    metrics.incrementCounter(_httpSinkAttemptsName, attempt.get());
+                }
+                return promise;
+            } else {
+                attempt.set(attempt.get() + 1);
+                return attempt.get() <= _maxRetries ? sendHttpRequest(request, attempt) : promise;
+            }
+        });
+        return promise;
     }
 
     @Override
@@ -325,12 +362,15 @@ public class HttpSinkActor extends AbstractActor {
     private final HttpPostSink _sink;
     private final int _spreadingDelayMillis;
     private final MetricsFactory _metricsFactory;
+    private final int _maxRetries;
 
     private final String _evictedRequestsName;
     private final String _requestLatencyName;
     private final String _inQueueLatencyName;
     private final String _requestSuccessName;
     private final String _responseStatusName;
+    private final String _httpSinkAttemptsName;
+    private final String _samplesDroppedName;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpPostSink.class);
     private static final Logger EVICTED_LOGGER = LoggerFactory.getRateLimitLogger(HttpPostSink.class, Duration.ofSeconds(30));
