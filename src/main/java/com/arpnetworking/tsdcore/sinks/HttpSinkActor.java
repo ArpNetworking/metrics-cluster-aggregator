@@ -45,7 +45,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Actor that sends HTTP requests via a Ning HTTP client.
@@ -292,9 +291,8 @@ public class HttpSinkActor extends AbstractActor {
         final Request request = requestEntry.getRequest();
         _inflightRequestsCount++;
 
-        final AtomicReference<Integer> attempt = new AtomicReference<>(0);
         metrics.startTimer(_requestLatencyName);
-        final CompletableFuture<Response> promise = sendHttpRequest(request, attempt);
+        final CompletableFuture<Response> promise = sendHttpRequest(request, 0);
         final CompletionStage<Object> responsePromise = promise
                 .handle((result, err) -> {
                         metrics.stopTimer(_requestLatencyName);
@@ -326,18 +324,17 @@ public class HttpSinkActor extends AbstractActor {
 
     private CompletableFuture<Response> sendHttpRequest(
             final Request request,
-            final AtomicReference<Integer> attempt) {
+            final int attempt) {
         final CompletableFuture<Response> promise = new CompletableFuture<>();
         _client.executeRequest(request, new ResponseAsyncCompletionHandler(promise));
         promise.handle((result, err) -> {
             if (err == null && ACCEPTED_STATUS_CODES.contains(result.getStatusCode())) {
                 try (Metrics metrics = _metricsFactory.create()) {
-                    metrics.incrementCounter(_httpSinkAttemptsName, attempt.get());
+                    metrics.incrementCounter(_httpSinkAttemptsName, attempt);
                 }
                 return promise;
             } else {
-                attempt.set(attempt.get() + 1);
-                return attempt.get() <= _maxRetries ? sendHttpRequest(request, attempt) : promise;
+                return attempt < _maxRetries ? sendHttpRequest(request, attempt + 1) : promise;
             }
         });
         return promise;
