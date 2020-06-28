@@ -283,6 +283,7 @@
              <filesets>
                 <fileset>
                   <directory>${project.build.directory}/docker-assembly</directory>
+                  <directory>${project.build.directory}/appassembler</directory>
                 </fileset>
               </filesets>
             </configuration>
