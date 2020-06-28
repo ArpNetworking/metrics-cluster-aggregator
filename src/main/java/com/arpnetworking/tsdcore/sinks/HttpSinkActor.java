@@ -292,12 +292,14 @@ public class HttpSinkActor extends AbstractActor {
         _inflightRequestsCount++;
 
         metrics.startTimer(_requestLatencyName);
-        final CompletableFuture<Response> promise = sendHttpRequest(request, 0);
-        final CompletionStage<Object> responsePromise = promise
+        final HttpResponse httpResponse = sendHttpRequest(request, 0);
+        final CompletionStage<Object> responsePromise = httpResponse.getResponsePromise()
                 .handle((result, err) -> {
+                        System.out.printf("SHIT! result status code : %s.\n", result.getStatusCode());
                         metrics.stopTimer(_requestLatencyName);
                         final Object returnValue;
                         if (err == null) {
+                            System.out.printf("SHIT! Error is null!");
                             final int responseStatusCode = result.getStatusCode();
                             final int responseStatusClass = responseStatusCode / 100;
                             for (final int i : STATUS_CLASSES) {
@@ -306,8 +308,10 @@ public class HttpSinkActor extends AbstractActor {
                                         responseStatusClass == i ? 1 : 0);
                             }
                             if (ACCEPTED_STATUS_CODES.contains(responseStatusCode)) {
+                                 metrics.incrementCounter(_httpSinkAttemptsName, httpResponse.getAttempt());
                                  returnValue = new PostSuccess(result);
                             } else {
+                                 System.out.printf("SHIT! Going to PostReject!");
                                  returnValue = new PostRejected(request, result);
                                  metrics.incrementCounter(_samplesDroppedName);
                             }
@@ -322,22 +326,23 @@ public class HttpSinkActor extends AbstractActor {
         PatternsCS.pipe(responsePromise, context().dispatcher()).to(self());
     }
 
-    private CompletableFuture<Response> sendHttpRequest(
+    private HttpResponse sendHttpRequest(
             final Request request,
             final int attempt) {
         final CompletableFuture<Response> promise = new CompletableFuture<>();
         _client.executeRequest(request, new ResponseAsyncCompletionHandler(promise));
-        promise.handle((result, err) -> {
-            if (err == null && ACCEPTED_STATUS_CODES.contains(result.getStatusCode())) {
-                try (Metrics metrics = _metricsFactory.create()) {
-                    metrics.incrementCounter(_httpSinkAttemptsName, attempt);
-                }
-                return promise;
-            } else {
-                return attempt < _maxRetries ? sendHttpRequest(request, attempt + 1) : promise;
-            }
-        });
-        return promise;
+        return new HttpResponse(
+                promise.thenCompose(result -> {
+                    if (ACCEPTED_STATUS_CODES.contains(result.getStatusCode())) {
+                        return CompletableFuture.completedFuture(result);
+                    }else{
+                        System.out.printf("Failed for the %d time.\n", attempt+1);
+                        return attempt < _maxRetries ?
+                                sendHttpRequest(request, attempt+1).getResponsePromise() :
+                                CompletableFuture.completedFuture(result);
+                    }
+                }),
+                attempt);
     }
 
     @Override
@@ -501,5 +506,23 @@ public class HttpSinkActor extends AbstractActor {
 
         private final Request _request;
         private final long _enterTime;
+    }
+
+    private static final class HttpResponse {
+        private HttpResponse(final CompletableFuture<Response> responsePromise, final int attempt) {
+            _responsePromise = responsePromise;
+            _attempt = attempt;
+        }
+
+        public CompletableFuture<Response> getResponsePromise() {
+            return _responsePromise;
+        }
+
+        public int getAttempt() {
+            return _attempt;
+        }
+
+        private final CompletableFuture<Response> _responsePromise;
+        private final int _attempt;
     }
 }
