@@ -155,7 +155,7 @@ public class KairosDbSinkTest extends BaseActorTest {
                 .willReturn(WireMock.aResponse()
                         .withStatus(404)));
         _kairosDbSinkBuilder.setMaxRetries(1).build().recordAggregateData(TestBeanFactory.createPeriodicData());
-        Thread.sleep(1000);
+        Thread.sleep(3000);
 
         Mockito.verify(_mockMetricsFactory, Mockito.times(1)).create();
         Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/status/4xx", 1);

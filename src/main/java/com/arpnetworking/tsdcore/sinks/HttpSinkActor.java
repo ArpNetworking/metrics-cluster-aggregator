@@ -295,11 +295,9 @@ public class HttpSinkActor extends AbstractActor {
         final HttpResponse httpResponse = sendHttpRequest(request, 0);
         final CompletionStage<Object> responsePromise = httpResponse.getResponsePromise()
                 .handle((result, err) -> {
-                        System.out.printf("SHIT! result status code : %s.\n", result.getStatusCode());
                         metrics.stopTimer(_requestLatencyName);
                         final Object returnValue;
                         if (err == null) {
-                            System.out.printf("SHIT! Error is null!");
                             final int responseStatusCode = result.getStatusCode();
                             final int responseStatusClass = responseStatusCode / 100;
                             for (final int i : STATUS_CLASSES) {
@@ -311,7 +309,6 @@ public class HttpSinkActor extends AbstractActor {
                                  metrics.incrementCounter(_httpSinkAttemptsName, httpResponse.getAttempt());
                                  returnValue = new PostSuccess(result);
                             } else {
-                                 System.out.printf("SHIT! Going to PostReject!");
                                  returnValue = new PostRejected(request, result);
                                  metrics.incrementCounter(_samplesDroppedName);
                             }
@@ -329,16 +326,22 @@ public class HttpSinkActor extends AbstractActor {
     private HttpResponse sendHttpRequest(
             final Request request,
             final int attempt) {
+        try {
+            Thread.sleep(Double.valueOf(Math.pow(2, attempt) - 1).longValue() * 1000);
+        } catch (final InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         final CompletableFuture<Response> promise = new CompletableFuture<>();
         _client.executeRequest(request, new ResponseAsyncCompletionHandler(promise));
         return new HttpResponse(
                 promise.thenCompose(result -> {
                     if (ACCEPTED_STATUS_CODES.contains(result.getStatusCode())) {
                         return CompletableFuture.completedFuture(result);
-                    }else{
-                        System.out.printf("Failed for the %d time.\n", attempt+1);
-                        return attempt < _maxRetries ?
-                                sendHttpRequest(request, attempt+1).getResponsePromise() :
+                    } else {
+                        return attempt < _maxRetries
+                                ?
+                                sendHttpRequest(request, attempt + 1).getResponsePromise()
+                                :
                                 CompletableFuture.completedFuture(result);
                     }
                 }),
