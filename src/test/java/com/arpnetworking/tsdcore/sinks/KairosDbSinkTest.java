@@ -19,6 +19,7 @@ import akka.http.javadsl.model.MediaTypes;
 import com.arpnetworking.commons.jackson.databind.ObjectMapperFactory;
 import com.arpnetworking.metrics.Metrics;
 import com.arpnetworking.metrics.MetricsFactory;
+import com.arpnetworking.test.TestBeanFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.Condition;
 import com.arpnetworking.tsdcore.model.FQDSN;
@@ -75,7 +76,7 @@ public class KairosDbSinkTest extends BaseActorTest {
     }
 
     @Test
-    public void testPost() throws InterruptedException, IOException {
+    public void testPostSuccess() throws InterruptedException, IOException {
         // Fake a successful post to KairosDb
         _wireMock.register(WireMock.post(WireMock.urlEqualTo(PATH))
                 .willReturn(WireMock.aResponse()
@@ -135,6 +136,7 @@ public class KairosDbSinkTest extends BaseActorTest {
 
         // Verify that metrics has been recorded.
         Mockito.verify(_mockMetricsFactory, Mockito.times(1)).create();
+        Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/attempts", 0);
         Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/success", 1);
         Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/status/2xx", 1);
         Mockito.verify(_mockMetrics, Mockito.times(1)).setTimer(
@@ -145,6 +147,27 @@ public class KairosDbSinkTest extends BaseActorTest {
         Mockito.verify(_mockMetrics, Mockito.times(1)).stopTimer("sinks/http_post/kairosdb_sink_test/request_latency");
         Mockito.verify(_mockMetrics, Mockito.times(1)).close();
     }
+
+     @Test
+    public void testPostFailure() throws InterruptedException, IOException {
+         // Fake a successful post to KairosDb
+        _wireMock.register(WireMock.post(WireMock.urlEqualTo(PATH))
+                .willReturn(WireMock.aResponse()
+                        .withStatus(404)));
+        _kairosDbSinkBuilder.setMaxRetries(1).build().recordAggregateData(TestBeanFactory.createPeriodicData());
+        Thread.sleep(3000);
+
+        Mockito.verify(_mockMetricsFactory, Mockito.times(1)).create();
+        Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/status/4xx", 1);
+        Mockito.verify(_mockMetrics, Mockito.times(1)).setTimer(
+                Mockito.matches("sinks/http_post/kairosdb_sink_test/queue_time"),
+                Mockito.anyLong(),
+                Mockito.any());
+        Mockito.verify(_mockMetrics, Mockito.times(1)).startTimer("sinks/http_post/kairosdb_sink_test/request_latency");
+        Mockito.verify(_mockMetrics, Mockito.times(1)).stopTimer("sinks/http_post/kairosdb_sink_test/request_latency");
+        Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/samples_dropped");
+        Mockito.verify(_mockMetrics, Mockito.times(1)).close();
+     }
 
     private KairosDbSink.Builder _kairosDbSinkBuilder;
     private WireMockServer _wireMockServer;

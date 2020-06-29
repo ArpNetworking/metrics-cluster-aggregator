@@ -160,7 +160,8 @@ public abstract class HttpPostSink extends BaseSink {
                         builder._maximumConcurrency,
                         builder._maximumQueueSize,
                         builder._spreadPeriod,
-                        builder._metricsFactory));
+                        builder._metricsFactory,
+                        builder._maxRetries));
     }
 
     private final URI _uri;
@@ -245,6 +246,18 @@ public abstract class HttpPostSink extends BaseSink {
         }
 
         /**
+         * Sets the maximum number of retries of the http requests. Optional. Cannot be null.
+         * Default is 0.
+         *
+         * @param value the maximum number of retries of the http requests.
+         * @return this builder
+         */
+        public B setMaxRetries(final Integer value) {
+            _maxRetries = value;
+            return self();
+        }
+
+        /**
          * Sets the maximum pending queue size. Optional Cannot be null.
          * Default is 25000. Minimum is 1.
          *
@@ -281,5 +294,7 @@ public abstract class HttpPostSink extends BaseSink {
         @JacksonInject
         @NotNull
         private MetricsFactory _metricsFactory;
+        @NotNull
+        private Integer _maxRetries = 0;
     }
 }
