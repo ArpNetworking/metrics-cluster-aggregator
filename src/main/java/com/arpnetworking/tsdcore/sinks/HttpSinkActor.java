@@ -44,6 +44,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -61,6 +62,7 @@ public class HttpSinkActor extends AbstractActor {
      * @param maximumQueueSize Maximum number of pending requests.
      * @param spreadPeriod Maximum time to delay sending new aggregates to spread load.
      * @param metricsFactory metrics factory to record metrics.
+     * @param maximumRetries Maximum number of retries for the http requests.
      * @return A new Props
      */
     public static Props props(
@@ -69,8 +71,17 @@ public class HttpSinkActor extends AbstractActor {
             final int maximumConcurrency,
             final int maximumQueueSize,
             final Period spreadPeriod,
-            final MetricsFactory metricsFactory) {
-        return Props.create(HttpSinkActor.class, client, sink, maximumConcurrency, maximumQueueSize, spreadPeriod, metricsFactory);
+            final MetricsFactory metricsFactory,
+            final int maximumRetries) {
+        return Props.create(
+                HttpSinkActor.class,
+                client,
+                sink,
+                maximumConcurrency,
+                maximumQueueSize,
+                spreadPeriod,
+                metricsFactory,
+                maximumRetries);
     }
 
     /**
@@ -82,6 +93,7 @@ public class HttpSinkActor extends AbstractActor {
      * @param maximumQueueSize Maximum number of pending requests.
      * @param spreadPeriod Maximum time to delay sending new aggregates to spread load.
      * @param metricsFactory metrics factory to record metrics.
+     * @param maximumRetries Maximum number of retries for the http requests.
      */
     public HttpSinkActor(
             final AsyncHttpClient client,
@@ -89,12 +101,14 @@ public class HttpSinkActor extends AbstractActor {
             final int maximumConcurrency,
             final int maximumQueueSize,
             final Period spreadPeriod,
-            final MetricsFactory metricsFactory) {
+            final MetricsFactory metricsFactory,
+            final int maximumRetries) {
         _client = client;
         _sink = sink;
         _maximumConcurrency = maximumConcurrency;
         _pendingRequests = EvictingQueue.create(maximumQueueSize);
         _metricsFactory = metricsFactory;
+        _maximumRetries = maximumRetries;
         if (Period.ZERO.equals(spreadPeriod)) {
             _spreadingDelayMillis = 0;
         } else {
@@ -106,6 +120,8 @@ public class HttpSinkActor extends AbstractActor {
         _inQueueLatencyName = "sinks/http_post/" + _sink.getMetricSafeName() + "/queue_time";
         _requestSuccessName = "sinks/http_post/" + _sink.getMetricSafeName() + "/success";
         _responseStatusName = "sinks/http_post/" + _sink.getMetricSafeName() + "/status";
+        _httpSinkAttemptsName = "sinks/http_post/" + _sink.getMetricSafeName() + "/attempts";
+        _samplesDroppedName = "sinks/http_post/" + _sink.getMetricSafeName() + "/samples_dropped";
     }
 
     /**
@@ -140,13 +156,24 @@ public class HttpSinkActor extends AbstractActor {
                     dispatchPending();
                 })
                 .match(PostRejected.class, rejected -> {
-                    processRejectedRequest(rejected);
-                    dispatchPending();
+                    final int attempt = rejected.getAttempt();
+                    if (attempt < _maximumRetries) {
+                        scheduleRetry(rejected.getRequest(), attempt);
+                    } else {
+                        processRejectedRequest(rejected);
+                        dispatchPending();
+                    }
                 })
                 .match(PostFailure.class, failure -> {
-                    processFailedRequest(failure);
-                    dispatchPending();
+                    final int attempt = failure.getAttempt();
+                    if (attempt < _maximumRetries) {
+                        scheduleRetry(failure.getRequest(), attempt);
+                    } else {
+                        processFailedRequest(failure);
+                        dispatchPending();
+                    }
                 })
+                .match(Retry.class, retry -> fireRequest(retry.getRequest(), retry.getAttempt()))
                 .match(WaitTimeExpired.class, message -> {
                     LOGGER.debug()
                             .setMessage("Received WaitTimeExpired message")
@@ -160,6 +187,12 @@ public class HttpSinkActor extends AbstractActor {
 
     private void processFailedRequest(final PostFailure failure) {
         _inflightRequestsCount--;
+
+        try (Metrics metrics = _metricsFactory.create()) {
+            metrics.incrementCounter(_samplesDroppedName, 1);
+            metrics.incrementCounter(_requestSuccessName, 0);
+        }
+
         LOGGER.error()
                 .setMessage("Post error")
                 .addData("sink", _sink)
@@ -173,11 +206,23 @@ public class HttpSinkActor extends AbstractActor {
         _inflightRequestsCount--;
         final Response response = rejected.getResponse();
         final Optional<String> responseBody = Optional.ofNullable(response.getResponseBody());
+        final int responseStatusCode = response.getStatusCode();
+
+        try (Metrics metrics = _metricsFactory.create()) {
+            metrics.incrementCounter(_samplesDroppedName, 1);
+            metrics.incrementCounter(_requestSuccessName, 0);
+            final int responseStatusClass = responseStatusCode / 100;
+            for (final int i : STATUS_CLASSES) {
+                metrics.incrementCounter(
+                        String.format("%s/%dxx", _responseStatusName, i),
+                        responseStatusClass == i ? 1 : 0);
+            }
+        }
 
         LOGGER.warn()
                 .setMessage("Post rejected")
                 .addData("sink", _sink)
-                .addData("status", response.getStatusCode())
+                .addData("status", responseStatusCode)
                 // CHECKSTYLE.OFF: IllegalInstantiation - This is ok for String from byte[]
                 .addData("request", new String(rejected.getRequest().getByteData(), Charsets.UTF_8))
                 // CHECKSTYLE.ON: IllegalInstantiation
@@ -190,11 +235,23 @@ public class HttpSinkActor extends AbstractActor {
         _postRequests++;
         _inflightRequestsCount--;
         final Response response = success.getResponse();
+        final int responseStatusCode = response.getStatusCode();
+
+        try (Metrics metrics = _metricsFactory.create()) {
+            metrics.incrementCounter(_httpSinkAttemptsName, success.getAttempt());
+            metrics.incrementCounter(_requestSuccessName, 1);
+            final int responseStatusClass = responseStatusCode / 100;
+            for (final int i : STATUS_CLASSES) {
+                metrics.incrementCounter(
+                        String.format("%s/%dxx", _responseStatusName, i),
+                        responseStatusClass == i ? 1 : 0);
+            }
+        }
 
         LOGGER.debug()
                 .setMessage("Post accepted")
                 .addData("sink", _sink)
-                .addData("status", response.getStatusCode())
+                .addData("status", responseStatusCode)
                 .addContext("actor", self())
                 .log();
     }
@@ -270,40 +327,51 @@ public class HttpSinkActor extends AbstractActor {
 
     private void fireNextRequest() {
         final RequestEntry requestEntry = _pendingRequests.poll();
-        final Metrics metrics = _metricsFactory.create();
-        metrics.setTimer(_inQueueLatencyName, System.currentTimeMillis() - requestEntry.getEnterTime(), TimeUnit.MILLISECONDS);
+        try (Metrics metrics = _metricsFactory.create()) {
+            metrics.setTimer(_inQueueLatencyName, System.currentTimeMillis() - requestEntry.getEnterTime(), TimeUnit.MILLISECONDS);
+        }
 
         final Request request = requestEntry.getRequest();
         _inflightRequestsCount++;
 
+        fireRequest(request, 0);
+    }
+
+
+    private void fireRequest(final Request request, final int attempt) {
         final CompletableFuture<Response> promise = new CompletableFuture<>();
-        metrics.startTimer(_requestLatencyName);
+        final long requestStartTime = System.currentTimeMillis();
         _client.executeRequest(request, new ResponseAsyncCompletionHandler(promise));
         final CompletionStage<Object> responsePromise = promise
                 .handle((result, err) -> {
-                        metrics.stopTimer(_requestLatencyName);
-                        final Object returnValue;
-                        if (err == null) {
-                            final int responseStatusCode = result.getStatusCode();
-                            final int responseStatusClass = responseStatusCode / 100;
-                            for (final int i : STATUS_CLASSES) {
-                                metrics.incrementCounter(
-                                        String.format("%s/%dxx", _responseStatusName, i),
-                                        responseStatusClass == i ? 1 : 0);
-                            }
-                            if (ACCEPTED_STATUS_CODES.contains(responseStatusCode)) {
-                                 returnValue = new PostSuccess(result);
-                            } else {
-                                 returnValue = new PostRejected(request, result);
-                            }
+                    try (Metrics metrics = _metricsFactory.create()) {
+                        metrics.setTimer(_requestLatencyName, System.currentTimeMillis() - requestStartTime, TimeUnit.MILLISECONDS);
+                    }
+                    if (err == null) {
+                        if (ACCEPTED_STATUS_CODES.contains(result.getStatusCode())) {
+                             return new PostSuccess(attempt, result);
                         } else {
-                            returnValue = new PostFailure(request, err);
+                             return new PostRejected(attempt, request, result);
                         }
-                        metrics.incrementCounter(_requestSuccessName, (returnValue instanceof PostSuccess) ? 1 : 0);
-                        metrics.close();
-                        return returnValue;
+                    } else {
+                        return new PostFailure(attempt, request, err);
+                    }
                 });
         PatternsCS.pipe(responsePromise, context().dispatcher()).to(self());
+    }
+
+    private void scheduleRetry(final Request request, final int attempt) {
+        final Duration delay = Duration.ofMillis(
+                ThreadLocalRandom.current().nextInt(
+                        Math.min((int) Math.pow(2, attempt), MAXIMUM_DELAY_MILLIS)
+                )
+        );
+        getContext().system().scheduler().scheduleOnce(
+                                delay,
+                                self(),
+                                new Retry(attempt + 1, request),
+                                getContext().dispatcher(),
+                                self());
     }
 
     @Override
@@ -325,17 +393,21 @@ public class HttpSinkActor extends AbstractActor {
     private final HttpPostSink _sink;
     private final int _spreadingDelayMillis;
     private final MetricsFactory _metricsFactory;
+    private final int _maximumRetries;
 
     private final String _evictedRequestsName;
     private final String _requestLatencyName;
     private final String _inQueueLatencyName;
     private final String _requestSuccessName;
     private final String _responseStatusName;
+    private final String _httpSinkAttemptsName;
+    private final String _samplesDroppedName;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpPostSink.class);
     private static final Logger EVICTED_LOGGER = LoggerFactory.getRateLimitLogger(HttpPostSink.class, Duration.ofSeconds(30));
     private static final Set<Integer> ACCEPTED_STATUS_CODES = Sets.newHashSet();
     private static final ImmutableList<Integer> STATUS_CLASSES = com.google.common.collect.ImmutableList.of(2, 3, 4, 5);
+    private static final int MAXIMUM_DELAY_MILLIS = 64000;
 
     static {
         // TODO(vkoskela): Make accepted status codes configurable [AINT-682]
@@ -367,10 +439,26 @@ public class HttpSinkActor extends AbstractActor {
     }
 
     /**
+     * Base class to wrap a HTTP request status.
+     */
+    private abstract static class PostStatus {
+        private PostStatus(final int attempt) {
+            _attempt = attempt;
+        }
+
+        public int getAttempt() {
+            return _attempt;
+        }
+
+        private final int _attempt;
+    }
+
+    /**
      * Message class to wrap an errored HTTP request.
      */
-    private static final class PostFailure {
-        private PostFailure(final Request request, final Throwable throwable) {
+    private static final class PostFailure extends PostStatus{
+        private PostFailure(final int attempt, final Request request, final Throwable throwable) {
+            super(attempt);
             _throwable = throwable;
             _request = request;
         }
@@ -390,8 +478,9 @@ public class HttpSinkActor extends AbstractActor {
     /**
      * Message class to wrap a success HTTP request.
      */
-    private static final class PostSuccess {
-        private PostSuccess(final Response response) {
+    private static final class PostSuccess extends PostStatus{
+        private PostSuccess(final int attempt, final Response response) {
+            super(attempt);
             _response = response;
         }
 
@@ -405,8 +494,9 @@ public class HttpSinkActor extends AbstractActor {
     /**
      * Message class to wrap a rejected HTTP request.
      */
-    private static final class PostRejected {
-        private PostRejected(final Request request, final Response response) {
+    private static final class PostRejected extends PostStatus {
+        private PostRejected(final int attempt, final Request request, final Response response) {
+            super(attempt);
             _request = request;
             _response = response;
         }
@@ -421,6 +511,22 @@ public class HttpSinkActor extends AbstractActor {
 
         private final Request _request;
         private final Response _response;
+    }
+
+    /**
+     * Message class to do retries.
+     */
+    private static final class Retry extends PostStatus{
+        private Retry(final int attempt, final Request request) {
+            super(attempt);
+            _request = request;
+        }
+
+        public Request getRequest() {
+            return _request;
+        }
+        
+        private final Request _request;
     }
 
     /**
