@@ -160,7 +160,9 @@ public class KairosDbSinkTest extends BaseActorTest {
         _kairosDbSinkBuilder.setMaximumAttempts(2).setBaseBackoff(Period.millis(1)).build()
                 .recordAggregateData(TestBeanFactory.createPeriodicData());
 
-        Awaitility.await().untilAsserted(() -> _wireMock.verifyThat(2, WireMock.postRequestedFor(WireMock.urlEqualTo(PATH))));
+        Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(
+                () -> _wireMock.verifyThat(2, WireMock.postRequestedFor(WireMock.urlEqualTo(PATH)))
+        );
 
         Mockito.verify(_mockMetricsFactory, Mockito.times(4)).create();
         Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/status/5xx", 1);
