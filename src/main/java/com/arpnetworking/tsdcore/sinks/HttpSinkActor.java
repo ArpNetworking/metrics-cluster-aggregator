@@ -62,7 +62,6 @@ public class HttpSinkActor extends AbstractActor {
      * @param maximumQueueSize Maximum number of pending requests.
      * @param spreadPeriod Maximum time to delay sending new aggregates to spread load.
      * @param metricsFactory metrics factory to record metrics.
-     * @param maximumRetries Maximum number of retries for the http requests.
      * @return A new Props
      */
     public static Props props(
@@ -71,8 +70,7 @@ public class HttpSinkActor extends AbstractActor {
             final int maximumConcurrency,
             final int maximumQueueSize,
             final Period spreadPeriod,
-            final MetricsFactory metricsFactory,
-            final int maximumRetries) {
+            final MetricsFactory metricsFactory) {
         return Props.create(
                 HttpSinkActor.class,
                 client,
@@ -80,8 +78,7 @@ public class HttpSinkActor extends AbstractActor {
                 maximumConcurrency,
                 maximumQueueSize,
                 spreadPeriod,
-                metricsFactory,
-                maximumRetries);
+                metricsFactory);
     }
 
     /**
@@ -93,7 +90,6 @@ public class HttpSinkActor extends AbstractActor {
      * @param maximumQueueSize Maximum number of pending requests.
      * @param spreadPeriod Maximum time to delay sending new aggregates to spread load.
      * @param metricsFactory metrics factory to record metrics.
-     * @param maximumRetries Maximum number of retries for the http requests.
      */
     public HttpSinkActor(
             final AsyncHttpClient client,
@@ -101,14 +97,12 @@ public class HttpSinkActor extends AbstractActor {
             final int maximumConcurrency,
             final int maximumQueueSize,
             final Period spreadPeriod,
-            final MetricsFactory metricsFactory,
-            final int maximumRetries) {
+            final MetricsFactory metricsFactory) {
         _client = client;
         _sink = sink;
         _maximumConcurrency = maximumConcurrency;
         _pendingRequests = EvictingQueue.create(maximumQueueSize);
         _metricsFactory = metricsFactory;
-        _maximumRetries = maximumRetries;
         if (Period.ZERO.equals(spreadPeriod)) {
             _spreadingDelayMillis = 0;
         } else {
@@ -157,7 +151,18 @@ public class HttpSinkActor extends AbstractActor {
                 })
                 .match(PostRejected.class, rejected -> {
                     final int attempt = rejected.getAttempt();
-                    if (attempt < _maximumRetries) {
+                    final Response response = rejected.getResponse();
+                    if (RETRYABLE_STATUS_CODES.contains(response.getStatusCode()) && attempt < _sink.getMaximumAttempts()) {
+                        LOGGER.warn()
+                            .setMessage("Attempt rejected")
+                            .addData("sink", _sink)
+                            .addData("status", response.getStatusCode())
+                            // CHECKSTYLE.OFF: IllegalInstantiation - This is ok for String from byte[]
+                            .addData("request", new String(rejected.getRequest().getByteData(), Charsets.UTF_8))
+                            // CHECKSTYLE.ON: IllegalInstantiation
+                            .addData("response", response.getResponseBody())
+                            .addContext("actor", self())
+                            .log();
                         scheduleRetry(rejected.getRequest(), attempt);
                     } else {
                         processRejectedRequest(rejected);
@@ -166,7 +171,13 @@ public class HttpSinkActor extends AbstractActor {
                 })
                 .match(PostFailure.class, failure -> {
                     final int attempt = failure.getAttempt();
-                    if (attempt < _maximumRetries) {
+                    if (attempt < _sink.getMaximumAttempts()) {
+                        LOGGER.warn()
+                                .setMessage("Attempt failed")
+                                .addData("sink", _sink)
+                                .addData("error", failure.getCause())
+                                .addContext("actor", self())
+                                .log();
                         scheduleRetry(failure.getRequest(), attempt);
                     } else {
                         processFailedRequest(failure);
@@ -334,7 +345,7 @@ public class HttpSinkActor extends AbstractActor {
         final Request request = requestEntry.getRequest();
         _inflightRequestsCount++;
 
-        fireRequest(request, 0);
+        fireRequest(request, 1);
     }
 
 
@@ -362,10 +373,19 @@ public class HttpSinkActor extends AbstractActor {
 
     private void scheduleRetry(final Request request, final int attempt) {
         final Duration delay = Duration.ofMillis(
-                ThreadLocalRandom.current().nextInt(
-                        Math.min((int) Math.pow(2, attempt), MAXIMUM_DELAY_MILLIS)
+                Math.min(
+                        _sink.getBaseBackoff().getMillis() * ThreadLocalRandom.current().nextInt((int) Math.pow(2, attempt)),
+                        _sink.getMaximumDelay().getMillis()
                 )
+
         );
+        LOGGER.debug()
+                .setMessage("Retry scheduled")
+                .addData("request", request)
+                .addData("backoff time", delay)
+                .addData("attempt", attempt)
+                .addContext("actor", self())
+                .log();
         getContext().system().scheduler().scheduleOnce(
                                 delay,
                                 self(),
@@ -393,7 +413,6 @@ public class HttpSinkActor extends AbstractActor {
     private final HttpPostSink _sink;
     private final int _spreadingDelayMillis;
     private final MetricsFactory _metricsFactory;
-    private final int _maximumRetries;
 
     private final String _evictedRequestsName;
     private final String _requestLatencyName;
@@ -406,8 +425,8 @@ public class HttpSinkActor extends AbstractActor {
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpPostSink.class);
     private static final Logger EVICTED_LOGGER = LoggerFactory.getRateLimitLogger(HttpPostSink.class, Duration.ofSeconds(30));
     private static final Set<Integer> ACCEPTED_STATUS_CODES = Sets.newHashSet();
+    private static final Set<Integer> RETRYABLE_STATUS_CODES = Sets.newHashSet();
     private static final ImmutableList<Integer> STATUS_CLASSES = com.google.common.collect.ImmutableList.of(2, 3, 4, 5);
-    private static final int MAXIMUM_DELAY_MILLIS = 64000;
 
     static {
         // TODO(vkoskela): Make accepted status codes configurable [AINT-682]
@@ -415,6 +434,13 @@ public class HttpSinkActor extends AbstractActor {
         ACCEPTED_STATUS_CODES.add(StatusCodes.CREATED.intValue());
         ACCEPTED_STATUS_CODES.add(StatusCodes.ACCEPTED.intValue());
         ACCEPTED_STATUS_CODES.add(StatusCodes.NO_CONTENT.intValue());
+    }
+
+    static {
+        RETRYABLE_STATUS_CODES.add(StatusCodes.TOO_MANY_REQUESTS.intValue());
+        RETRYABLE_STATUS_CODES.add(StatusCodes.BAD_GATEWAY.intValue());
+        RETRYABLE_STATUS_CODES.add(StatusCodes.SERVICE_UNAVAILABLE.intValue());
+        RETRYABLE_STATUS_CODES.add(StatusCodes.REQUEST_TIMEOUT.intValue());
     }
 
     /**

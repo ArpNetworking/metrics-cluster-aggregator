@@ -19,6 +19,7 @@ import akka.http.javadsl.model.MediaTypes;
 import com.arpnetworking.commons.jackson.databind.ObjectMapperFactory;
 import com.arpnetworking.metrics.Metrics;
 import com.arpnetworking.metrics.MetricsFactory;
+import com.arpnetworking.test.TestBeanFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.Condition;
 import com.arpnetworking.tsdcore.model.FQDSN;
@@ -33,6 +34,7 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.awaitility.Awaitility;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.junit.After;
@@ -154,13 +156,14 @@ public class KairosDbSinkTest extends BaseActorTest {
          // Fake a successful post to KairosDb
         _wireMock.register(WireMock.post(WireMock.urlEqualTo(PATH))
                 .willReturn(WireMock.aResponse()
-                        .withStatus(404)));
-        _kairosDbSinkBuilder.setMaximumRetries(1).build().recordAggregateData(com.arpnetworking.test.TestBeanFactory.createPeriodicData());
+                        .withStatus(502)));
+        _kairosDbSinkBuilder.setMaximumAttempts(2).setBaseBackoff(Period.millis(1)).build()
+                .recordAggregateData(TestBeanFactory.createPeriodicData());
 
-        Thread.currentThread().join(5000);
+        Awaitility.await().untilAsserted(() -> _wireMock.verifyThat(2, WireMock.postRequestedFor(WireMock.urlEqualTo(PATH))));
 
         Mockito.verify(_mockMetricsFactory, Mockito.times(4)).create();
-        Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/status/4xx", 1);
+        Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/status/5xx", 1);
         Mockito.verify(_mockMetrics, Mockito.times(1)).setTimer(
                 Mockito.matches("sinks/http_post/kairosdb_sink_test/queue_time"),
                 Mockito.anyLong(),
