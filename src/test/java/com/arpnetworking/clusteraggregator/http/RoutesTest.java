@@ -43,6 +43,8 @@ public class RoutesTest extends BaseActorTest {
     public void testApply() throws InterruptedException {
         final HttpRequest request = HttpRequest.create("test_health_check");
         _routes.apply(request);
+
+        // wait for the request to complete. The actor time out is 5 seconds so here wait for 6 seconds.
         Thread.sleep(6000);
 
         Mockito.verify(_mockMetricsFactory).create();
@@ -53,6 +55,8 @@ public class RoutesTest extends BaseActorTest {
 
         final HttpRequest unknownRequest = HttpRequest.create("kb23k1dnlkns02");
         _routes.apply(unknownRequest);
+
+        // wait for the request to complete. Since unknown_route will not call actor, don't have to wait for 6 seconds. 
         Thread.sleep(1000);
 
         Mockito.verify(_mockMetricsFactory, Mockito.times(2)).create();
