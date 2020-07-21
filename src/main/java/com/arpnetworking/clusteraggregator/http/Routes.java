@@ -36,7 +36,6 @@ import com.arpnetworking.commons.jackson.databind.ObjectMapperFactory;
 import com.arpnetworking.configuration.jackson.akka.AkkaModule;
 import com.arpnetworking.metrics.Metrics;
 import com.arpnetworking.metrics.MetricsFactory;
-import com.arpnetworking.metrics.Timer;
 import com.arpnetworking.steno.LogBuilder;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
@@ -56,6 +55,7 @@ import java.time.Duration;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -99,11 +99,7 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
 
     @Override
     public CompletionStage<HttpResponse> apply(final HttpRequest request) {
-        final Metrics metrics = _metricsFactory.create();
-        final Timer timer = metrics.createTimer(createMetricName(request, REQUEST_METRIC));
-        metrics.setGauge(
-                createMetricName(request, BODY_SIZE_METRIC),
-                request.entity().getContentLengthOption().orElse(0L));
+        final long requestStartTime = System.currentTimeMillis();
         final UUID requestId = UUID.randomUUID();
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace()
@@ -120,8 +116,6 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
         }
         return process(request).<HttpResponse>whenComplete(
                 (response, failure) -> {
-                    timer.close();
-
                     final int responseStatus;
                     if (response != null) {
                         responseStatus = response.status().intValue();
@@ -129,10 +123,19 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
                         // TODO(ville): Figure out how to intercept post-exception mapping.
                         responseStatus = 599;
                     }
+
+                    final Metrics metrics = _metricsFactory.create();
+                    metrics.setTimer(
+                            createMetricName(request, responseStatus, REQUEST_METRIC),
+                            System.currentTimeMillis() - requestStartTime,
+                            TimeUnit.MILLISECONDS);
+                    metrics.setGauge(
+                            createMetricName(request, responseStatus, BODY_SIZE_METRIC),
+                            request.entity().getContentLengthOption().orElse(0L));
                     final int responseStatusClass = responseStatus / 100;
                     for (final int i : STATUS_CLASSES) {
                         metrics.incrementCounter(
-                                createMetricName(request, String.format("%s/%dxx", STATUS_METRIC, i)),
+                                createMetricName(request, responseStatus, String.format("%s/%dxx", STATUS_METRIC, i)),
                                 responseStatusClass == i ? 1 : 0);
                     }
                     metrics.close();
@@ -237,14 +240,18 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
                 });
     }
 
-    private String createMetricName(final HttpRequest request, final String actionPart) {
+    private String createMetricName(final HttpRequest request, final int responseStatus, final String actionPart) {
         final StringBuilder nameBuilder = new StringBuilder()
                 .append(REST_SERVICE_METRIC_ROOT)
                 .append(request.method().value());
-        if (!request.getUri().path().startsWith("/")) {
-            nameBuilder.append("/");
+        if (responseStatus == 404) {
+            nameBuilder.append("/unknown_route");
+        } else {
+            if (!request.getUri().path().startsWith("/")) {
+                nameBuilder.append("/");
+            }
+            nameBuilder.append(request.getUri().path());
         }
-        nameBuilder.append(request.getUri().path());
         nameBuilder.append("/");
         nameBuilder.append(actionPart);
         return nameBuilder.toString();
