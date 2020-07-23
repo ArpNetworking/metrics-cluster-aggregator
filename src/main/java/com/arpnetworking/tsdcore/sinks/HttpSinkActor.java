@@ -26,10 +26,13 @@ import com.arpnetworking.steno.LogValueMapFactory;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.model.PeriodicData;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.collect.EvictingQueue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
+import it.unimi.dsi.fastutil.doubles.Double2LongMap;
 import org.asynchttpclient.AsyncCompletionHandler;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.Request;
@@ -39,6 +42,8 @@ import scala.concurrent.duration.FiniteDuration;
 
 import java.time.Duration;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
@@ -200,7 +205,7 @@ public class HttpSinkActor extends AbstractActor {
         _inflightRequestsCount--;
 
         try (Metrics metrics = _metricsFactory.create()) {
-            metrics.incrementCounter(_samplesDroppedName, 1);
+            metrics.incrementCounter(_samplesDroppedName, getSamplesCount(failure.getRequest()));
             metrics.incrementCounter(_requestSuccessName, 0);
         }
 
@@ -220,7 +225,7 @@ public class HttpSinkActor extends AbstractActor {
         final int responseStatusCode = response.getStatusCode();
 
         try (Metrics metrics = _metricsFactory.create()) {
-            metrics.incrementCounter(_samplesDroppedName, 1);
+            metrics.incrementCounter(_samplesDroppedName, getSamplesCount(rejected.getRequest()));
             metrics.incrementCounter(_requestSuccessName, 0);
             final int responseStatusClass = responseStatusCode / 100;
             for (final int i : STATUS_CLASSES) {
@@ -240,6 +245,30 @@ public class HttpSinkActor extends AbstractActor {
                 .addData("response", responseBody)
                 .addContext("actor", self())
                 .log();
+    }
+
+    private long getSamplesCount(final Request request) {
+        try {
+            final ObjectMapper objectMapper = new ObjectMapper();
+            final List<Map<String, Object>> datalist = objectMapper.readValue(request.getByteData(), new RequestBodyTypeReference());
+            long samplesCount = 0;
+            for (Map<String, Object> datumMap: datalist) {
+                final String name = (String) datumMap.get("name");
+                if (datumMap.get("type").equals("histogram")) {
+                    final Double2LongMap bins = (Double2LongMap) datumMap.get("bins");
+                    for (long v : bins.values()) {
+                        samplesCount += v;
+                    }
+                } else if (name.split("/").length >= 3 && name.split("/")[2].equals("count")) {
+                    samplesCount += (long) datumMap.get("value");
+                } else {
+                    samplesCount += 1;
+                }
+            }
+            return samplesCount;
+        } catch (final java.io.IOException | NullPointerException e) {
+            return 1L;
+        }
     }
 
     private void processSuccessRequest(final PostSuccess success) {
@@ -374,8 +403,8 @@ public class HttpSinkActor extends AbstractActor {
     private void scheduleRetry(final Request request, final int attempt) {
         final Duration delay = Duration.ofMillis(
                 Math.min(
-                        _sink.getBaseBackoff().getMillis() * ThreadLocalRandom.current().nextInt((int) Math.pow(2, attempt)),
-                        _sink.getMaximumDelay().getMillis()
+                        _sink.getRetryBaseBackoff().getMillis() * ThreadLocalRandom.current().nextInt((int) Math.pow(2, attempt - 1)),
+                        _sink.getRetryMaximumDelay().getMillis()
                 )
 
         );
@@ -597,4 +626,6 @@ public class HttpSinkActor extends AbstractActor {
         private final Request _request;
         private final long _enterTime;
     }
+
+    private static final class RequestBodyTypeReference extends TypeReference<List<Map<String, Object>>> { }
 }

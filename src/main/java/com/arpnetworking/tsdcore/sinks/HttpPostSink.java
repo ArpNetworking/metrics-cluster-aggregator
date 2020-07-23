@@ -28,6 +28,8 @@ import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.google.common.collect.Lists;
+import net.sf.oval.constraint.CheckWith;
+import net.sf.oval.constraint.CheckWithCheck;
 import net.sf.oval.constraint.Min;
 import net.sf.oval.constraint.NotNull;
 import org.asynchttpclient.AsyncHttpClient;
@@ -144,20 +146,20 @@ public abstract class HttpPostSink extends BaseSink {
     }
 
     /**
-     * Accessor for the BaseBackoff <code>Period</code>.
+     * Accessor for the BaseBackoff of retries <code>Period</code>.
      *
      * @return The BaseBackoff <code>Period</code>.
      */
-    protected Period getBaseBackoff() {
+    protected Period getRetryBaseBackoff() {
         return _baseBackoff;
     }
 
     /**
-     * Accessor for the MaximumDelay <code>Period</code>.
+     * Accessor for the MaximumDelay of retries <code>Period</code>.
      *
      * @return The MaximumDelay <code>Period</code>.
      */
-    protected Period getMaximumDelay() {
+    protected Period getRetryMaximumDelay() {
         return _maximumDelay;
     }
 
@@ -280,7 +282,7 @@ public abstract class HttpPostSink extends BaseSink {
 
         /**
          * Sets the maximum number of attempts of the http requests. Optional. Cannot be null.
-         * Default is 1. Mimunim is 1.
+         * Default is 1. Minimum is 1.
          *
          * @param value the maximum number of attempts of the http requests.
          * @return this builder
@@ -357,7 +359,22 @@ public abstract class HttpPostSink extends BaseSink {
         @NotNull
         private Period _baseBackoff = Period.millis(50);
         @NotNull
+        @CheckWith(CheckPeriod.class)
         private Period _maximumDelay = Period.seconds(60);
 
+
+        private static final class CheckPeriod implements CheckWithCheck.SimpleCheck {
+
+            private static final long serialVersionUID = -6924010227680984149L;
+
+            @Override
+            public boolean isSatisfied(final Object validatedObject, final Object value) {
+                if (!(validatedObject instanceof HttpPostSink.Builder)) {
+                    return false;
+                }
+                final HttpPostSink.Builder<?, ?> builder = (HttpPostSink.Builder<?, ?>) validatedObject;
+                return builder._baseBackoff.getMillis() >= 0 && builder._maximumDelay.getMillis() >= 0;
+            }
+        }
     }
 }

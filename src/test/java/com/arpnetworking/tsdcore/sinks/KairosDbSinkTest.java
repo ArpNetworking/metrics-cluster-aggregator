@@ -34,6 +34,7 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import net.sf.oval.exception.ConstraintsViolatedException;
 import org.awaitility.Awaitility;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
@@ -75,6 +76,11 @@ public class KairosDbSinkTest extends BaseActorTest {
     public void tearDown() {
         super.tearDown();
         _wireMockServer.stop();
+    }
+
+    @Test(expected = ConstraintsViolatedException.class)
+    public void testNegativeBaseBackOff() {
+        _kairosDbSinkBuilder.setBaseBackoff(Period.millis(-5)).build();
     }
 
     @Test
@@ -175,7 +181,9 @@ public class KairosDbSinkTest extends BaseActorTest {
                 Mockito.anyLong(),
                 Mockito.any(TimeUnit.class));
         Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/success", 0);
-        Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/samples_dropped", 1);
+        Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter(
+                Mockito.matches("sinks/http_post/kairosdb_sink_test/samples_dropped"),
+                Mockito.anyLong());
         Mockito.verify(_mockMetrics, Mockito.times(4)).close();
      }
 
