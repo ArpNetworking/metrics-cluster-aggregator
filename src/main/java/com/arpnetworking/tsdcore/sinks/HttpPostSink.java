@@ -28,6 +28,8 @@ import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.google.common.collect.Lists;
+import net.sf.oval.constraint.CheckWith;
+import net.sf.oval.constraint.CheckWithCheck;
 import net.sf.oval.constraint.Min;
 import net.sf.oval.constraint.NotNull;
 import org.asynchttpclient.AsyncHttpClient;
@@ -133,6 +135,33 @@ public abstract class HttpPostSink extends BaseSink {
     protected Uri getAysncHttpClientUri() {
         return _aysncHttpClientUri;
     }
+    
+    /**
+     * Accessor for the MaximumAttempts.
+     *
+     * @return The MaximumAttempts.
+     */
+    protected int getMaximumAttempts() {
+        return _maximumAttempts;
+    }
+
+    /**
+     * Accessor for the BaseBackoff of retries <code>Period</code>.
+     *
+     * @return The BaseBackoff <code>Period</code>.
+     */
+    protected Period getRetryBaseBackoff() {
+        return _baseBackoff;
+    }
+
+    /**
+     * Accessor for the MaximumDelay of retries <code>Period</code>.
+     *
+     * @return The MaximumDelay <code>Period</code>.
+     */
+    protected Period getRetryMaximumDelay() {
+        return _maximumDelay;
+    }
 
     /**
      * Serialize the <code>PeriodicData</code> and <code>Condition</code> instances
@@ -161,11 +190,18 @@ public abstract class HttpPostSink extends BaseSink {
                         builder._maximumQueueSize,
                         builder._spreadPeriod,
                         builder._metricsFactory));
+        
+        _maximumAttempts = builder._maximumAttempts;
+        _baseBackoff = builder._baseBackoff;
+        _maximumDelay = builder._maximumDelay;
     }
 
     private final URI _uri;
     private final Uri _aysncHttpClientUri;
     private final ActorRef _sinkActor;
+    private final int _maximumAttempts;
+    private final Period _baseBackoff;
+    private final Period _maximumDelay;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpPostSink.class);
     private static final AsyncHttpClient CLIENT;
@@ -245,6 +281,18 @@ public abstract class HttpPostSink extends BaseSink {
         }
 
         /**
+         * Sets the maximum number of attempts of the http requests. Optional. Cannot be null.
+         * Default is 1. Minimum is 1.
+         *
+         * @param value the maximum number of attempts of the http requests.
+         * @return this builder
+         */
+        public B setMaximumAttempts(final Integer value) {
+            _maximumAttempts = value;
+            return self();
+        }
+
+        /**
          * Sets the maximum pending queue size. Optional Cannot be null.
          * Default is 25000. Minimum is 1.
          *
@@ -253,6 +301,30 @@ public abstract class HttpPostSink extends BaseSink {
          */
         public B setMaximumQueueSize(final Integer value) {
             _maximumQueueSize = value;
+            return self();
+        }
+
+        /**
+         * Sets the base backoff period. Optional Cannot be null.
+         * Default is 50 milliseconds.
+         *
+         * @param value the base backoff period
+         * @return this builder
+         */
+        public B setBaseBackoff(final Period value) {
+            _baseBackoff = value;
+            return self();
+        }
+
+        /**
+         * Sets the maximum delay for retries. Optional Cannot be null.
+         * Default is 60 seconds.
+         *
+         * @param value the maximum delay for retries
+         * @return this builder
+         */
+        public B setMaximumDelay(final Period value) {
+            _maximumDelay = value;
             return self();
         }
 
@@ -281,5 +353,28 @@ public abstract class HttpPostSink extends BaseSink {
         @JacksonInject
         @NotNull
         private MetricsFactory _metricsFactory;
+        @NotNull
+        @Min(1)
+        private Integer _maximumAttempts = 1;
+        @NotNull
+        private Period _baseBackoff = Period.millis(50);
+        @NotNull
+        @CheckWith(CheckPeriod.class)
+        private Period _maximumDelay = Period.seconds(60);
+
+
+        private static final class CheckPeriod implements CheckWithCheck.SimpleCheck {
+
+            private static final long serialVersionUID = -6924010227680984149L;
+
+            @Override
+            public boolean isSatisfied(final Object validatedObject, final Object value) {
+                if (!(validatedObject instanceof HttpPostSink.Builder)) {
+                    return false;
+                }
+                final HttpPostSink.Builder<?, ?> builder = (HttpPostSink.Builder<?, ?>) validatedObject;
+                return builder._baseBackoff.getMillis() >= 0 && builder._maximumDelay.getMillis() >= 0;
+            }
+        }
     }
 }
