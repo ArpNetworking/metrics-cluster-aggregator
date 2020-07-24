@@ -181,9 +181,6 @@ public class KairosDbSinkTest extends BaseActorTest {
                 Mockito.anyLong(),
                 Mockito.any(TimeUnit.class));
         Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/success", 0);
-        Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter(
-                Mockito.matches("sinks/http_post/kairosdb_sink_test/samples_dropped"),
-                Mockito.anyLong());
         Mockito.verify(_mockMetrics, Mockito.times(4)).close();
      }
 
