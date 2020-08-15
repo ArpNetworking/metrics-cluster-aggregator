@@ -146,18 +146,18 @@ public abstract class HttpPostSink extends BaseSink {
     }
 
     /**
-     * Accessor for the BaseBackoff of retries <code>Period</code>.
+     * Accessor for the BaseBackoff of retries {@link Duration}.
      *
-     * @return The BaseBackoff <code>Period</code>.
+     * @return The BaseBackoff {@link Duration}.
      */
     protected Duration getRetryBaseBackoff() {
         return _baseBackoff;
     }
 
     /**
-     * Accessor for the MaximumDelay of retries <code>Period</code>.
+     * Accessor for the MaximumDelay of retries {@link Duration}.
      *
-     * @return The MaximumDelay <code>Period</code>.
+     * @return The MaximumDelay {@link Duration}.
      */
     protected Duration getRetryMaximumDelay() {
         return _maximumDelay;
@@ -244,11 +244,11 @@ public abstract class HttpPostSink extends BaseSink {
         }
 
         /**
-         * Instance of <code>MetricsFactory</code>. Cannot be null. This field
+         * Instance of {@link MetricsFactory}. Cannot be null. This field
          * may be injected automatically by Jackson/Guice if setup to do so.
          *
-         * @param value Instance of <code>MetricsFactory</code>.
-         * @return This instance of <code>Builder</code>.
+         * @param value Instance of {@link MetricsFactory}.
+         * @return this builder
          */
         public B setMetricsFactory(final MetricsFactory value) {
             _metricsFactory = value;

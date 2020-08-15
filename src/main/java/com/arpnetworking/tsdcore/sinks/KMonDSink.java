@@ -120,7 +120,7 @@ public final class KMonDSink extends HttpPostSink {
                         .append("&status=").append(maxStatus)
                         .append("&timestamp=").append((int) Unit.SECOND.convert(
                                 periodicData.getStart().toInstant().toEpochMilli(),
-                        Unit.MILLISECOND))
+                                Unit.MILLISECOND))
                         .append("&output=").append(name)
                         .append("%7C")
                         .append(dataBuilder.toString());

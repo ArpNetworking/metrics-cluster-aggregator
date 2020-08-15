@@ -551,6 +551,7 @@
       <artifactId>metrics-client</artifactId>
       <version>${metrics.client.version}</version>
       <exclusions>
+        <!-- TODO(ville): Remove suppression once findbugs to spotbugs migration is complete in CAGG -->
         <exclusion>
           <groupId>com.google.code.findbugs</groupId>
           <artifactId>findbugs-annotations</artifactId>
@@ -562,6 +563,7 @@
       <artifactId>apache-http-sink-extra</artifactId>
       <version>${metrics.http.extra.version}</version>
       <exclusions>
+        <!-- TODO(ville): Remove suppression once findbugs to spotbugs migration is complete in CAGG -->
         <exclusion>
           <groupId>com.google.code.findbugs</groupId>
           <artifactId>findbugs-annotations</artifactId>
@@ -826,6 +828,7 @@
       <artifactId>reflections</artifactId>
       <version>${reflections.version}</version>
       <exclusions>
+        <!-- TODO(ville): Remove suppression once findbugs to spotbugs migration is complete in CAGG -->
         <exclusion>
           <groupId>com.google.code.findbugs</groupId>
           <artifactId>findbugs-annotations</artifactId>

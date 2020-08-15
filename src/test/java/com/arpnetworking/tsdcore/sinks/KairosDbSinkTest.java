@@ -45,11 +45,11 @@ import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.concurrent.TimeUnit;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Tests for the {@link KairosDbSink} class.

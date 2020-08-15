@@ -371,8 +371,8 @@ public class HttpSinkActor extends AbstractActor {
     private void scheduleRetry(final Request request, final int attempt) {
         final Duration delay = Duration.ofMillis(
                 Math.min(
-                        _sink.getRetryBaseBackoff().getMillis() * ThreadLocalRandom.current().nextInt((int) Math.pow(2, attempt - 1)),
-                        _sink.getRetryMaximumDelay().getMillis()
+                        _sink.getRetryBaseBackoff().toMillis() * ThreadLocalRandom.current().nextInt((int) Math.pow(2, attempt - 1)),
+                        _sink.getRetryMaximumDelay().toMillis()
                 )
 
         );
