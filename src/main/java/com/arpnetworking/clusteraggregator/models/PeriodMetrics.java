@@ -22,8 +22,8 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
-import org.joda.time.DateTime;
 
+import java.time.ZonedDateTime;
 import java.util.Map;
 
 /**
@@ -123,7 +123,7 @@ public class PeriodMetrics {
         _sampleCountLatestPeriod.clear();
     }
 
-    public DateTime getLatestPeriod() {
+    public ZonedDateTime getLatestPeriod() {
         return _latestPeriod;
     }
 
@@ -162,7 +162,7 @@ public class PeriodMetrics {
 
     private final MetricsFactory _metricsFactory;
 
-    private DateTime _latestPeriod = null;
+    private ZonedDateTime _latestPeriod = null;
     private long _metricsLatestPeriod = 0;
     private long _servicesLatestPeriod = 0;
     private long _statisticsLatestPeriod = 0;

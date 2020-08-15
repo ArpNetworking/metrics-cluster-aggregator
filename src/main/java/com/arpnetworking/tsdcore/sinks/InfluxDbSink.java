@@ -26,7 +26,6 @@ import net.sf.oval.constraint.NotNull;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.RequestBuilder;
-import org.joda.time.format.ISOPeriodFormat;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
@@ -56,7 +55,7 @@ public final class InfluxDbSink extends HttpPostSink {
     @Override
     protected Collection<byte[]> serialize(final PeriodicData periodicData) {
         final String period = periodicData.getPeriod()
-            .toString(ISOPeriodFormat.standard());
+            .toString();
 
         final Map<String, MetricFormat> metrics = Maps.newHashMap();
 
@@ -67,7 +66,7 @@ public final class InfluxDbSink extends HttpPostSink {
             if (formattedData == null) {
                 formattedData = new MetricFormat(
                         metricName,
-                        periodicData.getStart().getMillis(),
+                        periodicData.getStart().toInstant().toEpochMilli(),
                         periodicData.getDimensions()
                 )
                         .addTag("service", data.getFQDSN().getService())

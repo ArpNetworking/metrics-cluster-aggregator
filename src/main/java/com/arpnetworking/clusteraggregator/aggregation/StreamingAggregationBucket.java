@@ -23,8 +23,8 @@ import com.arpnetworking.tsdcore.statistics.Accumulator;
 import com.arpnetworking.tsdcore.statistics.Calculator;
 import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.google.common.collect.Maps;
-import org.joda.time.DateTime;
 
+import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.Optional;
 
@@ -40,11 +40,11 @@ public class StreamingAggregationBucket {
      *
      * @param periodStart Start of the period for the bucket.
      */
-    public StreamingAggregationBucket(final DateTime periodStart) {
+    public StreamingAggregationBucket(final ZonedDateTime periodStart) {
         _periodStart = periodStart;
     }
 
-    public DateTime getPeriodStart() {
+    public ZonedDateTime getPeriodStart() {
         return _periodStart;
     }
 
@@ -85,7 +85,7 @@ public class StreamingAggregationBucket {
         return _specified.getOrDefault(statistic, false);
     }
 
-    public Optional<DateTime> getMinRequestTime() {
+    public Optional<ZonedDateTime> getMinRequestTime() {
         return _minRequestTime;
     }
 
@@ -142,8 +142,8 @@ public class StreamingAggregationBucket {
         }
     }
 
-    private final DateTime _periodStart;
-    private Optional<DateTime> _minRequestTime = Optional.empty();
+    private final ZonedDateTime _periodStart;
+    private Optional<ZonedDateTime> _minRequestTime = Optional.empty();
     private final Map<Statistic, Calculator<?>> _data = Maps.newHashMap();
     private final Map<Statistic, Boolean> _specified = Maps.newHashMap();
 

@@ -334,13 +334,14 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
          * @param value The unit.
          * @return This {@link Builder} instance.
          */
-        public Builder setUnit(final Unit value) {
+        public Builder setUnit(@Nullable final Unit value) {
             _unit = value;
             return this;
         }
 
         @NotNull
         private Double _value;
+        @Nullable
         private Unit _unit;
     }
 }

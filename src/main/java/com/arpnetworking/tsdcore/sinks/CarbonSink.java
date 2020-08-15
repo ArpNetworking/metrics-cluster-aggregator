@@ -45,7 +45,7 @@ public class CarbonSink extends TcpSink {
                             periodicData.getPeriod().toString(),
                             datum.getFQDSN().getStatistic().getName(),
                             datum.getValue().getValue(),
-                            periodicData.getStart().toInstant().getMillis() / 1000)
+                            periodicData.getStart().toEpochSecond())
                     .getBytes(Charsets.UTF_8));
         }
         return builder.result();

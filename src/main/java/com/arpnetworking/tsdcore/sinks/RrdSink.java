@@ -26,12 +26,12 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
 import net.sf.oval.constraint.NotEmpty;
 import net.sf.oval.constraint.NotNull;
-import org.joda.time.Period;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.time.Duration;
 import java.util.HashMap;
 
 /**
@@ -159,7 +159,7 @@ public final class RrdSink extends BaseSink {
         }
 
         public void storeData(final PeriodicData periodicData, final AggregatedData data) {
-            final long startTimeEpochInSeconds = periodicData.getStart().getMillis() / 1000;
+            final long startTimeEpochInSeconds = periodicData.getStart().toEpochSecond();
             createRRDFile(periodicData.getPeriod(), startTimeEpochInSeconds);
             final String value = startTimeEpochInSeconds + ":" + String.format("%f", data.getValue().getValue());
             final String[] arguments = new String[] {
@@ -170,7 +170,7 @@ public final class RrdSink extends BaseSink {
             executeProcess(arguments);
         }
 
-        private void createRRDFile(final Period period, final long startTime) {
+        private void createRRDFile(final Duration period, final long startTime) {
             if (new File(_fileName).exists()) {
                 return;
             }
@@ -189,8 +189,8 @@ public final class RrdSink extends BaseSink {
                 "-b",
                 Long.toString(startTime),
                 "-s",
-                Integer.toString(period.toStandardSeconds().getSeconds()),
-                "DS:metric:GAUGE:" + Integer.toString(period.toStandardSeconds().getSeconds() * 3) + ":U:U",
+                Long.toString(period.getSeconds()),
+                "DS:metric:GAUGE:" + Long.toString(period.getSeconds() * 3) + ":U:U",
                 "RRA:AVERAGE:0.5:1:1000" };
             executeProcess(arguments);
         }

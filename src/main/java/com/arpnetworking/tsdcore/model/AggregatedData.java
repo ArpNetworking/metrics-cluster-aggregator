@@ -22,10 +22,10 @@ import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import net.sf.oval.constraint.NotEmpty;
 import net.sf.oval.constraint.NotNull;
-import org.joda.time.DateTime;
-import org.joda.time.Period;
 
 import java.io.Serializable;
+import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -47,7 +47,7 @@ public final class AggregatedData implements Serializable {
      * @deprecated Migrate to PeriodicData.
      */
     @Deprecated
-    public Period getPeriod() {
+    public Duration getPeriod() {
         return _period;
     }
 
@@ -65,7 +65,7 @@ public final class AggregatedData implements Serializable {
      * @deprecated Migrate to PeriodicData.
      */
     @Deprecated
-    public DateTime getPeriodStart() {
+    public ZonedDateTime getPeriodStart() {
         return getStart();
     }
 
@@ -74,7 +74,7 @@ public final class AggregatedData implements Serializable {
      * @deprecated Migrate to PeriodicData.
      */
     @Deprecated
-    public DateTime getStart() {
+    public ZonedDateTime getStart() {
         return _start;
     }
 
@@ -215,8 +215,8 @@ public final class AggregatedData implements Serializable {
     private final Quantity _value;
     private final long _populationSize;
     private final ImmutableList<Quantity> _samples;
-    private final DateTime _start;
-    private final Period _period;
+    private final ZonedDateTime _start;
+    private final Duration _period;
     private final String _host;
     private final boolean _isSpecified;
     private final Object _supportingData;
@@ -288,7 +288,7 @@ public final class AggregatedData implements Serializable {
          * @param value The period start.
          * @return This instance of {@link Builder}.
          */
-        public Builder setStart(final DateTime value) {
+        public Builder setStart(final ZonedDateTime value) {
             _start = value;
             return this;
         }
@@ -299,7 +299,7 @@ public final class AggregatedData implements Serializable {
          * @param value The period.
          * @return This instance of {@link Builder}.
          */
-        public Builder setPeriod(final Period value) {
+        public Builder setPeriod(final Duration value) {
             _period = value;
             return this;
         }
@@ -346,9 +346,9 @@ public final class AggregatedData implements Serializable {
         @NotNull
         private Long _populationSize;
         @NotNull
-        private DateTime _start;
+        private ZonedDateTime _start;
         @NotNull
-        private Period _period;
+        private Duration _period;
         @NotNull
         @NotEmpty
         private String _host;

@@ -29,8 +29,8 @@ import net.sf.oval.constraint.Min;
 import net.sf.oval.constraint.NotEmpty;
 import net.sf.oval.constraint.NotNull;
 import net.sf.oval.constraint.Range;
-import org.joda.time.Period;
 
+import java.time.Duration;
 import java.util.function.Function;
 
 /**
@@ -182,6 +182,6 @@ public abstract class TcpSink extends BaseSink {
         @Min(value = 0)
         private Integer _maxQueueSize = 10000;
         @NotNull
-        private Period _exponentialBackoffBase = Period.millis(500);
+        private Duration _exponentialBackoffBase = Duration.ofMillis(500);
     }
 }

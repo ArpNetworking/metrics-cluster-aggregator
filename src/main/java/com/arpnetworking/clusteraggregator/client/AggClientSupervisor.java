@@ -31,11 +31,11 @@ import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import org.joda.time.Period;
-import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.net.InetSocketAddress;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -96,8 +96,8 @@ public class AggClientSupervisor extends AbstractActor {
     }
 
     private FiniteDuration getRandomConnectionTime() {
-        final long minMillis = _minConnectionTimeout.toStandardDuration().getMillis();
-        final long maxMillis = _maxConnectionTimeout.toStandardDuration().getMillis();
+        final long minMillis = _minConnectionTimeout.toMillis();
+        final long maxMillis = _maxConnectionTimeout.toMillis();
         final long randomMillis = (long) (_random.nextDouble() * (maxMillis - minMillis) + minMillis);
         return FiniteDuration.apply(randomMillis, TimeUnit.MILLISECONDS);
     }
@@ -109,7 +109,7 @@ public class AggClientSupervisor extends AbstractActor {
         // so the retries count and timeframe are irrelevant.
         return new AllForOneStrategy(
                 1, // Number of retries
-                Duration.create(5, TimeUnit.MINUTES), // Within 5 minutes
+                Duration.of(5, ChronoUnit.MINUTES), // Within 5 minutes
                 throwable -> {
                     LOGGER.warn()
                             .setMessage("Supervisor caught exception")
@@ -127,8 +127,8 @@ public class AggClientSupervisor extends AbstractActor {
 
     private final ActorRef _shardRegion;
     private final ActorRef _emitter;
-    private final Period _minConnectionTimeout;
-    private final Period _maxConnectionTimeout;
+    private final Duration _minConnectionTimeout;
+    private final Duration _maxConnectionTimeout;
     private final Boolean _calculateClusterAggregates;
     private final Random _random = new Random();
     private static final Logger LOGGER = LoggerFactory.getLogger(AggClientSupervisor.class);

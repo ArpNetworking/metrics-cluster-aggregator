@@ -24,9 +24,9 @@ import com.google.common.collect.Maps;
 import net.sf.oval.constraint.NotEmpty;
 import net.sf.oval.constraint.NotNull;
 import net.sf.oval.constraint.Range;
-import org.joda.time.Period;
 
 import java.io.File;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
 
@@ -85,15 +85,15 @@ public final class ClusterAggregatorConfiguration {
         return _logDirectory;
     }
 
-    public Period getMaxConnectionTimeout() {
+    public Duration getMaxConnectionTimeout() {
         return _maxConnectionTimeout;
     }
 
-    public Period getMinConnectionTimeout() {
+    public Duration getMinConnectionTimeout() {
         return _minConnectionTimeout;
     }
 
-    public Period getJvmMetricsCollectionInterval() {
+    public Duration getJvmMetricsCollectionInterval() {
         return _jvmMetricsCollectionInterval;
     }
 
@@ -117,7 +117,7 @@ public final class ClusterAggregatorConfiguration {
         return _reaggregationInjectClusterAsHost;
     }
 
-    public Period getReaggregationTimeout() {
+    public Duration getReaggregationTimeout() {
         return _reaggregationTimeout;
     }
 
@@ -219,10 +219,10 @@ public final class ClusterAggregatorConfiguration {
     private final File _hostPipelineConfiguration;
     private final ImmutableSet<String> _reaggregationDimensions;
     private final boolean _reaggregationInjectClusterAsHost;
-    private final Period _reaggregationTimeout;
-    private final Period _minConnectionTimeout;
-    private final Period _maxConnectionTimeout;
-    private final Period _jvmMetricsCollectionInterval;
+    private final Duration _reaggregationTimeout;
+    private final Duration _minConnectionTimeout;
+    private final Duration _maxConnectionTimeout;
+    private final Duration _jvmMetricsCollectionInterval;
     private final RebalanceConfiguration _rebalanceConfiguration;
     private final String _clusterHostSuffix;
     private final boolean _calculateClusterAggregations;
@@ -414,7 +414,7 @@ public final class ClusterAggregatorConfiguration {
          * @param value The minimum time before cycling a connection.
          * @return This instance of {@link Builder}.
          */
-        public Builder setMinConnectionTimeout(final Period value) {
+        public Builder setMinConnectionTimeout(final Duration value) {
             _minConnectionTimeout = value;
             return this;
         }
@@ -425,7 +425,7 @@ public final class ClusterAggregatorConfiguration {
          * @param value The maximum time before cycling a connection.
          * @return This instance of {@link Builder}.
          */
-        public Builder setMaxConnectionTimeout(final Period value) {
+        public Builder setMaxConnectionTimeout(final Duration value) {
             _maxConnectionTimeout = value;
             return this;
         }
@@ -433,10 +433,10 @@ public final class ClusterAggregatorConfiguration {
         /**
          * Period for collecting JVM metrics.
          *
-         * @param value A {@link Period} value.
+         * @param value A {@link Duration} value.
          * @return This instance of {@link Builder}.
          */
-        public Builder setJvmMetricsCollectionInterval(final Period value) {
+        public Builder setJvmMetricsCollectionInterval(final Duration value) {
             _jvmMetricsCollectionInterval = value;
             return this;
         }
@@ -497,7 +497,7 @@ public final class ClusterAggregatorConfiguration {
          * @param value Timeout from period start to wait for all data to arrive.
          * @return This instance of {@link Builder}.
          */
-        public Builder setReaggregationTimeout(final Period value) {
+        public Builder setReaggregationTimeout(final Duration value) {
             _reaggregationTimeout = value;
             return this;
         }
@@ -578,17 +578,17 @@ public final class ClusterAggregatorConfiguration {
         @NotNull
         private Boolean _reaggregationInjectClusterAsHost = Boolean.TRUE;
         @NotNull
-        private Period _reaggregationTimeout = Period.minutes(1);
+        private Duration _reaggregationTimeout = Duration.ofMinutes(1);
         @NotNull
         private File _hostPipelineConfiguration;
         @NotNull
         private Map<String, ?> _akkaConfiguration;
         @NotNull
-        private Period _maxConnectionTimeout;
+        private Duration _maxConnectionTimeout;
         @NotNull
-        private Period _minConnectionTimeout;
+        private Duration _minConnectionTimeout;
         @NotNull
-        private Period _jvmMetricsCollectionInterval;
+        private Duration _jvmMetricsCollectionInterval;
         @NotNull
         private RebalanceConfiguration _rebalanceConfiguration;
         @NotNull

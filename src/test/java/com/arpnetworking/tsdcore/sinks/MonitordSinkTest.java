@@ -22,13 +22,13 @@ import com.arpnetworking.test.TestBeanFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.google.common.collect.ImmutableList;
-import org.joda.time.Period;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.net.URI;
+import java.time.Duration;
 import java.util.Collection;
 
 /**
@@ -56,7 +56,7 @@ public class MonitordSinkTest {
     public void testSerializeMerge() {
         final String service = "service-testSerializeMerge";
         final String metric = "metric-testSerializeMerge";
-        final Period period = Period.minutes(5);
+        final Duration period = Duration.ofMinutes(5);
         final String host = "test-host";
         final String cluster = "test-cluster";
         final ImmutableList<AggregatedData> data = ImmutableList.of(
@@ -90,7 +90,7 @@ public class MonitordSinkTest {
     public void testSerializeNoMergeService() {
         final String service = "service-testSerializeNoMergeService";
         final String metric = "metric-testSerializeNoMergeService";
-        final Period period = Period.minutes(5);
+        final Duration period = Duration.ofMinutes(5);
         final ImmutableList<AggregatedData> data = ImmutableList.of(
                 TestBeanFactory.createAggregatedDataBuilder()
                         .setFQDSN(TestBeanFactory.createFQDSNBuilder()
@@ -118,7 +118,7 @@ public class MonitordSinkTest {
     public void testSerializeNoMergeMetric() {
         final String service = "service-testSerializeNoMergeMetric";
         final String metric = "metric-testSerializeNoMergeMetric";
-        final Period period = Period.minutes(5);
+        final Duration period = Duration.ofMinutes(5);
         final ImmutableList<AggregatedData> data = ImmutableList.of(
                 TestBeanFactory.createAggregatedDataBuilder()
                         .setFQDSN(TestBeanFactory.createFQDSNBuilder()
@@ -152,14 +152,14 @@ public class MonitordSinkTest {
                                 .setService(service)
                                 .setMetric(metric)
                                 .build())
-                        .setPeriod(Period.minutes(5))
+                        .setPeriod(Duration.ofMinutes(5))
                         .build(),
                 TestBeanFactory.createAggregatedDataBuilder()
                         .setFQDSN(TestBeanFactory.createFQDSNBuilder()
                                 .setService(service)
                                 .setMetric(metric)
                                 .build())
-                        .setPeriod(Period.minutes(1))
+                        .setPeriod(Duration.ofMinutes(1))
                         .build());
         final MonitordSink monitordSink = _monitordSinkBuilder.build();
         final PeriodicData periodicData = TestBeanFactory.createPeriodicDataBuilder()

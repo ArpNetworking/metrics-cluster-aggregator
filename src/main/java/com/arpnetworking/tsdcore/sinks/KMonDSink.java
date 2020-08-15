@@ -33,10 +33,9 @@ import net.sf.oval.constraint.NotNull;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.RequestBuilder;
-import org.joda.time.Period;
-import org.joda.time.format.ISOPeriodFormat;
 
 import java.nio.charset.Charset;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -66,7 +65,7 @@ public final class KMonDSink extends HttpPostSink {
 
     @Override
     protected Collection<byte[]> serialize(final PeriodicData periodicData) {
-        final Period period = periodicData.getPeriod();
+        final Duration period = periodicData.getPeriod();
         final Multimap<String, AggregatedData> indexedData = prepareData(periodicData);
         final Multimap<String, Condition> indexedConditions = prepareConditions(periodicData.getConditions());
 
@@ -81,7 +80,7 @@ public final class KMonDSink extends HttpPostSink {
                 final String name = new StringBuilder()
                         .append(first.getFQDSN().getService())
                         .append("_")
-                        .append(period.toString(ISOPeriodFormat.standard()))
+                        .append(period.toString())
                         .append("_")
                         .append(first.getFQDSN().getMetric())
                         .toString();
@@ -113,13 +112,15 @@ public final class KMonDSink extends HttpPostSink {
                     continue;
                 }
 
-                stringBuilder.append("run_every=").append(period.toStandardSeconds().getSeconds())
+                stringBuilder.append("run_every=").append(period.getSeconds())
                         .append("&has_alert=").append(hasAlert)
                         .append("&path=").append(first.getFQDSN().getCluster())
                         .append("%2f").append(periodicData.getDimensions().get("host"))
                         .append("&monitor=").append(name)
                         .append("&status=").append(maxStatus)
-                        .append("&timestamp=").append((int) Unit.SECOND.convert(periodicData.getStart().getMillis(), Unit.MILLISECOND))
+                        .append("&timestamp=").append((int) Unit.SECOND.convert(
+                                periodicData.getStart().toInstant().toEpochMilli(),
+                        Unit.MILLISECOND))
                         .append("&output=").append(name)
                         .append("%7C")
                         .append(dataBuilder.toString());
@@ -190,7 +191,7 @@ public final class KMonDSink extends HttpPostSink {
         return Multimaps.index(
                 periodicData.getData(), input ->
                         input.getFQDSN().getService() + "_"
-                                + periodicData.getPeriod().toString(ISOPeriodFormat.standard()) + "_"
+                                + periodicData.getPeriod().toString() + "_"
                                 + input.getFQDSN().getMetric() + "_"
                                 + periodicData.getDimensions().get("host") + "_"
                                 + input.getFQDSN().getCluster());

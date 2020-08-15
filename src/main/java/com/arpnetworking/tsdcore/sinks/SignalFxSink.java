@@ -28,7 +28,6 @@ import net.sf.oval.constraint.NotNull;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.RequestBuilder;
-import org.joda.time.format.ISOPeriodFormat;
 
 import java.util.Collection;
 import java.util.List;
@@ -66,8 +65,9 @@ public final class SignalFxSink extends HttpPostSink {
 
     @Override
     protected Collection<byte[]> serialize(final PeriodicData periodicData) {
-        final String period = periodicData.getPeriod().toString(ISOPeriodFormat.standard());
-        final long timestamp = periodicData.getStart().getMillis() + periodicData.getPeriod().toStandardDuration().getMillis();
+        final String period = periodicData.getPeriod().toString();
+        final long timestamp = periodicData.getStart().toInstant().toEpochMilli()
+                + periodicData.getPeriod().toMillis();
 
         final List<byte[]> serializedData = Lists.newArrayList();
         SignalFxProtocolBuffers.DataPointUploadMessage.Builder sfxMessage = SignalFxProtocolBuffers.DataPointUploadMessage.newBuilder();

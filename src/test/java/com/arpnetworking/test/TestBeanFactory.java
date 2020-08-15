@@ -28,11 +28,12 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import org.joda.time.DateTime;
-import org.joda.time.Period;
 
+import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
+import javax.annotation.Nullable;
 
 /**
  * Creates reasonable random instances of common data types for testing. This is
@@ -98,8 +99,8 @@ public final class TestBeanFactory {
                 .setFQDSN(createFQDSN())
                 .setHost("host-" + UUID.randomUUID())
                 .setValue(createSample())
-                .setStart(DateTime.now())
-                .setPeriod(Period.minutes(5))
+                .setStart(ZonedDateTime.now())
+                .setPeriod(Duration.ofMinutes(5))
                 .setIsSpecified(true)
                 .setSamples(Lists.newArrayList(createSample()))
                 .setPopulationSize((long) (Math.random() * 100));
@@ -124,8 +125,8 @@ public final class TestBeanFactory {
                 .setDimensions(ImmutableMap.of("host", "host-" + UUID.randomUUID()))
                 .setData(ImmutableList.of(createAggregatedData()))
                 .setConditions(ImmutableList.of())
-                .setPeriod(Period.minutes(5))
-                .setStart(DateTime.now());
+                .setPeriod(Duration.ofMinutes(5))
+                .setStart(ZonedDateTime.now());
     }
 
     /**
@@ -169,7 +170,10 @@ public final class TestBeanFactory {
 
     private static final Function<Double, Quantity> CREATE_SAMPLE = new Function<Double, Quantity>() {
         @Override
-        public Quantity apply(final Double input) {
+        public Quantity apply(@Nullable final Double input) {
+            if (input == null) {
+                throw new IllegalArgumentException("Sample value cannot be null");
+            }
             return new Quantity.Builder().setValue(input).setUnit(Unit.MILLISECOND).build();
         }
     };

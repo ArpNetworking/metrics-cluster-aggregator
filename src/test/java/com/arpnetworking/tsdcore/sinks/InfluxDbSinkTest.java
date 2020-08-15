@@ -25,14 +25,16 @@ import com.arpnetworking.tsdcore.statistics.StatisticFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import org.joda.time.DateTime;
-import org.joda.time.Period;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.Collection;
 
 /**
@@ -66,10 +68,12 @@ public final class InfluxDbSinkTest {
 
         final String service = "service-testSerializeMerge";
         final String metric = "metric-testSerializeMerge";
-        final Period period = Period.minutes(5);
+        final Duration period = Duration.ofMinutes(5);
         final String host = "test-host";
         final String cluster = "test-cluster";
-        final DateTime dateTime = new DateTime(1456361906636L);
+        final ZonedDateTime dateTime = ZonedDateTime.ofInstant(
+                Instant.ofEpochMilli(1456361906636L),
+                ZoneOffset.UTC);
         final ImmutableList<AggregatedData> data = ImmutableList.of(
                 TestBeanFactory.createAggregatedDataBuilder()
                         .setFQDSN(TestBeanFactory.createFQDSNBuilder()
@@ -125,10 +129,12 @@ public final class InfluxDbSinkTest {
         final String service = "service-testSerializeMerge";
         final String metric = "metric-testSerializeMerge";
         final String metric2 = "metric-testSerializeMerge2";
-        final Period period = Period.minutes(5);
+        final Duration period = Duration.ofMinutes(5);
         final String host = "test-host";
         final String cluster = "test-cluster";
-        final DateTime dateTime = new DateTime(1456361906636L);
+        final ZonedDateTime dateTime = ZonedDateTime.ofInstant(
+                Instant.ofEpochMilli(1456361906636L),
+                ZoneOffset.UTC);
         final ImmutableList<AggregatedData> data = ImmutableList.of(
                 TestBeanFactory.createAggregatedDataBuilder()
                         .setFQDSN(TestBeanFactory.createFQDSNBuilder()
@@ -184,10 +190,12 @@ public final class InfluxDbSinkTest {
 
         final String service = "service test,Serialize=Merge";
         final String metric = "metric test,Serialize=Merge";
-        final Period period = Period.minutes(5);
+        final Duration period = Duration.ofMinutes(5);
         final String host = "test host";
         final String cluster = "test cluster";
-        final DateTime dateTime = new DateTime(1456361906636L);
+        final ZonedDateTime dateTime = ZonedDateTime.ofInstant(
+                Instant.ofEpochMilli(1456361906636L),
+                ZoneOffset.UTC);
         final ImmutableList<AggregatedData> data = ImmutableList.of(
                 TestBeanFactory.createAggregatedDataBuilder()
                         .setFQDSN(TestBeanFactory.createFQDSNBuilder()

@@ -120,11 +120,10 @@
     <hikari.version>2.5.1</hikari.version>
     <fastutil.version>8.3.1</fastutil.version>
     <h2.version>1.4.193</h2.version>
-    <jackson.version>2.9.2</jackson.version>
+    <jackson.version>2.9.8</jackson.version>
     <javassist.version>3.22.0-GA</javassist.version>
     <javassist.maven.core.version>0.2.1</javassist.maven.core.version>
     <javax.persistence.version>1.0.2</javax.persistence.version>
-    <joda.time.version>2.9.9</joda.time.version>
     <jsr305.version>3.0.2</jsr305.version>
     <junit.version>4.12</junit.version>
     <junitparams.version>1.0.5</junitparams.version>
@@ -615,13 +614,13 @@
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.datatype</groupId>
-      <artifactId>jackson-datatype-jdk8</artifactId>
+      <artifactId>jackson-datatype-jsr310</artifactId>
       <version>${jackson.version}</version>
       <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.datatype</groupId>
-      <artifactId>jackson-datatype-joda</artifactId>
+      <artifactId>jackson-datatype-jdk8</artifactId>
       <version>${jackson.version}</version>
       <scope>runtime</scope>
     </dependency>
@@ -735,11 +734,6 @@
           <artifactId>findbugs-annotations</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>joda-time</groupId>
-      <artifactId>joda-time</artifactId>
-      <version>${joda.time.version}</version>
     </dependency>
     <dependency>
       <groupId>net.sf.oval</groupId>

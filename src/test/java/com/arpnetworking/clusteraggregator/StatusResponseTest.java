@@ -41,7 +41,7 @@ public class StatusResponseTest extends BaseActorTest {
         final Map<ActorRef, Set<String>> current = Maps.newHashMap();
         final ParallelLeastShardAllocationStrategy.RebalanceNotification notification = new ParallelLeastShardAllocationStrategy
                 .RebalanceNotification(current, inflight, pending);
-        new ClusterStatusCache.StatusResponse(null, Optional.of(notification));
+        new ClusterStatusCache.StatusResponse(Optional.empty(), Optional.of(notification));
     }
 
     @Test
@@ -57,7 +57,7 @@ public class StatusResponseTest extends BaseActorTest {
 
         final ParallelLeastShardAllocationStrategy.RebalanceNotification notification = new ParallelLeastShardAllocationStrategy
                 .RebalanceNotification(current, inflight, pending);
-        new ClusterStatusCache.StatusResponse(null, Optional.of(notification));
+        new ClusterStatusCache.StatusResponse(Optional.empty(), Optional.of(notification));
     }
 
     @Test
@@ -74,7 +74,7 @@ public class StatusResponseTest extends BaseActorTest {
 
         final ParallelLeastShardAllocationStrategy.RebalanceNotification notification = new ParallelLeastShardAllocationStrategy
                 .RebalanceNotification(current, inflight, pending);
-        new ClusterStatusCache.StatusResponse(null, Optional.of(notification));
+        new ClusterStatusCache.StatusResponse(Optional.empty(), Optional.of(notification));
     }
 
     @Test
@@ -91,6 +91,6 @@ public class StatusResponseTest extends BaseActorTest {
 
         final ParallelLeastShardAllocationStrategy.RebalanceNotification notification = new ParallelLeastShardAllocationStrategy
                 .RebalanceNotification(current, inflight, pending);
-        new ClusterStatusCache.StatusResponse(null, Optional.of(notification));
+        new ClusterStatusCache.StatusResponse(Optional.empty(), Optional.of(notification));
     }
 }

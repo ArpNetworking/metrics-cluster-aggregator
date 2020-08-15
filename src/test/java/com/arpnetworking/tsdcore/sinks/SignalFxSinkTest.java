@@ -27,8 +27,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.signalfx.metrics.protobuf.SignalFxProtocolBuffers;
-import org.joda.time.DateTime;
-import org.joda.time.Period;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -36,6 +34,10 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.net.URI;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 /**
@@ -81,9 +83,11 @@ public class SignalFxSinkTest extends BaseActorTest {
                 .setUri(URI.create("http://localhost:" + _wireMockServer.port() + "/v2/datapoint"))
                 .build();
 
-        final DateTime start = new DateTime(1445313091000L);
+        final ZonedDateTime start = ZonedDateTime.ofInstant(
+                Instant.ofEpochMilli(1445313091L),
+                ZoneOffset.UTC);
         final PeriodicData periodicData = TestBeanFactory.createPeriodicDataBuilder()
-                .setPeriod(Period.seconds(1))
+                .setPeriod(Duration.ofSeconds(1))
                 .setStart(start)
                 .setDimensions(ImmutableMap.of("host", "app1.example.com"))
                 .setData(

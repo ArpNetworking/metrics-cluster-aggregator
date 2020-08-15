@@ -22,9 +22,9 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.Maps;
 import net.sf.oval.constraint.NotNull;
-import org.joda.time.DateTime;
-import org.joda.time.Period;
 
+import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.Map;
 
 /**
@@ -70,11 +70,11 @@ public final class FQSN {
         return _fqdsn.getStatistic();
     }
 
-    public Period getPeriod() {
+    public Duration getPeriod() {
         return _period;
     }
 
-    public DateTime getStart() {
+    public ZonedDateTime getStart() {
         return _start;
     }
 
@@ -128,8 +128,8 @@ public final class FQSN {
     }
 
     private final FQDSN _fqdsn;
-    private final Period _period;
-    private final DateTime _start;
+    private final Duration _period;
+    private final ZonedDateTime _start;
     private final Map<String, String> _dimensions;
 
     /**
@@ -212,7 +212,7 @@ public final class FQSN {
          * @param value The period.
          * @return This instance of {@link Builder}.
          */
-        public Builder setPeriod(final Period value) {
+        public Builder setPeriod(final Duration value) {
             _period = value;
             return this;
         }
@@ -224,7 +224,7 @@ public final class FQSN {
          * @param value The period start.
          * @return This instance of {@link Builder}.
          */
-        public Builder setStart(final DateTime value) {
+        public Builder setStart(final ZonedDateTime value) {
             _start = value;
             return this;
         }
@@ -266,9 +266,9 @@ public final class FQSN {
         @NotNull
         private FQDSN.Builder _fqdsn = new FQDSN.Builder();
         @NotNull
-        private Period _period;
+        private Duration _period;
         @NotNull
-        private DateTime _start;
+        private ZonedDateTime _start;
         @NotNull
         private Map<String, String> _dimensions = Maps.newHashMap();
     }

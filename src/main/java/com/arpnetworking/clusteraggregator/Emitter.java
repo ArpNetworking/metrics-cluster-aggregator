@@ -26,8 +26,9 @@ import com.arpnetworking.tsdcore.sinks.MultiSink;
 import com.arpnetworking.tsdcore.sinks.Sink;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import org.joda.time.DateTime;
-import org.joda.time.Period;
+
+import java.time.Duration;
+import java.time.ZonedDateTime;
 
 /**
  * Holds the sinks and emits to them.
@@ -67,8 +68,8 @@ public class Emitter extends AbstractActor {
         return receiveBuilder()
                 .match(AggregatedData.class, datum -> {
                     final String host = datum.getHost();
-                    final Period period = datum.getPeriod();
-                    final DateTime start = datum.getStart();
+                    final Duration period = datum.getPeriod();
+                    final ZonedDateTime start = datum.getStart();
                     final PeriodicData periodicData = new PeriodicData.Builder()
                             .setData(ImmutableList.of(datum))
                             .setConditions(ImmutableList.of())

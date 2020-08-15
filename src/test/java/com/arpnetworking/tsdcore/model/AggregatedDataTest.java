@@ -20,11 +20,11 @@ import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.arpnetworking.tsdcore.statistics.StatisticFactory;
 import com.arpnetworking.utility.test.BuildableEqualsAndHashCodeTester;
 import com.google.common.collect.Lists;
-import org.joda.time.DateTime;
-import org.joda.time.Period;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 /**
@@ -44,8 +44,8 @@ public class AggregatedDataTest {
         final String expectedCluster = "MyCluster";
         final Quantity expectedValue = TestBeanFactory.createSample();
         final boolean expectedIsSpecified = true;
-        final DateTime expectedPeriodStart = new DateTime();
-        final Period expectedPeriod = Period.minutes(5);
+        final ZonedDateTime expectedPeriodStart = ZonedDateTime.now();
+        final Duration expectedPeriod = Duration.ofMinutes(5);
         final long expectedPopulationSize = 111;
         final List<Quantity> expectedSamples = Lists.newArrayList(TestBeanFactory.createSample(), TestBeanFactory.createSample());
 
@@ -91,9 +91,9 @@ public class AggregatedDataTest {
                                 .build())
                         .setHost("MyHostA")
                         .setValue(TestBeanFactory.createSample())
-                        .setStart(new DateTime())
+                        .setStart(ZonedDateTime.now())
                         .setIsSpecified(true)
-                        .setPeriod(Period.minutes(1))
+                        .setPeriod(Duration.ofMinutes(1))
                         .setPopulationSize(1L)
                         .setSupportingData(new Object())
                         .setSamples(Lists.newArrayList(TestBeanFactory.createSample())),
@@ -106,9 +106,9 @@ public class AggregatedDataTest {
                                 .build())
                         .setHost("MyHostB")
                         .setValue(TestBeanFactory.createSample())
-                        .setStart(new DateTime().plusDays(1))
+                        .setStart(ZonedDateTime.now().plusDays(1))
                         .setIsSpecified(false)
-                        .setPeriod(Period.minutes(5))
+                        .setPeriod(Duration.ofMinutes(5))
                         .setPopulationSize(2L)
                         .setSupportingData(new Object())
                         .setSamples(Lists.newArrayList(TestBeanFactory.createSample(), TestBeanFactory.createSample())));
@@ -125,9 +125,9 @@ public class AggregatedDataTest {
                         .build())
                 .setHost("MyHostA")
                 .setValue(TestBeanFactory.createSample())
-                .setStart(new DateTime())
+                .setStart(ZonedDateTime.now())
                 .setIsSpecified(true)
-                .setPeriod(Period.minutes(1))
+                .setPeriod(Duration.ofMinutes(1))
                 .setPopulationSize(1L)
                 .setSamples(Lists.newArrayList(TestBeanFactory.createSample()))
                 .build()

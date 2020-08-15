@@ -33,9 +33,9 @@ import com.google.inject.name.Named;
 import net.sf.oval.constraint.Min;
 import net.sf.oval.constraint.NotEmpty;
 import net.sf.oval.constraint.NotNull;
-import org.joda.time.Period;
 
 import java.net.URI;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
@@ -204,13 +204,13 @@ public final class CirconusSink extends BaseSink {
         }
 
         /**
-         * Sets the maximum delay before starting to send data to the server. Optional. Cannot be null.
-         * Default is 0.
+         * Sets the maximum delay before starting to send data to the server. Optional.
+         * Cannot be null. Default is 0.
          *
          * @param value the maximum delay before sending new data
          * @return this builder
          */
-        public Builder setSpreadPeriod(final Period value) {
+        public Builder setSpreadPeriod(final Duration value) {
             _spreadPeriod = value;
             return this;
         }
@@ -284,7 +284,7 @@ public final class CirconusSink extends BaseSink {
         @Min(1)
         private Integer _maximumQueueSize = 2500;
         @NotNull
-        private Period _spreadPeriod = Period.ZERO;
+        private Duration _spreadPeriod = Duration.ZERO;
         @NotNull
         private Boolean _enableHistograms = false;
         @NotNull

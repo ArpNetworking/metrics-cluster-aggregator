@@ -22,9 +22,9 @@ import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import net.sf.oval.constraint.NotNull;
-import org.joda.time.DateTime;
-import org.joda.time.Period;
 
+import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -36,15 +36,15 @@ import javax.annotation.Nullable;
 @Loggable
 public final class PeriodicData {
 
-    public Period getPeriod() {
+    public Duration getPeriod() {
         return _period;
     }
 
-    public DateTime getStart() {
+    public ZonedDateTime getStart() {
         return _start;
     }
 
-    public Optional<DateTime> getMinRequestTime() {
+    public Optional<ZonedDateTime> getMinRequestTime() {
         return _minRequestTime;
     }
 
@@ -109,9 +109,9 @@ public final class PeriodicData {
         _conditions = builder._conditions;
     }
 
-    private final Period _period;
-    private final DateTime _start;
-    private final Optional<DateTime> _minRequestTime;
+    private final Duration _period;
+    private final ZonedDateTime _start;
+    private final Optional<ZonedDateTime> _minRequestTime;
     private final ImmutableMap<String, String> _dimensions;
     private final ImmutableList<AggregatedData> _data;
     private final ImmutableList<Condition> _conditions;
@@ -135,7 +135,7 @@ public final class PeriodicData {
          * @param value The period.
          * @return This {@link Builder} instance.
          */
-        public Builder setPeriod(final Period value) {
+        public Builder setPeriod(final Duration value) {
             _period = value;
             return this;
         }
@@ -146,7 +146,7 @@ public final class PeriodicData {
          * @param minRequestTime The minimum request time.
          * @return This {@link Builder} instance.
          */
-        public Builder setMinRequestTime(@Nullable final DateTime minRequestTime) {
+        public Builder setMinRequestTime(@Nullable final ZonedDateTime minRequestTime) {
             _minRequestTime = minRequestTime;
             return this;
         }
@@ -157,7 +157,7 @@ public final class PeriodicData {
          * @param value The start.
          * @return This {@link Builder} instance.
          */
-        public Builder setStart(final DateTime value) {
+        public Builder setStart(final ZonedDateTime value) {
             _start = value;
             return this;
         }
@@ -196,11 +196,11 @@ public final class PeriodicData {
         }
 
         @NotNull
-        private Period _period;
+        private Duration _period;
         @NotNull
-        private DateTime _start;
+        private ZonedDateTime _start;
         @Nullable
-        private DateTime _minRequestTime;
+        private ZonedDateTime _minRequestTime;
         @NotNull
         private ImmutableMap<String, String> _dimensions = ImmutableMap.of();
         @NotNull

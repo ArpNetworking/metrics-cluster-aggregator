@@ -30,7 +30,6 @@ import com.arpnetworking.tsdcore.sinks.Sink;
 import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.arpnetworking.tsdcore.statistics.StatisticFactory;
 import com.arpnetworking.utility.BaseActorTest;
-import org.joda.time.Period;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,6 +39,9 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import scala.concurrent.duration.FiniteDuration;
 
+import java.time.Duration;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -73,9 +75,9 @@ public class EmitterTest extends BaseActorTest {
                         .setStatistic(MEDIAN_STATISTIC)
                         .build())
                 .setHost("TestHost")
-                .setPeriod(Period.minutes(1))
+                .setPeriod(Duration.ofMinutes(1))
                 .setIsSpecified(true)
-                .setStart(org.joda.time.DateTime.now().hourOfDay().roundFloorCopy())
+                .setStart(ZonedDateTime.now().truncatedTo(ChronoUnit.HOURS))
                 .setPopulationSize(0L)
                 .setSamples(Collections.<Quantity>emptyList())
                 .setValue(new Quantity.Builder()

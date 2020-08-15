@@ -23,14 +23,14 @@ import com.arpnetworking.utility.BaseActorTest;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import org.joda.time.DateTime;
-import org.joda.time.Period;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
+import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.function.Consumer;
 
 /**
@@ -59,8 +59,8 @@ public class CarbonSinkTest extends BaseActorTest {
         final PeriodicData periodicData = new PeriodicData.Builder()
                 .setData(ImmutableList.of(datum))
                 .setDimensions(ImmutableMap.of("host", "MyHost"))
-                .setPeriod(Period.minutes(1))
-                .setStart(DateTime.now())
+                .setPeriod(Duration.ofMinutes(1))
+                .setStart(ZonedDateTime.now())
                 .build();
         carbonSink.recordAggregateData(periodicData);
         Mockito.verify(recorder, Mockito.timeout(5000)).accept(Mockito.any());
@@ -73,7 +73,7 @@ public class CarbonSinkTest extends BaseActorTest {
         final String[] keyValueParts = bufferString.split(" ");
         Assert.assertEquals("Buffer=" + bufferString, 3, keyValueParts.length);
         Assert.assertEquals("Buffer=" + bufferString, String.format("%f", datum.getValue().getValue()), keyValueParts[1]);
-        Assert.assertEquals("Buffer=" + bufferString, String.valueOf(periodicData.getStart().getMillis() / 1000), keyValueParts[2]);
+        Assert.assertEquals("Buffer=" + bufferString, String.valueOf(periodicData.getStart().toEpochSecond()), keyValueParts[2]);
         final String[] keyParts = keyValueParts[0].split("\\.");
         Assert.assertEquals("Buffer=" + bufferString, 6, keyParts.length);
         Assert.assertEquals("Buffer=" + bufferString, datum.getFQDSN().getCluster(), keyParts[0]);

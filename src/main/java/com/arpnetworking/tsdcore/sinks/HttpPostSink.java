@@ -39,9 +39,9 @@ import org.asynchttpclient.DefaultAsyncHttpClientConfig;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.RequestBuilder;
 import org.asynchttpclient.uri.Uri;
-import org.joda.time.Period;
 
 import java.net.URI;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.function.Function;
 
@@ -150,7 +150,7 @@ public abstract class HttpPostSink extends BaseSink {
      *
      * @return The BaseBackoff <code>Period</code>.
      */
-    protected Period getRetryBaseBackoff() {
+    protected Duration getRetryBaseBackoff() {
         return _baseBackoff;
     }
 
@@ -159,7 +159,7 @@ public abstract class HttpPostSink extends BaseSink {
      *
      * @return The MaximumDelay <code>Period</code>.
      */
-    protected Period getRetryMaximumDelay() {
+    protected Duration getRetryMaximumDelay() {
         return _maximumDelay;
     }
 
@@ -199,8 +199,8 @@ public abstract class HttpPostSink extends BaseSink {
     private final Uri _aysncHttpClientUri;
     private final ActorRef _sinkActor;
     private final int _maximumAttempts;
-    private final Period _baseBackoff;
-    private final Period _maximumDelay;
+    private final Duration _baseBackoff;
+    private final Duration _maximumDelay;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpPostSink.class);
     private static final AsyncHttpClient CLIENT;
@@ -274,7 +274,7 @@ public abstract class HttpPostSink extends BaseSink {
          * @param value the maximum delay before sending new data
          * @return this builder
          */
-        public B setSpreadPeriod(final Period value) {
+        public B setSpreadPeriod(final Duration value) {
             _spreadPeriod = value;
             return self();
         }
@@ -310,7 +310,7 @@ public abstract class HttpPostSink extends BaseSink {
          * @param value the base backoff period
          * @return this builder
          */
-        public B setBaseBackoff(final Period value) {
+        public B setBaseBackoff(final Duration value) {
             _baseBackoff = value;
             return self();
         }
@@ -322,7 +322,7 @@ public abstract class HttpPostSink extends BaseSink {
          * @param value the maximum delay for retries
          * @return this builder
          */
-        public B setMaximumDelay(final Period value) {
+        public B setMaximumDelay(final Duration value) {
             _maximumDelay = value;
             return self();
         }
@@ -348,7 +348,7 @@ public abstract class HttpPostSink extends BaseSink {
         @Min(1)
         private Integer _maximumQueueSize = 25000;
         @NotNull
-        private Period _spreadPeriod = Period.ZERO;
+        private Duration _spreadPeriod = Duration.ZERO;
         @JacksonInject
         @NotNull
         private MetricsFactory _metricsFactory;
@@ -356,10 +356,10 @@ public abstract class HttpPostSink extends BaseSink {
         @Min(1)
         private Integer _maximumAttempts = 1;
         @NotNull
-        private Period _baseBackoff = Period.millis(50);
+        private Duration _baseBackoff = Duration.ofMillis(50);
         @NotNull
         @CheckWith(CheckPeriod.class)
-        private Period _maximumDelay = Period.seconds(60);
+        private Duration _maximumDelay = Duration.ofSeconds(60);
 
 
         private static final class CheckPeriod implements CheckWithCheck.SimpleCheck {
@@ -372,7 +372,7 @@ public abstract class HttpPostSink extends BaseSink {
                     return false;
                 }
                 final HttpPostSink.Builder<?, ?> builder = (HttpPostSink.Builder<?, ?>) validatedObject;
-                return builder._baseBackoff.getMillis() >= 0 && builder._maximumDelay.getMillis() >= 0;
+                return builder._baseBackoff.toMillis() >= 0 && builder._maximumDelay.toMillis() >= 0;
             }
         }
     }

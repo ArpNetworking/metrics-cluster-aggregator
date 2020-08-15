@@ -31,10 +31,9 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import net.sf.oval.constraint.NotNull;
-import org.joda.time.DateTime;
-import org.joda.time.Period;
 
 import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -64,7 +63,7 @@ public final class CombinedMetricData {
         return _metricName;
     }
 
-    public Period getPeriod() {
+    public Duration getPeriod() {
         return _period;
     }
 
@@ -72,11 +71,11 @@ public final class CombinedMetricData {
         return _calculatedValues;
     }
 
-    public DateTime getPeriodStart() {
+    public ZonedDateTime getPeriodStart() {
         return _periodStart;
     }
 
-    public Optional<DateTime> getMinRequestTime() {
+    public Optional<ZonedDateTime> getMinRequestTime() {
         return _minRequestTime;
     }
 
@@ -168,10 +167,10 @@ public final class CombinedMetricData {
     public static final String CLUSTER_KEY = "cluster";
 
     private final String _metricName;
-    private final Period _period;
+    private final Duration _period;
     private final Map<Statistic, StatisticValue> _calculatedValues;
-    private final DateTime _periodStart;
-    private final Optional<DateTime> _minRequestTime;
+    private final ZonedDateTime _periodStart;
+    private final Optional<ZonedDateTime> _minRequestTime;
     private final String _service;
     private final String _cluster;
 
@@ -234,7 +233,7 @@ public final class CombinedMetricData {
          * @param value The value.
          * @return This {@link Builder} instance.
          */
-        public Builder setPeriodStart(final DateTime value) {
+        public Builder setPeriodStart(final ZonedDateTime value) {
             _periodStart = value;
             return this;
         }
@@ -245,7 +244,7 @@ public final class CombinedMetricData {
          * @param value The value.
          * @return This {@link Builder} instance.
          */
-        public Builder setPeriod(final Period value) {
+        public Builder setPeriod(final Duration value) {
             _period = value;
             return this;
         }
@@ -256,17 +255,17 @@ public final class CombinedMetricData {
          * @param minRequestTime The value to set
          * @return This {@link Builder} instance.
          */
-        public Builder setMinRequestTime(@Nullable final DateTime minRequestTime) {
+        public Builder setMinRequestTime(@Nullable final ZonedDateTime minRequestTime) {
             _minRequestTime = minRequestTime;
             return this;
         }
 
-        private static Optional<DateTime> maybeParseMinRequestTime(final String minRequestTime) {
+        private static Optional<ZonedDateTime> maybeParseMinRequestTime(final String minRequestTime) {
             if (minRequestTime.isEmpty()) {
                 return Optional.empty();
             }
 
-            return Optional.of(DateTime.parse(minRequestTime));
+            return Optional.of(ZonedDateTime.parse(minRequestTime));
         }
 
         /**
@@ -278,8 +277,8 @@ public final class CombinedMetricData {
         public static Builder fromStatisticSetRecord(final Messages.StatisticSetRecord record) {
             final Builder builder = new Builder()
                     .setMetricName(record.getMetric())
-                    .setPeriod(Period.parse(record.getPeriod()))
-                    .setPeriodStart(DateTime.parse(record.getPeriodStart()))
+                    .setPeriod(Duration.parse(record.getPeriod()))
+                    .setPeriodStart(ZonedDateTime.parse(record.getPeriodStart()))
                     .setMinRequestTime(maybeParseMinRequestTime(record.getClientMinimumRequestTime()).orElse(null))
                     .setCluster(record.getCluster())
                     .setService(record.getService());
@@ -359,11 +358,11 @@ public final class CombinedMetricData {
         @NotNull
         private String _metricName;
         @NotNull
-        private Period _period;
+        private Duration _period;
         @NotNull
-        private DateTime _periodStart;
+        private ZonedDateTime _periodStart;
         @Nullable
-        private DateTime _minRequestTime;
+        private ZonedDateTime _minRequestTime;
         @NotNull
         private String _service;
         @NotNull

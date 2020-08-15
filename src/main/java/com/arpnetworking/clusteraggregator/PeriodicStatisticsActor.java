@@ -23,8 +23,8 @@ import com.arpnetworking.clusteraggregator.models.PeriodMetrics;
 import com.arpnetworking.metrics.MetricsFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.google.common.collect.Maps;
-import org.joda.time.Period;
 
+import java.time.Duration;
 import java.util.Map;
 
 /**
@@ -57,7 +57,7 @@ public class PeriodicStatisticsActor extends AbstractActor {
     public Receive createReceive() {
         return receiveBuilder()
                 .match(AggregatedData.class, report -> {
-                    final Period period = report.getPeriod();
+                    final Duration period = report.getPeriod();
                     PeriodMetrics metrics = _periodMetrics.get(period);
                     if (metrics == null) {
                         metrics = new PeriodMetrics(_metricsFactory);
@@ -70,6 +70,6 @@ public class PeriodicStatisticsActor extends AbstractActor {
                 .build();
     }
 
-    private final Map<Period, PeriodMetrics> _periodMetrics = Maps.newHashMap();
+    private final Map<Duration, PeriodMetrics> _periodMetrics = Maps.newHashMap();
     private final MetricsFactory _metricsFactory;
 }

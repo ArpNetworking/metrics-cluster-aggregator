@@ -19,13 +19,13 @@ import com.arpnetworking.test.TestBeanFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.google.common.collect.ImmutableList;
-import org.joda.time.Period;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.time.Duration;
 import java.util.Collections;
 
 /**
@@ -48,10 +48,10 @@ public class PeriodFilteringSinkTest {
                 .build();
         final ImmutableList<AggregatedData> data = ImmutableList.of(
                 TestBeanFactory.createAggregatedDataBuilder()
-                        .setPeriod(Period.minutes(1))
+                        .setPeriod(Duration.ofMinutes(1))
                         .build());
         final PeriodicData periodicData = TestBeanFactory.createPeriodicDataBuilder()
-                .setPeriod(Period.minutes(1))
+                .setPeriod(Duration.ofMinutes(1))
                 .setData(data)
                 .build();
 
@@ -64,14 +64,14 @@ public class PeriodFilteringSinkTest {
         final PeriodFilteringSink periodFilteringSink = new PeriodFilteringSink.Builder()
                 .setName("testExclude")
                 .setSink(_sink)
-                .setExclude(Collections.singleton(Period.minutes(5)))
+                .setExclude(Collections.singleton(Duration.ofMinutes(5)))
                 .build();
         final AggregatedData excludedDatum =
                 TestBeanFactory.createAggregatedDataBuilder()
-                        .setPeriod(Period.minutes(5))
+                        .setPeriod(Duration.ofMinutes(5))
                         .build();
         final PeriodicData periodicDataIn = TestBeanFactory.createPeriodicDataBuilder()
-                .setPeriod(Period.minutes(5))
+                .setPeriod(Duration.ofMinutes(5))
                 .setData(ImmutableList.of(excludedDatum))
                 .build();
         periodFilteringSink.recordAggregateData(periodicDataIn);
@@ -83,14 +83,14 @@ public class PeriodFilteringSinkTest {
         final PeriodFilteringSink periodFilteringSink = new PeriodFilteringSink.Builder()
                 .setName("testExcludeLessThanExclude")
                 .setSink(_sink)
-                .setExcludeLessThan(Period.minutes(5))
+                .setExcludeLessThan(Duration.ofMinutes(5))
                 .build();
         final AggregatedData excludedDatum =
                 TestBeanFactory.createAggregatedDataBuilder()
-                        .setPeriod(Period.minutes(1))
+                        .setPeriod(Duration.ofMinutes(1))
                         .build();
         final PeriodicData.Builder periodicDataBuilder = TestBeanFactory.createPeriodicDataBuilder()
-                .setPeriod(Period.minutes(1));
+                .setPeriod(Duration.ofMinutes(1));
         final PeriodicData periodicDataExcluded = periodicDataBuilder
                 .setData(ImmutableList.of(excludedDatum))
                 .build();
@@ -103,14 +103,14 @@ public class PeriodFilteringSinkTest {
         final PeriodFilteringSink periodFilteringSink = new PeriodFilteringSink.Builder()
                 .setName("testExcludeLessThanInclude")
                 .setSink(_sink)
-                .setExcludeLessThan(Period.minutes(5))
+                .setExcludeLessThan(Duration.ofMinutes(5))
                 .build();
         final AggregatedData includedDatum =
                 TestBeanFactory.createAggregatedDataBuilder()
-                        .setPeriod(Period.minutes(5))
+                        .setPeriod(Duration.ofMinutes(5))
                         .build();
         final PeriodicData.Builder periodicDataBuilder = TestBeanFactory.createPeriodicDataBuilder()
-                .setPeriod(Period.minutes(5));
+                .setPeriod(Duration.ofMinutes(5));
         final PeriodicData periodicDataIncluded = periodicDataBuilder
                 .setData(ImmutableList.of(includedDatum))
                 .build();
@@ -123,14 +123,14 @@ public class PeriodFilteringSinkTest {
         final PeriodFilteringSink periodFilteringSink = new PeriodFilteringSink.Builder()
                 .setName("testExcludeGreaterThanExclude")
                 .setSink(_sink)
-                .setExcludeGreaterThan(Period.minutes(5))
+                .setExcludeGreaterThan(Duration.ofMinutes(5))
                 .build();
         final AggregatedData excludedDatum =
                 TestBeanFactory.createAggregatedDataBuilder()
-                        .setPeriod(Period.minutes(10))
+                        .setPeriod(Duration.ofMinutes(10))
                         .build();
         final PeriodicData.Builder periodicDataBuilder = TestBeanFactory.createPeriodicDataBuilder()
-                .setPeriod(Period.minutes(10));
+                .setPeriod(Duration.ofMinutes(10));
         final PeriodicData periodicDataExcluded = periodicDataBuilder
                 .setData(ImmutableList.of(excludedDatum))
                 .build();
@@ -143,14 +143,14 @@ public class PeriodFilteringSinkTest {
         final PeriodFilteringSink periodFilteringSink = new PeriodFilteringSink.Builder()
                 .setName("testExcludeGreaterThanInclude")
                 .setSink(_sink)
-                .setExcludeGreaterThan(Period.minutes(5))
+                .setExcludeGreaterThan(Duration.ofMinutes(5))
                 .build();
         final AggregatedData includedDatum =
                 TestBeanFactory.createAggregatedDataBuilder()
-                        .setPeriod(Period.minutes(5))
+                        .setPeriod(Duration.ofMinutes(5))
                         .build();
         final PeriodicData.Builder periodicDataBuilder = TestBeanFactory.createPeriodicDataBuilder()
-                .setPeriod(Period.minutes(5));
+                .setPeriod(Duration.ofMinutes(5));
         final PeriodicData periodicDataIncluded = periodicDataBuilder
                 .setData(ImmutableList.of(includedDatum))
                 .build();
@@ -160,7 +160,7 @@ public class PeriodFilteringSinkTest {
 
     @Test
     public void testIncludeOverExclude() {
-        final Period includePeriod = Period.minutes(5);
+        final Duration includePeriod = Duration.ofMinutes(5);
         final PeriodFilteringSink periodFilteringSink = new PeriodFilteringSink.Builder()
                 .setName("testIncludeOverExclude")
                 .setSink(_sink)
@@ -172,7 +172,7 @@ public class PeriodFilteringSinkTest {
                         .setPeriod(includePeriod)
                         .build();
         final PeriodicData.Builder periodicDataBuilder = TestBeanFactory.createPeriodicDataBuilder()
-                .setPeriod(Period.minutes(5));
+                .setPeriod(Duration.ofMinutes(5));
         final PeriodicData periodicData = periodicDataBuilder
                 .setData(ImmutableList.of(includedDatum))
                 .build();
@@ -182,19 +182,19 @@ public class PeriodFilteringSinkTest {
 
     @Test
     public void testIncludeOverLessThanExclude() {
-        final Period includePeriod = Period.minutes(5);
+        final Duration includePeriod = Duration.ofMinutes(5);
         final PeriodFilteringSink periodFilteringSink = new PeriodFilteringSink.Builder()
                 .setName("testIncludeOverLessThanExclude")
                 .setSink(_sink)
                 .setInclude(Collections.singleton(includePeriod))
-                .setExcludeLessThan(Period.minutes(10))
+                .setExcludeLessThan(Duration.ofMinutes(10))
                 .build();
         final AggregatedData includedDatum =
                 TestBeanFactory.createAggregatedDataBuilder()
                         .setPeriod(includePeriod)
                         .build();
         final PeriodicData.Builder periodicDataBuilder = TestBeanFactory.createPeriodicDataBuilder()
-                .setPeriod(Period.minutes(10));
+                .setPeriod(Duration.ofMinutes(10));
         final PeriodicData periodicData = periodicDataBuilder
                 .setData(ImmutableList.of(includedDatum))
                 .build();
@@ -204,19 +204,19 @@ public class PeriodFilteringSinkTest {
 
     @Test
     public void testIncludeOverGreaterThanExclude() {
-        final Period includePeriod = Period.minutes(5);
+        final Duration includePeriod = Duration.ofMinutes(5);
         final PeriodFilteringSink periodFilteringSink = new PeriodFilteringSink.Builder()
                 .setName("testIncludeOverGreaterThanExclude")
                 .setSink(_sink)
                 .setInclude(Collections.singleton(includePeriod))
-                .setExcludeGreaterThan(Period.minutes(10))
+                .setExcludeGreaterThan(Duration.ofMinutes(10))
                 .build();
         final ImmutableList<AggregatedData> data = ImmutableList.of(
                 TestBeanFactory.createAggregatedDataBuilder()
                         .setPeriod(includePeriod)
                         .build());
         final PeriodicData periodicData = TestBeanFactory.createPeriodicDataBuilder()
-                .setPeriod(Period.minutes(10))
+                .setPeriod(Duration.ofMinutes(10))
                 .setData(data)
                 .build();
         periodFilteringSink.recordAggregateData(periodicData);

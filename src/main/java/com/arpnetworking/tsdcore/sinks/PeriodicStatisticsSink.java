@@ -34,8 +34,8 @@ import net.sf.oval.constraint.CheckWith;
 import net.sf.oval.constraint.CheckWithCheck;
 import net.sf.oval.constraint.Min;
 import net.sf.oval.constraint.NotNull;
-import org.joda.time.Period;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
@@ -120,7 +120,7 @@ public final class PeriodicStatisticsSink extends BaseSink {
     static ImmutableMap<String, String> computeKey(
             final ImmutableMap<String, String> parameters,
             final String periodDimensionName,
-            final Period period,
+            final Duration period,
             final ImmutableMultimap<String, String> mappedDimensions,
             final ImmutableMap<String, String> defaultDimensionValues) {
         // Filter the input key's parameters by the ones we wish to dimension map
@@ -191,7 +191,7 @@ public final class PeriodicStatisticsSink extends BaseSink {
         return Collections.newSetFromMap(new ConcurrentHashMap<>(initialCapacity));
     }
 
-    private static String getPeriodAsString(final Period period) {
+    private static String getPeriodAsString(final Duration period) {
         @Nullable final String periodAsString = CACHED_PERIOD_STRINGS.get(period);
         if (periodAsString == null) {
             return period.toString();
@@ -258,21 +258,21 @@ public final class PeriodicStatisticsSink extends BaseSink {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PeriodicStatisticsSink.class);
     private static final int EXECUTOR_TIMEOUT_IN_SECONDS = 30;
-    private static final ImmutableMap<Period, String> CACHED_PERIOD_STRINGS;
+    private static final ImmutableMap<Duration, String> CACHED_PERIOD_STRINGS;
 
     static {
-        final ImmutableSet<Period> periods = ImmutableSet.<Period>builder()
-                .add(Period.seconds(1))
-                .add(Period.minutes(1))
-                .add(Period.minutes(2))
-                .add(Period.minutes(5))
-                .add(Period.minutes(10))
-                .add(Period.minutes(15))
-                .add(Period.hours(1))
-                .add(Period.days(1))
+        final ImmutableSet<Duration> periods = ImmutableSet.<Duration>builder()
+                .add(Duration.ofSeconds(1))
+                .add(Duration.ofMinutes(1))
+                .add(Duration.ofMinutes(2))
+                .add(Duration.ofMinutes(5))
+                .add(Duration.ofMinutes(10))
+                .add(Duration.ofMinutes(15))
+                .add(Duration.ofHours(1))
+                .add(Duration.ofDays(1))
                 .build();
-        final ImmutableMap.Builder<Period, String> builder = ImmutableMap.builder();
-        for (final Period period : periods) {
+        final ImmutableMap.Builder<Duration, String> builder = ImmutableMap.builder();
+        for (final Duration period : periods) {
             builder.put(period, period.toString());
         }
         CACHED_PERIOD_STRINGS = builder.build();
@@ -343,8 +343,8 @@ public final class PeriodicStatisticsSink extends BaseSink {
             }
 
 
-            _age.accumulate(now - periodicData.getStart().plus(periodicData.getPeriod()).toInstant().getMillis());
-            periodicData.getMinRequestTime().ifPresent(t -> _requestAge.accumulate(now - t.toInstant().getMillis()));
+            _age.accumulate(now - periodicData.getStart().plus(periodicData.getPeriod()).toInstant().toEpochMilli());
+            periodicData.getMinRequestTime().ifPresent(t -> _requestAge.accumulate(now - t.toInstant().toEpochMilli()));
         }
 
         public boolean flushMetrics() {
