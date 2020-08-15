@@ -550,11 +550,23 @@
       <groupId>com.arpnetworking.metrics</groupId>
       <artifactId>metrics-client</artifactId>
       <version>${metrics.client.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.google.code.findbugs</groupId>
+          <artifactId>findbugs-annotations</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.arpnetworking.metrics.extras</groupId>
       <artifactId>apache-http-sink-extra</artifactId>
       <version>${metrics.http.extra.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.google.code.findbugs</groupId>
+          <artifactId>findbugs-annotations</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.arpnetworking.metrics.extras</groupId>
@@ -813,6 +825,12 @@
       <groupId>org.reflections</groupId>
       <artifactId>reflections</artifactId>
       <version>${reflections.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.google.code.findbugs</groupId>
+          <artifactId>findbugs-annotations</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.aspectj</groupId>

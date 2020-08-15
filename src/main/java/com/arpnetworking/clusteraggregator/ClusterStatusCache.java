@@ -30,6 +30,7 @@ import com.arpnetworking.utility.ParallelLeastShardAllocationStrategy;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import scala.compat.java8.OptionConverters;
 import scala.concurrent.duration.Duration;
 
@@ -124,7 +125,7 @@ public class ClusterStatusCache extends AbstractActor {
 
     private void sendResponse(final ActorRef sender) {
         final StatusResponse response = new StatusResponse(
-                Optional.of(_clusterState.orElse(_cluster.state())),
+                _clusterState.orElse(_cluster.state()),
                 _rebalanceState);
         sender.tell(response, self());
     }
@@ -166,9 +167,9 @@ public class ClusterStatusCache extends AbstractActor {
          * @param rebalanceNotification the last rebalance data
          */
         public StatusResponse(
-                final Optional<ClusterEvent.CurrentClusterState> clusterState,
+                @Nullable final ClusterEvent.CurrentClusterState clusterState,
                 final Optional<ParallelLeastShardAllocationStrategy.RebalanceNotification> rebalanceNotification) {
-            _clusterState = clusterState.orElse(null);
+            _clusterState = clusterState;
 
             if (rebalanceNotification.isPresent()) {
                 final ParallelLeastShardAllocationStrategy.RebalanceNotification notification = rebalanceNotification.get();
@@ -184,11 +185,12 @@ public class ClusterStatusCache extends AbstractActor {
 
                 final Map<ActorRef, Set<String>> currentAllocations = notification.getCurrentAllocations();
 
-                _allocations = allRefs.stream()
-                        .map(shardRegion -> computeShardAllocation(pendingRebalances, currentAllocations, shardRegion))
-                        .collect(Collectors.toList());
+                _allocations = Optional.of(
+                        allRefs.stream()
+                                .map(shardRegion -> computeShardAllocation(pendingRebalances, currentAllocations, shardRegion))
+                                .collect(Collectors.toList()));
             } else {
-                _allocations = null;
+                _allocations = Optional.empty();
             }
         }
 
@@ -221,20 +223,19 @@ public class ClusterStatusCache extends AbstractActor {
                     .build();
         }
 
-        public Optional<ClusterEvent.CurrentClusterState> getClusterState() {
-            return Optional.ofNullable(_clusterState);
+        @Nullable
+        public ClusterEvent.CurrentClusterState getClusterState() {
+            return _clusterState;
         }
 
         public Optional<List<ShardAllocation>> getAllocations() {
-            return Optional.ofNullable(_allocations);
+            return _allocations;
         }
 
-        // NOTE: Cannot be Optional because this class must be serializable
         @Nullable
         private final ClusterEvent.CurrentClusterState _clusterState;
-        // NOTE: Cannot be Optional because this class must be serializable
-        @Nullable
-        private final List<ShardAllocation> _allocations;
+        @SuppressFBWarnings("SE_BAD_FIELD")
+        private final Optional<List<ShardAllocation>> _allocations;
         private static final long serialVersionUID = 603308359721162702L;
     }
 }

@@ -44,8 +44,9 @@ import javax.annotation.Nullable;
  */
 public final class StatusResponse {
 
-    public Optional<String> getClusterLeader() {
-        return _clusterLeader.map(Address::toString);
+    @Nullable
+    public String getClusterLeader() {
+        return _clusterLeader != null ? _clusterLeader.toString() : null;
     }
 
     public String getLocalAddress() {
@@ -54,7 +55,7 @@ public final class StatusResponse {
 
     @JsonProperty("isLeader")
     public boolean isLeader() {
-        return _localAddress.equals(_clusterLeader.orElse(null));
+        return _localAddress.equals(_clusterLeader);
     }
 
     @JsonSerialize(contentUsing = MemberSerializer.class)
@@ -76,12 +77,12 @@ public final class StatusResponse {
     }
 
     private StatusResponse(final Builder builder) {
-        if (builder._clusterState == null || !builder._clusterState.getClusterState().isPresent()) {
-            _clusterLeader = Optional.empty();
+        if (builder._clusterState == null || builder._clusterState.getClusterState() == null) {
+            _clusterLeader = null;
             _members = Collections.emptyList();
         } else {
-            _clusterLeader = Optional.of(builder._clusterState.getClusterState().get().getLeader());
-            _members = builder._clusterState.getClusterState().get().getMembers();
+            _clusterLeader = builder._clusterState.getClusterState().getLeader();
+            _members = builder._clusterState.getClusterState().getMembers();
         }
 
         _localAddress = builder._localAddress;
@@ -96,7 +97,7 @@ public final class StatusResponse {
     }
 
     private final Address _localAddress;
-    private final Optional<Address> _clusterLeader;
+    @Nullable private final Address _clusterLeader;
     private final Iterable<Member> _members;
     private final Map<Duration, PeriodMetrics> _localMetrics;
     private final Optional<List<ShardAllocation>> _allocations;
