@@ -17,8 +17,12 @@ package com.arpnetworking.clusteraggregator.configuration;
 
 import com.arpnetworking.commons.builder.OvalBuilder;
 import com.arpnetworking.commons.jackson.databind.ObjectMapperFactory;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import net.sf.oval.constraint.NotEmpty;
@@ -29,6 +33,7 @@ import java.io.File;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Representation of cluster aggregator configuration.
@@ -53,11 +58,17 @@ public final class ClusterAggregatorConfiguration {
         return _monitoringService;
     }
 
-    public String getMonitoringHost() {
+    public ImmutableList<JsonNode> getMonitoringSinks() {
+        return _monitoringSinks;
+    }
+
+    @Deprecated
+    public Optional<String> getMonitoringHost() {
         return _monitoringHost;
     }
 
-    public int getMonitoringPort() {
+    @Deprecated
+    public Optional<Integer> getMonitoringPort() {
         return _monitoringPort;
     }
 
@@ -151,6 +162,10 @@ public final class ClusterAggregatorConfiguration {
                 .add("id", Integer.toHexString(System.identityHashCode(this)))
                 .add("MonitoringCluster", _monitoringCluster)
                 .add("MonitoringService", _monitoringService)
+                .add("MonitoringSinks", _monitoringSinks)
+                .add("MonitoringHost", _monitoringHost)
+                .add("MonitoringPort", _monitoringPort)
+                .add("JvmMetricsCollectionInterval", _jvmMetricsCollectionInterval)
                 .add("HttpHost", _httpHost)
                 .add("HttpPort", _httpPort)
                 .add("HttpHealthCheckPath", _httpHealthCheckPath)
@@ -167,7 +182,6 @@ public final class ClusterAggregatorConfiguration {
                 .add("ReaggregationTimeout", _reaggregationTimeout)
                 .add("MinConnectionTimeout", _minConnectionTimeout)
                 .add("MaxConnectionTimeout", _maxConnectionTimeout)
-                .add("JvmMetricsCollectionInterval", _jvmMetricsCollectionInterval)
                 .add("RebalanceConfiguration", _rebalanceConfiguration)
                 .add("ClusterHostSuffix", _clusterHostSuffix)
                 .add("DatabaseConfigurations", _databaseConfigurations)
@@ -177,8 +191,9 @@ public final class ClusterAggregatorConfiguration {
     private ClusterAggregatorConfiguration(final Builder builder) {
         _monitoringCluster = builder._monitoringCluster;
         _monitoringService = builder._monitoringService;
-        _monitoringHost = builder._monitoringHost;
-        _monitoringPort = builder._monitoringPort;
+        _monitoringSinks = builder._monitoringSinks;
+        _monitoringHost = Optional.ofNullable(builder._monitoringHost);
+        _monitoringPort = Optional.ofNullable(builder._monitoringPort);
         _httpHost = builder._httpHost;
         _httpPort = builder._httpPort;
         _httpHealthCheckPath = builder._httpHealthCheckPath;
@@ -204,8 +219,9 @@ public final class ClusterAggregatorConfiguration {
 
     private final String _monitoringCluster;
     private final String _monitoringService;
-    private final String _monitoringHost;
-    private final int _monitoringPort;
+    private final ImmutableList<JsonNode> _monitoringSinks;
+    private final Optional<String> _monitoringHost;
+    private final Optional<Integer> _monitoringPort;
     private final File _logDirectory;
     private final String _httpHost;
     private final int _httpPort;
@@ -228,6 +244,8 @@ public final class ClusterAggregatorConfiguration {
     private final boolean _calculateClusterAggregations;
     private final Map<String, DatabaseConfiguration> _databaseConfigurations;
 
+    private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.getInstance();
+
     /**
      * {@link com.arpnetworking.commons.builder.Builder} implementation for
      * {@link com.arpnetworking.clusteraggregator.configuration.ClusterAggregatorConfiguration}.
@@ -240,6 +258,10 @@ public final class ClusterAggregatorConfiguration {
          */
         public Builder() {
             super(ClusterAggregatorConfiguration::new);
+
+            final ObjectNode sinkRoot = OBJECT_MAPPER.createObjectNode();
+            sinkRoot.set("class", new TextNode("com.arpnetworking.metrics.impl.ApacheHttpSink"));
+            _monitoringSinks = ImmutableList.of(sinkRoot);
         }
 
         /**
@@ -266,24 +288,40 @@ public final class ClusterAggregatorConfiguration {
         }
 
         /**
-         * The monitoring endpoint host (Where to post data). Optional. Cannot be null or empty. Default
-         * is 'localhost'.
+         * The monitoring sinks. Optional. Cannot be null. The default value is
+         * the default instance of {@link com.arpnetworking.metrics.impl.ApacheHttpSink}.
+         *
+         * @param value The monitoring sinks.
+         * @return This instance of {@link Builder}.
+         */
+        public Builder setMonitoringSinks(final ImmutableList<JsonNode> value) {
+            _monitoringSinks = value;
+            return this;
+        }
+
+        /**
+         * The monitoring endpoint host (Where to post data). Optional. Cannot
+         * be empty. Defaults to unspecified.
          *
          * @param value The monitoring endpoint uri.
          * @return This instance of {@link Builder}.
+         * @deprecated Use {@link Builder#setMonitoringSinks(ImmutableList)}
          */
+        @Deprecated
         public Builder setMonitoringHost(final String value) {
             _monitoringHost = value;
             return this;
         }
 
         /**
-         * The monitoring endpoint port. Optional. Cannot be null, must be between 1 and
-         * 65535 (inclusive). Defaults to 7090.
+         * The monitoring endpoint port. Optional. Must be between 1 and
+         * 65535 (inclusive). Defaults to unspecified.
          *
          * @param value The port to listen on.
          * @return This instance of {@link Builder}.
+         * @deprecated Use {@link Builder#setMonitoringSinks(ImmutableList)}
          */
+        @Deprecated
         public Builder setMonitoringPort(final Integer value) {
             _monitoringPort = value;
             return this;
@@ -542,12 +580,15 @@ public final class ClusterAggregatorConfiguration {
         @NotNull
         @NotEmpty
         private String _monitoringService = "cluster_aggregator";
+        // TODO(ville): Apply the default here once we migrate off JsonNode.
         @NotNull
+        private ImmutableList<JsonNode> _monitoringSinks;
         @NotEmpty
-        private String _monitoringHost = "localhost";
-        @NotNull
+        private String _monitoringHost;
         @Range(min = 1, max = 65535)
-        private Integer _monitoringPort = 7090;
+        private Integer _monitoringPort;
+        @NotNull
+        private Duration _jvmMetricsCollectionInterval = Duration.ofMillis(1000);
         @NotNull
         @NotEmpty
         private String _httpHost = "0.0.0.0";
@@ -587,8 +628,6 @@ public final class ClusterAggregatorConfiguration {
         private Duration _maxConnectionTimeout;
         @NotNull
         private Duration _minConnectionTimeout;
-        @NotNull
-        private Duration _jvmMetricsCollectionInterval;
         @NotNull
         private RebalanceConfiguration _rebalanceConfiguration;
         @NotNull
