@@ -30,7 +30,7 @@ import java.util.Iterator;
 import java.util.regex.Pattern;
 
 /**
- * Tests for the <code>JsonNodeDirectorySource</code> class.
+ * Tests for the {@link JsonNodeDirectorySource} class.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */

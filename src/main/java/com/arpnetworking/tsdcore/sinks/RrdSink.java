@@ -26,12 +26,12 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
 import net.sf.oval.constraint.NotEmpty;
 import net.sf.oval.constraint.NotNull;
-import org.joda.time.Period;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.time.Duration;
 import java.util.HashMap;
 
 /**
@@ -104,7 +104,7 @@ public final class RrdSink extends BaseSink {
     private static final Logger LOGGER = LoggerFactory.getLogger(RrdSink.class);
 
     /**
-     * Implementation of builder pattern for <code>RrdClusterSink</code>.
+     * Implementation of builder pattern for {@link RrdSink}.
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
@@ -121,7 +121,7 @@ public final class RrdSink extends BaseSink {
          * The path to the RRD root. Cannot be null or empty.
          *
          * @param value The path to the RRD root.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setPath(final String value) {
             _path = value;
@@ -132,7 +132,7 @@ public final class RrdSink extends BaseSink {
          * The RRD tool to use. Cannot be null or empty. Default is "rrdtool".
          *
          * @param value The RRD tool to use.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setRrdTool(final String value) {
             _rrdTool = value;
@@ -159,7 +159,7 @@ public final class RrdSink extends BaseSink {
         }
 
         public void storeData(final PeriodicData periodicData, final AggregatedData data) {
-            final long startTimeEpochInSeconds = periodicData.getStart().getMillis() / 1000;
+            final long startTimeEpochInSeconds = periodicData.getStart().toEpochSecond();
             createRRDFile(periodicData.getPeriod(), startTimeEpochInSeconds);
             final String value = startTimeEpochInSeconds + ":" + String.format("%f", data.getValue().getValue());
             final String[] arguments = new String[] {
@@ -170,7 +170,7 @@ public final class RrdSink extends BaseSink {
             executeProcess(arguments);
         }
 
-        private void createRRDFile(final Period period, final long startTime) {
+        private void createRRDFile(final Duration period, final long startTime) {
             if (new File(_fileName).exists()) {
                 return;
             }
@@ -189,8 +189,8 @@ public final class RrdSink extends BaseSink {
                 "-b",
                 Long.toString(startTime),
                 "-s",
-                Integer.toString(period.toStandardSeconds().getSeconds()),
-                "DS:metric:GAUGE:" + Integer.toString(period.toStandardSeconds().getSeconds() * 3) + ":U:U",
+                Long.toString(period.getSeconds()),
+                "DS:metric:GAUGE:" + Long.toString(period.getSeconds() * 3) + ":U:U",
                 "RRA:AVERAGE:0.5:1:1000" };
             executeProcess(arguments);
         }

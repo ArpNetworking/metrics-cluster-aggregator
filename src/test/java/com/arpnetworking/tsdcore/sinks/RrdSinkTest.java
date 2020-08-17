@@ -24,17 +24,17 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
-import org.joda.time.Period;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 
 /**
- * Tests for the <code>RrdSink</code> class.
+ * Tests for the {@link RrdSink} class.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
@@ -87,7 +87,7 @@ public class RrdSinkTest {
                                         .setStatistic(MEAN_STATISTIC)
                                         .build())
                                 .setHost("localhost")
-                                .setPeriod(Period.minutes(5))
+                                .setPeriod(Duration.ofMinutes(5))
                                 .build()))
                 .setDimensions(ImmutableMap.of("host", "MyHost"))
                 .build();
@@ -104,7 +104,7 @@ public class RrdSinkTest {
                                         .setStatistic(MEAN_STATISTIC)
                                         .build())
                                 .setHost("localhost")
-                                .setPeriod(Period.minutes(5))
+                                .setPeriod(Duration.ofMinutes(5))
                                 .build()))
                 .setDimensions(ImmutableMap.of("host", "MyHost"))
                 .build();

@@ -33,7 +33,7 @@ import java.util.Optional;
 /**
  * Histogram statistic. This is a supporting statistic and does not produce
  * a value itself. It is used by percentile statistics as a common dependency.
- * Use <code>StatisticFactory</code> for construction.
+ * Use {@link StatisticFactory} for construction.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
@@ -77,7 +77,7 @@ public final class HistogramStatistic extends BaseStatistic {
         /**
          * Public constructor.
          *
-         * @param statistic The <code>Statistic</code>.
+         * @param statistic The {@link Statistic}.
          */
         /* package private */ HistogramAccumulator(final Statistic statistic) {
             super(statistic);
@@ -206,7 +206,8 @@ public final class HistogramStatistic extends BaseStatistic {
         private final HistogramSnapshot _histogramSnapshot;
 
         /**
-         * Implementation of the builder pattern for a {@link HistogramSupportingData}.
+         * {@link com.arpnetworking.commons.builder.Builder} implementation for
+         * {@link HistogramSupportingData}.
          *
          * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
          */

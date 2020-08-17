@@ -37,12 +37,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import org.joda.time.DateTime;
-import org.joda.time.Period;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.io.Serializable;
 import java.time.Duration;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Map;
@@ -60,7 +60,7 @@ import javax.annotation.Nullable;
 public class StreamingAggregator extends AbstractActorWithTimers {
 
     /**
-     * Creates a <code>Props</code> for use in Akka.
+     * Creates a {@link Props} for use in Akka.
      *
      * @param metricsListener Where to send metrics about aggregation computations.
      * @param emitter Where to send the metrics data.
@@ -68,7 +68,7 @@ public class StreamingAggregator extends AbstractActorWithTimers {
      * @param reaggregationDimensions The dimensions to reaggregate over.
      * @param injectClusterAsHost Whether to inject a host dimension based on cluster.
      * @param aggregatorTimeout The time to wait from the start of the period for all data.
-     * @return A new <code>Props</code>.
+     * @return A new {@link Props}.
      */
     public static Props props(
             final ActorRef metricsListener,
@@ -76,7 +76,7 @@ public class StreamingAggregator extends AbstractActorWithTimers {
             final String clusterHostSuffix,
             final ImmutableSet<String> reaggregationDimensions,
             final boolean injectClusterAsHost,
-            final Period aggregatorTimeout) {
+            final Duration aggregatorTimeout) {
         return Props.create(
                 StreamingAggregator.class,
                 metricsListener,
@@ -104,7 +104,7 @@ public class StreamingAggregator extends AbstractActorWithTimers {
             @Named("cluster-host-suffix") final String clusterHostSuffix,
             @Named("reaggregation-dimensions") final ImmutableSet<String> reaggregationDimensions,
             @Named("reaggregation-cluster-as-host") final boolean injectClusterAsHost,
-            @Named("reaggregation-timeout") final Period aggregatorTimeout) {
+            @Named("reaggregation-timeout") final Duration aggregatorTimeout) {
         _periodicStatistics = periodicStatistics;
         _clusterHostSuffix = clusterHostSuffix;
         _reaggregationDimensions = reaggregationDimensions;
@@ -132,7 +132,7 @@ public class StreamingAggregator extends AbstractActorWithTimers {
                     if (_initialized) {
                         while (!_aggBuckets.isEmpty()) {
                             final StreamingAggregationBucket bucket = _aggBuckets.getFirst();
-                            if (bucket.getPeriodStart().plus(_period).plus(_aggregatorTimeout).isBeforeNow()) {
+                            if (bucket.getPeriodStart().plus(_period).plus(_aggregatorTimeout).isBefore(ZonedDateTime.now())) {
                                 _aggBuckets.removeFirst();
 
                                 // Walk over every statistic in the bucket
@@ -207,7 +207,7 @@ public class StreamingAggregator extends AbstractActorWithTimers {
         initialize(data, metricData);
 
         // Find the time bucket to dump this in
-        final DateTime periodStart = DateTime.parse(data.getPeriodStart());
+        final ZonedDateTime periodStart = ZonedDateTime.parse(data.getPeriodStart());
         if (_aggBuckets.size() > 0 && _aggBuckets.getFirst().getPeriodStart().isAfter(periodStart)) {
             // We got a bit of data that is too old for us to aggregate.
             WORK_TOO_OLD_LOGGER.warn()
@@ -284,7 +284,7 @@ public class StreamingAggregator extends AbstractActorWithTimers {
                     .setPeriod(_period)
                     .setPopulationSize(1L)
                     .setSamples(Collections.emptyList())
-                    .setStart(DateTime.now().hourOfDay().roundFloorCopy())
+                    .setStart(ZonedDateTime.now().truncatedTo(ChronoUnit.HOURS))
                     .setValue(new Quantity.Builder().setValue(0d).build());
             _initialized = true;
             LOGGER.debug()
@@ -321,7 +321,7 @@ public class StreamingAggregator extends AbstractActorWithTimers {
         if (_injectClusterAsHost) {
             addDimension(CombinedMetricData.HOST_KEY, createHost(), builder);
         } else {
-            final @Nullable String hostDimension = statisticSetRecord.getDimensionsMap().get(CombinedMetricData.HOST_KEY);
+            @Nullable final String hostDimension = statisticSetRecord.getDimensionsMap().get(CombinedMetricData.HOST_KEY);
             if (hostDimension != null) {
                 addDimension(CombinedMetricData.HOST_KEY, hostDimension, builder);
             }
@@ -354,9 +354,9 @@ public class StreamingAggregator extends AbstractActorWithTimers {
     private final ImmutableSet<String> _reaggregationDimensions;
     private final boolean _injectClusterAsHost;
     private final Set<Statistic> _statistics = Sets.newHashSet();
-    private final Period _aggregatorTimeout;
+    private final Duration _aggregatorTimeout;
     private boolean _initialized = false;
-    private Period _period;
+    private Duration _period;
     private String _cluster;
     private String _metric;
     private String _service;

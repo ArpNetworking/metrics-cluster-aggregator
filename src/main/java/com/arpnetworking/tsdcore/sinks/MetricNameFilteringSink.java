@@ -116,7 +116,7 @@ public final class MetricNameFilteringSink extends BaseSink {
     /**
      * Protected constructor.
      *
-     * @param builder Instance of <code>Builder</code>.
+     * @param builder Instance of {@link Builder}.
      */
     protected MetricNameFilteringSink(final Builder builder) {
         super(builder);
@@ -139,7 +139,7 @@ public final class MetricNameFilteringSink extends BaseSink {
     private final Sink _sink;
 
     /**
-     * Base <code>Builder</code> implementation.
+     * Base {@link Builder} implementation.
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
@@ -159,7 +159,7 @@ public final class MetricNameFilteringSink extends BaseSink {
          * null.
          *
          * @param value The exclude filters.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setExcludeFilters(final List<String> value) {
             _excludeFilters = value;
@@ -173,7 +173,7 @@ public final class MetricNameFilteringSink extends BaseSink {
          * null.
          *
          * @param value The include filters.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setIncludeFilters(final List<String> value) {
             _includeFilters = value;
@@ -184,7 +184,7 @@ public final class MetricNameFilteringSink extends BaseSink {
          * The aggregated data sink to filter. Cannot be null.
          *
          * @param value The aggregated data sink to filter.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setSink(final Sink value) {
             _sink = value;

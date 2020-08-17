@@ -26,10 +26,10 @@ import com.arpnetworking.steno.LoggerFactory;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import org.joda.time.Period;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.io.Serializable;
+import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -41,7 +41,7 @@ import java.util.concurrent.TimeUnit;
 public class AggregationRouter extends AbstractActor {
 
     /**
-     * Creates a <code>Props</code> for use in Akka.
+     * Creates a {@link Props} for use in Akka.
      *
      * @param metricsListener Where to send metrics about aggregation computations.
      * @param emitter Where to send the metrics data.
@@ -49,7 +49,7 @@ public class AggregationRouter extends AbstractActor {
      * @param reaggregationDimensions The dimensions to reaggregate over.
      * @param injectClusterAsHost Whether to inject a host dimension based on cluster.
      * @param aggregatorTimeout The time to wait from the start of the period for all data.
-     * @return A new <code>Props</code>.
+     * @return A new {@link Props}.
      */
     public static Props props(
             final ActorRef metricsListener,
@@ -57,7 +57,7 @@ public class AggregationRouter extends AbstractActor {
             final String clusterHostSuffix,
             final ImmutableSet<String> reaggregationDimensions,
             final boolean injectClusterAsHost,
-            final Period aggregatorTimeout) {
+            final Duration aggregatorTimeout) {
         return Props.create(
                 AggregationRouter.class,
                 metricsListener,
@@ -85,7 +85,7 @@ public class AggregationRouter extends AbstractActor {
             @Named("cluster-host-suffix") final String clusterHostSuffix,
             @Named("reaggregation-dimensions") final ImmutableSet<String> reaggregationDimensions,
             @Named("reaggregation-cluster-as-host") final boolean injectClusterAsHost,
-            @Named("reaggregation-timeout") final Period aggregatorTimeout) {
+            @Named("reaggregation-timeout") final Duration aggregatorTimeout) {
         _streamingChild = context().actorOf(
                 StreamingAggregator.props(
                         periodicStatistics,

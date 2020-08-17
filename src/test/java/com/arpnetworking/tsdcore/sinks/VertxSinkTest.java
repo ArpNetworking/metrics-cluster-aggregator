@@ -18,7 +18,7 @@ package com.arpnetworking.tsdcore.sinks;
 import org.junit.Test;
 
 /**
- * Tests for the <code>CarbonSink</code> class.
+ * Tests for the {@link CarbonSink} class.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */

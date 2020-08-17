@@ -27,8 +27,6 @@ import com.arpnetworking.steno.LogValueMapFactory;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.model.PeriodicData;
-import org.joda.time.DateTime;
-import org.joda.time.Period;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.net.InetSocketAddress;
@@ -58,7 +56,7 @@ public class TcpSinkActor extends AbstractActor {
             final String serverAddress,
             final int serverPort,
             final int maximumQueueSize,
-            final Period exponentialBackoffBase) {
+            final Duration exponentialBackoffBase) {
         return Props.create(TcpSinkActor.class, sink, serverAddress, serverPort, maximumQueueSize, exponentialBackoffBase);
     }
 
@@ -76,12 +74,12 @@ public class TcpSinkActor extends AbstractActor {
             final String serverAddress,
             final int serverPort,
             final int maximumQueueSize,
-            final Period exponentialBackoffBase) {
+            final Duration exponentialBackoffBase) {
         _sink = sink;
         _serverAddress = serverAddress;
         _serverPort = serverPort;
         _maximumQueueSize = maximumQueueSize;
-        _exponentialBackoffBase = Duration.ofMillis(exponentialBackoffBase.toDurationFrom(DateTime.now()).getMillis());
+        _exponentialBackoffBase = exponentialBackoffBase;
         _pendingRequests = new LinkedList<>();
         connect();
     }

@@ -22,9 +22,9 @@ import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import net.sf.oval.constraint.NotNull;
-import org.joda.time.DateTime;
-import org.joda.time.Period;
 
+import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -36,15 +36,15 @@ import javax.annotation.Nullable;
 @Loggable
 public final class PeriodicData {
 
-    public Period getPeriod() {
+    public Duration getPeriod() {
         return _period;
     }
 
-    public DateTime getStart() {
+    public ZonedDateTime getStart() {
         return _start;
     }
 
-    public Optional<DateTime> getMinRequestTime() {
+    public Optional<ZonedDateTime> getMinRequestTime() {
         return _minRequestTime;
     }
 
@@ -109,15 +109,16 @@ public final class PeriodicData {
         _conditions = builder._conditions;
     }
 
-    private final Period _period;
-    private final DateTime _start;
-    private final Optional<DateTime> _minRequestTime;
+    private final Duration _period;
+    private final ZonedDateTime _start;
+    private final Optional<ZonedDateTime> _minRequestTime;
     private final ImmutableMap<String, String> _dimensions;
     private final ImmutableList<AggregatedData> _data;
     private final ImmutableList<Condition> _conditions;
 
     /**
-     * <code>Builder</code> implementation for <code>PeriodicData</code>.
+     * {@link com.arpnetworking.commons.builder.Builder} implementation for
+     * {@link PeriodicData}.
      */
     public static final class Builder extends OvalBuilder<PeriodicData> {
 
@@ -132,9 +133,9 @@ public final class PeriodicData {
          * Set the period. Required. Cannot be null.
          *
          * @param value The period.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
-        public Builder setPeriod(final Period value) {
+        public Builder setPeriod(final Duration value) {
             _period = value;
             return this;
         }
@@ -143,9 +144,9 @@ public final class PeriodicData {
          * Set the minimum request time. Can be null.
          *
          * @param minRequestTime The minimum request time.
-         * @return This <code>BUilder</code> instance.
+         * @return This {@link Builder} instance.
          */
-        public Builder setMinRequestTime(@Nullable final DateTime minRequestTime) {
+        public Builder setMinRequestTime(@Nullable final ZonedDateTime minRequestTime) {
             _minRequestTime = minRequestTime;
             return this;
         }
@@ -154,18 +155,18 @@ public final class PeriodicData {
          * Set the start. Required. Cannot be null.
          *
          * @param value The start.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
-        public Builder setStart(final DateTime value) {
+        public Builder setStart(final ZonedDateTime value) {
             _start = value;
             return this;
         }
 
         /**
-         * Set the dimensions. Optional. Cannot be null. Defaults to an empty <code>Map</code>.
+         * Set the dimensions. Optional. Cannot be null. Defaults to an empty {@link ImmutableMap}.
          *
          * @param value The dimensions.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setDimensions(final ImmutableMap<String, String> value) {
             _dimensions = value;
@@ -173,10 +174,10 @@ public final class PeriodicData {
         }
 
         /**
-         * Set the data. Optional. Cannot be null. Defaults to an empty <code>List</code>.
+         * Set the data. Optional. Cannot be null. Defaults to an empty {@link ImmutableList}.
          *
          * @param value The data.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setData(final ImmutableList<AggregatedData> value) {
             _data = value;
@@ -184,10 +185,10 @@ public final class PeriodicData {
         }
 
         /**
-         * Set the conditions. Optional. Cannot be null. Defaults to an empty <code>List</code>.
+         * Set the conditions. Optional. Cannot be null. Defaults to an empty {@link ImmutableList}.
          *
          * @param value The conditions.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setConditions(final ImmutableList<Condition> value) {
             _conditions = value;
@@ -195,11 +196,11 @@ public final class PeriodicData {
         }
 
         @NotNull
-        private Period _period;
+        private Duration _period;
         @NotNull
-        private DateTime _start;
+        private ZonedDateTime _start;
         @Nullable
-        private DateTime _minRequestTime;
+        private ZonedDateTime _minRequestTime;
         @NotNull
         private ImmutableMap<String, String> _dimensions = ImmutableMap.of();
         @NotNull

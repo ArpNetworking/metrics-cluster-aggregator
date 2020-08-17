@@ -51,13 +51,13 @@ import java.util.Optional;
  */
 public class AggClientConnection extends AbstractActor {
     /**
-     * Creates a <code>Props</code> for use in Akka.
+     * Creates a {@link Props} for use in Akka.
      *
      * @param connection Reference to the client connection actor.
      * @param remote The address of the client socket.
      * @param maxConnectionAge The maximum duration to keep a connection open before cycling it.
      * @param calculateAggregates True to compute cluster aggregations, false to only publish host aggregations
-     * @return A new <code>Props</code>.
+     * @return A new {@link Props}.
      */
     public static Props props(
             final ActorRef connection,

@@ -18,13 +18,14 @@ package com.arpnetworking.tsdcore.model;
 import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.arpnetworking.tsdcore.statistics.StatisticFactory;
 import com.arpnetworking.utility.test.BuildableEqualsAndHashCodeTester;
-import org.joda.time.DateTime;
-import org.joda.time.Period;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.time.Duration;
+import java.time.ZonedDateTime;
+
 /**
- * Tests for the <code>FQSN</code> class.
+ * Tests for the {@link FQSN} class.
  *
  * TODO(vkoskela): Enable dimensions. [MAI-449]
  *
@@ -38,8 +39,8 @@ public class FQSNTest {
         final String expectedService = "MyService";
         final String expectedMetric = "MyMetric";
         final String expectedCluster = "MyCluster";
-        final Period expectedPeriod = Period.minutes(5);
-        final DateTime expectedStart = DateTime.now();
+        final Duration expectedPeriod = Duration.ofMinutes(5);
+        final ZonedDateTime expectedStart = ZonedDateTime.now();
         final String expectedHost = "MyHost";
 
         final FQSN fqsn = new FQSN.Builder()
@@ -68,8 +69,8 @@ public class FQSNTest {
         final String expectedService = "MyService";
         final String expectedMetric = "MyMetric";
         final String expectedCluster = "MyCluster";
-        final Period expectedPeriod = Period.minutes(5);
-        final DateTime expectedStart = DateTime.now();
+        final Duration expectedPeriod = Duration.ofMinutes(5);
+        final ZonedDateTime expectedStart = ZonedDateTime.now();
         final String expectedHost = "MyHost";
 
         final FQSN fqsn = new FQSN.Builder()
@@ -98,8 +99,8 @@ public class FQSNTest {
         final String expectedService = "MyService";
         final String expectedMetric = "MyMetric";
         final String expectedCluster = "MyCluster";
-        final Period expectedPeriod = Period.minutes(5);
-        final DateTime expectedStart = DateTime.now();
+        final Duration expectedPeriod = Duration.ofMinutes(5);
+        final ZonedDateTime expectedStart = ZonedDateTime.now();
         final String expectedHost = "MyHost";
 
         final FQSN fqsn = new FQSN.Builder()
@@ -126,14 +127,14 @@ public class FQSNTest {
 
     @Test
     public void testEqualsAndHashCode() {
-        final DateTime now = DateTime.now();
+        final ZonedDateTime now = ZonedDateTime.now();
         BuildableEqualsAndHashCodeTester.assertEqualsAndHashCode(
                 new FQSN.Builder()
                         .setStatistic(TP99_STATISTIC)
                         .setService("MyServiceA")
                         .setMetric("MyMetricA")
                         .setCluster("MyClusterA")
-                        .setPeriod(Period.minutes(1))
+                        .setPeriod(Duration.ofMinutes(1))
                         .setStart(now),
                         //.addDimension("host", "MyHostA"),
                 new FQSN.Builder()
@@ -141,7 +142,7 @@ public class FQSNTest {
                         .setService("MyServiceB")
                         .setMetric("MyMetricB")
                         .setCluster("MyClusterB")
-                        .setPeriod(Period.minutes(5))
+                        .setPeriod(Duration.ofMinutes(5))
                         .setStart(now.plusDays(1)));
                         //.addDimension("host", "MyHostB"));
     }
@@ -153,8 +154,8 @@ public class FQSNTest {
                 .setService("MyService")
                 .setMetric("MyMetric")
                 .setCluster("MyCluster")
-                .setPeriod(Period.minutes(1))
-                .setStart(DateTime.now())
+                .setPeriod(Duration.ofMinutes(1))
+                .setStart(ZonedDateTime.now())
                 //.addDimension("host", "MyHost")
                 .build()
                 .toString();

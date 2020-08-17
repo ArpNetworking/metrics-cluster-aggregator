@@ -32,7 +32,7 @@ import scala.concurrent.duration.FiniteDuration;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Tests <code>JvmMetricsCollector</code> class.
+ * Tests {@link JvmMetricsCollector} class.
  *
  * @author Deepika Misra (deepika at groupon dot com)
  */

@@ -34,8 +34,8 @@ import net.sf.oval.constraint.CheckWith;
 import net.sf.oval.constraint.CheckWithCheck;
 import net.sf.oval.constraint.Min;
 import net.sf.oval.constraint.NotNull;
-import org.joda.time.Period;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
@@ -120,7 +120,7 @@ public final class PeriodicStatisticsSink extends BaseSink {
     static ImmutableMap<String, String> computeKey(
             final ImmutableMap<String, String> parameters,
             final String periodDimensionName,
-            final Period period,
+            final Duration period,
             final ImmutableMultimap<String, String> mappedDimensions,
             final ImmutableMap<String, String> defaultDimensionValues) {
         // Filter the input key's parameters by the ones we wish to dimension map
@@ -191,7 +191,7 @@ public final class PeriodicStatisticsSink extends BaseSink {
         return Collections.newSetFromMap(new ConcurrentHashMap<>(initialCapacity));
     }
 
-    private static String getPeriodAsString(final Period period) {
+    private static String getPeriodAsString(final Duration period) {
         @Nullable final String periodAsString = CACHED_PERIOD_STRINGS.get(period);
         if (periodAsString == null) {
             return period.toString();
@@ -258,21 +258,21 @@ public final class PeriodicStatisticsSink extends BaseSink {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PeriodicStatisticsSink.class);
     private static final int EXECUTOR_TIMEOUT_IN_SECONDS = 30;
-    private static final ImmutableMap<Period, String> CACHED_PERIOD_STRINGS;
+    private static final ImmutableMap<Duration, String> CACHED_PERIOD_STRINGS;
 
     static {
-        final ImmutableSet<Period> periods = ImmutableSet.<Period>builder()
-                .add(Period.seconds(1))
-                .add(Period.minutes(1))
-                .add(Period.minutes(2))
-                .add(Period.minutes(5))
-                .add(Period.minutes(10))
-                .add(Period.minutes(15))
-                .add(Period.hours(1))
-                .add(Period.days(1))
+        final ImmutableSet<Duration> periods = ImmutableSet.<Duration>builder()
+                .add(Duration.ofSeconds(1))
+                .add(Duration.ofMinutes(1))
+                .add(Duration.ofMinutes(2))
+                .add(Duration.ofMinutes(5))
+                .add(Duration.ofMinutes(10))
+                .add(Duration.ofMinutes(15))
+                .add(Duration.ofHours(1))
+                .add(Duration.ofDays(1))
                 .build();
-        final ImmutableMap.Builder<Period, String> builder = ImmutableMap.builder();
-        for (final Period period : periods) {
+        final ImmutableMap.Builder<Duration, String> builder = ImmutableMap.builder();
+        for (final Duration period : periods) {
             builder.put(period, period.toString());
         }
         CACHED_PERIOD_STRINGS = builder.build();
@@ -343,8 +343,8 @@ public final class PeriodicStatisticsSink extends BaseSink {
             }
 
 
-            _age.accumulate(now - periodicData.getStart().plus(periodicData.getPeriod()).toInstant().getMillis());
-            periodicData.getMinRequestTime().ifPresent(t -> _requestAge.accumulate(now - t.toInstant().getMillis()));
+            _age.accumulate(now - periodicData.getStart().plus(periodicData.getPeriod()).toInstant().toEpochMilli());
+            periodicData.getMinRequestTime().ifPresent(t -> _requestAge.accumulate(now - t.toInstant().toEpochMilli()));
         }
 
         public boolean flushMetrics() {
@@ -413,7 +413,7 @@ public final class PeriodicStatisticsSink extends BaseSink {
     }
 
     /**
-     * Implementation of builder pattern for <code>PeriodicStatisticsSink</code>.
+     * Implementation of builder pattern for {@link PeriodicStatisticsSink}.
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
@@ -431,7 +431,7 @@ public final class PeriodicStatisticsSink extends BaseSink {
          * minimum 1. Default is 1.
          *
          * @param value The interval in seconds between flushes.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setIntervalInMilliseconds(final Long value) {
             _intervalInMilliseconds = value;
@@ -454,7 +454,7 @@ public final class PeriodicStatisticsSink extends BaseSink {
          * and which defaults to "_period".
          *
          * @param value The set of dimension names to partition on.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setDimensions(final ImmutableSet<String> value) {
             _dimensions = value;
@@ -478,7 +478,7 @@ public final class PeriodicStatisticsSink extends BaseSink {
          * and which defaults to "_period".
          *
          * @param value The set of dimension names to partition on.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setMappedDimensions(final ImmutableMap<String, String> value) {
             _mappedDimensions = value;
@@ -492,7 +492,7 @@ public final class PeriodicStatisticsSink extends BaseSink {
          * key refers to the dimension name on the input {@link PeriodicData}.
          *
          * @param value The default dimension key-value pairs.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setDefaultDimensionsValues(final ImmutableMap<String, String> value) {
             _defaultDimensionValues = value;
@@ -504,7 +504,7 @@ public final class PeriodicStatisticsSink extends BaseSink {
          * Cannot be null. Default is "_period".
          *
          * @param value The name of the outbound dimension for periodicity.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setPeriodDimensionName(final String value) {
             _periodDimensionName = value;
@@ -512,11 +512,11 @@ public final class PeriodicStatisticsSink extends BaseSink {
         }
 
         /**
-         * Instance of <code>MetricsFactory</code>. Cannot be null. This field
+         * Instance of {@link MetricsFactory}. Cannot be null. This field
          * may be injected automatically by Jackson/Guice if setup to do so.
          *
-         * @param value Instance of <code>MetricsFactory</code>.
-         * @return This instance of <code>Builder</code>.
+         * @param value Instance of {@link MetricsFactory}.
+         * @return This instance of {@link Builder}.
          */
         public Builder setMetricsFactory(final MetricsFactory value) {
             _metricsFactory = value;

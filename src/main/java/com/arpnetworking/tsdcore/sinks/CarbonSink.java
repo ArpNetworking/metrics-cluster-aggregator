@@ -45,7 +45,7 @@ public class CarbonSink extends TcpSink {
                             periodicData.getPeriod().toString(),
                             datum.getFQDSN().getStatistic().getName(),
                             datum.getValue().getValue(),
-                            periodicData.getStart().toInstant().getMillis() / 1000)
+                            periodicData.getStart().toEpochSecond())
                     .getBytes(Charsets.UTF_8));
         }
         return builder.result();
@@ -58,7 +58,7 @@ public class CarbonSink extends TcpSink {
     private static final Logger LOGGER = LoggerFactory.getLogger(CarbonSink.class);
 
     /**
-     * Implementation of builder pattern for <code>CarbonSink</code>.
+     * Implementation of builder pattern for {@link CarbonSink}.
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */

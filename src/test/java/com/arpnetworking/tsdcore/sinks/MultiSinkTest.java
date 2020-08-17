@@ -25,7 +25,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 /**
- * Tests for the <code>MultiSink</code> class.
+ * Tests for the {@link MultiSink} class.
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)

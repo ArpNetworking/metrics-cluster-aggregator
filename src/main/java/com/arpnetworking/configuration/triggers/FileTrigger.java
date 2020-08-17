@@ -21,7 +21,6 @@ import com.arpnetworking.logback.annotations.LogValue;
 import com.arpnetworking.steno.LogValueMapFactory;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import net.sf.oval.constraint.NotNull;
 
 import java.io.File;
@@ -30,9 +29,10 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Optional;
 
 /**
- * <code>Trigger</code> implementation based on a file's modified date and
+ * {@link Trigger} implementation based on a file's modified date and
  * its hash. If the file is created or removed the evaluation will return
  * true.
  *
@@ -59,8 +59,8 @@ public final class FileTrigger implements Trigger {
             final long lastModified = _file.lastModified();
             if (lastModified > _lastModified) {
                 _lastModified = lastModified;
-                final byte[] hash = createHash(_file);
-                if (!Arrays.equals(hash, _hash)) {
+                final Optional<byte[]> hash = createHash(_file);
+                if (!Arrays.equals(hash.orElse(null), _hash.orElse(null))) {
                     LOGGER.debug()
                             .setMessage("File modified and changes found")
                             .addData("file", _file)
@@ -98,8 +98,7 @@ public final class FileTrigger implements Trigger {
         return toLogValue().toString();
     }
 
-    @SuppressFBWarnings("PZLA_PREFER_ZERO_LENGTH_ARRAYS")
-    private byte[] createHash(final File file) {
+    private Optional<byte[]> createHash(final File file) {
         try (FileInputStream inputStream = new FileInputStream(file)) {
             final byte[] bytesBuffer = new byte[1024];
             int bytesRead = -1;
@@ -107,9 +106,9 @@ public final class FileTrigger implements Trigger {
             while ((bytesRead = inputStream.read(bytesBuffer)) != -1) {
                 _md5.update(bytesBuffer, 0, bytesRead);
             }
-            return _md5.digest();
+            return Optional.of(_md5.digest());
         } catch (final IOException ex) {
-            return null;
+            return Optional.empty();
         }
     }
 
@@ -122,7 +121,7 @@ public final class FileTrigger implements Trigger {
         _file = builder._file;
         _exists = true;
         _lastModified = -1;
-        _hash = null;
+        _hash = Optional.empty();
 
         try {
             _md5 = MessageDigest.getInstance("MD5");
@@ -136,12 +135,13 @@ public final class FileTrigger implements Trigger {
 
     private boolean _exists;
     private long _lastModified;
-    private byte[] _hash;
+    private Optional<byte[]> _hash;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FileTrigger.class);
 
     /**
-     * Builder for <code>FileTrigger</code>.
+     * {@link com.arpnetworking.commons.builder.Builder} implementation for
+     * {@link FileTrigger}.
      */
     public static final class Builder extends OvalBuilder<FileTrigger> {
 
@@ -153,10 +153,10 @@ public final class FileTrigger implements Trigger {
         }
 
         /**
-         * Set the <code>File</code> to monitor. Cannot be null.
+         * Set the {@link File} to monitor. Cannot be null.
          *
-         * @param value The <code>File</code> to monitor.
-         * @return This <code>Builder</code> instance.
+         * @param value The {@link File} to monitor.
+         * @return This {@link Builder} instance.
          */
         public Builder setFile(final File value) {
             _file = value;

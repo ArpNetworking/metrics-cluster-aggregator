@@ -78,7 +78,7 @@ For example:
   "aggregationPort": 7065,
   "maxConnectionTimeout": "PT2M",
   "minConnectionTimeout": "PT1M",
-  "jvmMetricsCollectionInterval": "PT.5S",
+  "jvmMetricsCollectionInterval": "PT0.5S",
   "rebalanceConfiguration": {
     "maxParallel": 100,
     "threshold": 500

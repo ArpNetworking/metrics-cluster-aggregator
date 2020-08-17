@@ -73,12 +73,12 @@ import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigParseOptions;
 import com.typesafe.config.ConfigSyntax;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.joda.time.Period;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
@@ -339,7 +339,7 @@ public class GuiceModule extends AbstractModule {
     @Provides
     @Named("reaggregation-timeout")
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
-    private Period provideReaggregationTimeout(final ClusterAggregatorConfiguration config) {
+    private Duration provideReaggregationTimeout(final ClusterAggregatorConfiguration config) {
         return config.getReaggregationTimeout();
     }
 

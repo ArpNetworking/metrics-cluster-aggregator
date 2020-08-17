@@ -23,13 +23,14 @@ import com.arpnetworking.tsdcore.model.Unit;
 import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.arpnetworking.tsdcore.statistics.StatisticFactory;
 import com.google.common.collect.Lists;
-import org.joda.time.DateTime;
-import org.joda.time.Period;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.time.Duration;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -295,8 +296,8 @@ public class AggDataUnifierTest {
                         .setMetric("someSumStat")
                         .setStatistic(SUM_STATISTIC)
                         .build())
-                .setPeriod(Period.minutes(1))
-                .setStart(DateTime.now().hourOfDay().roundFloorCopy())
+                .setPeriod(Duration.ofMinutes(1))
+                .setStart(ZonedDateTime.now().truncatedTo(ChronoUnit.HOURS))
                 .setHost("testhost")
                 .setIsSpecified(true)
                 .setPopulationSize(0L)

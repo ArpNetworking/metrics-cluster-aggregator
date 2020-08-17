@@ -33,7 +33,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Implementation of <code>DynamicConfigurationFactory</code> which maps two part keys
+ * Implementation of {@link DynamicConfigurationFactory} which maps two part keys
  * to cluster and service parameter values in API calls to ReMet Gui for configuration
  * data.
  *
@@ -115,7 +115,8 @@ public final class ReMetGuiDynamicConfigurationFactory implements DynamicConfigu
     private final String _serviceKey;
 
     /**
-     * <code>Builder</code> implementation for <code>DirectoryDynamicConfigurationFactory</code>.
+     * {@link com.arpnetworking.commons.builder.Builder} implementation for
+     * {@link ReMetGuiDynamicConfigurationFactory}.
      */
     public static final class Builder extends OvalBuilder<ReMetGuiDynamicConfigurationFactory> {
 
@@ -127,10 +128,10 @@ public final class ReMetGuiDynamicConfigurationFactory implements DynamicConfigu
         }
 
         /**
-         * Set the <code>URI</code>. Required. Cannot be null.
+         * Set the {@link URI}. Required. Cannot be null.
          *
-         * @param value The <code>URI</code>.
-         * @return This <code>Builder</code> instance.
+         * @param value The {@link URI}.
+         * @return This {@link Builder} instance.
          */
         public Builder setUri(final URI value) {
             _uri = value;
@@ -141,7 +142,7 @@ public final class ReMetGuiDynamicConfigurationFactory implements DynamicConfigu
          * Set the cluster parameter key. Optional. Default is "cluster". Cannot be null or empty.
          *
          * @param value The cluster parameter key.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setClusterKey(final String value) {
             _clusterKey = value;
@@ -152,7 +153,7 @@ public final class ReMetGuiDynamicConfigurationFactory implements DynamicConfigu
          * Set the service parameter key. Optional. Default is "service". Cannot be null or empty.
          *
          * @param value The service parameter key.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setServiceKey(final String value) {
             _serviceKey = value;

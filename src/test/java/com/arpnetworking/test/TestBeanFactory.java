@@ -28,11 +28,12 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import org.joda.time.DateTime;
-import org.joda.time.Period;
 
+import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
+import javax.annotation.Nullable;
 
 /**
  * Creates reasonable random instances of common data types for testing. This is
@@ -44,9 +45,9 @@ import java.util.UUID;
 public final class TestBeanFactory {
 
     /**
-     * Create a builder for pseudo-random <code>Condition</code>.
+     * Create a builder for pseudo-random {@link Condition}.
      *
-     * @return New builder for pseudo-random <code>Condition</code>.
+     * @return New builder for pseudo-random {@link Condition}.
      */
     public static Condition.Builder createConditionBuilder() {
         return new Condition.Builder()
@@ -58,18 +59,18 @@ public final class TestBeanFactory {
     }
 
     /**
-     * Create a new reasonable pseudo-random <code>Condition</code>.
+     * Create a new reasonable pseudo-random {@link Condition}.
      *
-     * @return New reasonable pseudo-random <code>Condition</code>.
+     * @return New reasonable pseudo-random {@link Condition}.
      */
     public static Condition createCondition() {
         return createConditionBuilder().build();
     }
 
     /**
-     * Create a builder for pseudo-random <code>FQDSN</code>.
+     * Create a builder for pseudo-random {@link FQDSN}.
      *
-     * @return New builder for pseudo-random <code>FQDSN</code>.
+     * @return New builder for pseudo-random {@link FQDSN}.
      */
     public static FQDSN.Builder createFQDSNBuilder() {
         return new FQDSN.Builder()
@@ -80,88 +81,88 @@ public final class TestBeanFactory {
     }
 
     /**
-     * Create a new reasonable pseudo-random <code>FQDSN</code>.
+     * Create a new reasonable pseudo-random {@link FQDSN}.
      *
-     * @return New reasonable pseudo-random <code>FQDSN</code>.
+     * @return New reasonable pseudo-random {@link FQDSN}.
      */
     public static FQDSN createFQDSN() {
         return createFQDSNBuilder().build();
     }
 
     /**
-     * Create a builder for pseudo-random <code>AggregatedData</code>.
+     * Create a builder for pseudo-random {@link AggregatedData}.
      *
-     * @return New builder for pseudo-random <code>AggregatedData</code>.
+     * @return New builder for pseudo-random {@link AggregatedData}.
      */
     public static AggregatedData.Builder createAggregatedDataBuilder() {
         return new AggregatedData.Builder()
                 .setFQDSN(createFQDSN())
                 .setHost("host-" + UUID.randomUUID())
                 .setValue(createSample())
-                .setStart(DateTime.now())
-                .setPeriod(Period.minutes(5))
+                .setStart(ZonedDateTime.now())
+                .setPeriod(Duration.ofMinutes(5))
                 .setIsSpecified(true)
                 .setSamples(Lists.newArrayList(createSample()))
                 .setPopulationSize((long) (Math.random() * 100));
     }
 
     /**
-     * Create a new reasonable pseudo-random <code>AggregatedData</code>.
+     * Create a new reasonable pseudo-random {@link AggregatedData}.
      *
-     * @return New reasonable pseudo-random <code>AggregatedData</code>.
+     * @return New reasonable pseudo-random {@link AggregatedData}.
      */
     public static AggregatedData createAggregatedData() {
         return createAggregatedDataBuilder().build();
     }
 
     /**
-     * Create a builder for pseudo-random <code>PeriodicData</code>.
+     * Create a builder for pseudo-random {@link PeriodicData}.
      *
-     * @return New builder for pseudo-random <code>PeriodicData</code>.
+     * @return New builder for pseudo-random {@link PeriodicData}.
      */
     public static PeriodicData.Builder createPeriodicDataBuilder() {
         return new PeriodicData.Builder()
                 .setDimensions(ImmutableMap.of("host", "host-" + UUID.randomUUID()))
                 .setData(ImmutableList.of(createAggregatedData()))
                 .setConditions(ImmutableList.of())
-                .setPeriod(Period.minutes(5))
-                .setStart(DateTime.now());
+                .setPeriod(Duration.ofMinutes(5))
+                .setStart(ZonedDateTime.now());
     }
 
     /**
-     * Create a new reasonable pseudo-random <code>PeriodicData</code>.
+     * Create a new reasonable pseudo-random {@link PeriodicData}.
      *
-     * @return New reasonable pseudo-random <code>PeriodicData</code>.
+     * @return New reasonable pseudo-random {@link PeriodicData}.
      */
     public static PeriodicData createPeriodicData() {
         return createPeriodicDataBuilder().build();
     }
 
     /**
-     * Create a builder for reasonable pseudo-random <code>Quantity</code>.
+     * Create a builder for reasonable pseudo-random {@link Quantity}.
      *
-     * @return New builder for reasonable pseudo-random <code>Quantity</code>.
+     * @return New builder for reasonable pseudo-random {@link Quantity}.
      */
     public static Quantity.Builder createSampleBuilder() {
         return new Quantity.Builder().setValue(Math.random()).setUnit(Unit.BIT);
     }
 
     /**
-     * Create a new reasonable pseudo-random <code>Quantity</code>.
+     * Create a new reasonable pseudo-random {@link Quantity}.
      *
-     * @return New reasonable pseudo-random <code>Quantity</code>.
+     * @return New reasonable pseudo-random {@link Quantity}.
      */
     public static Quantity createSample() {
         return new Quantity.Builder().setValue(Math.random()).setUnit(Unit.BIT).build();
     }
 
     /**
-     * Create a <code>List</code> of <code>Quantity</code> instances in
-     * <code>Unit.MILLISECOND</code> from a <code>List</code> of <code>Double</code>
+     * Create a {@link List} of {@link Quantity} instances in
+     * {@link Unit#MILLISECOND} from a {@link List} of {@link Double}
      * values.
      *
      * @param values The values.
-     * @return <code>List</code> of <code>Quantity</code> instances.
+     * @return {@link List} of {@link Quantity} instances.
      */
     public static List<Quantity> createSamples(final List<Double> values) {
         return FluentIterable.from(Lists.newArrayList(values)).transform(CREATE_SAMPLE).toList();
@@ -169,7 +170,10 @@ public final class TestBeanFactory {
 
     private static final Function<Double, Quantity> CREATE_SAMPLE = new Function<Double, Quantity>() {
         @Override
-        public Quantity apply(final Double input) {
+        public Quantity apply(@Nullable final Double input) {
+            if (input == null) {
+                throw new IllegalArgumentException("Sample value cannot be null");
+            }
             return new Quantity.Builder().setValue(input).setUnit(Unit.MILLISECOND).build();
         }
     };

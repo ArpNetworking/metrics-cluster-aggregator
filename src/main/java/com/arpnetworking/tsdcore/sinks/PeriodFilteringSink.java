@@ -23,8 +23,8 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Sets;
 import net.sf.oval.constraint.NotNull;
-import org.joda.time.Period;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
@@ -72,9 +72,9 @@ public final class PeriodFilteringSink extends BaseSink {
         super(builder);
         _cachedFilterResult = CacheBuilder.newBuilder()
                 .maximumSize(10)
-                .build(new CacheLoader<Period, Boolean>() {
+                .build(new CacheLoader<Duration, Boolean>() {
                     @Override
-                    public Boolean load(final Period key) throws Exception {
+                    public Boolean load(final Duration key) throws Exception {
                         if (_include.contains(key)) {
                             return true;
                         }
@@ -82,11 +82,11 @@ public final class PeriodFilteringSink extends BaseSink {
                             return false;
                         }
                         if (_excludeLessThan.isPresent()
-                                && key.toStandardDuration().isShorterThan(_excludeLessThan.get().toStandardDuration())) {
+                                && key.compareTo(_excludeLessThan.get()) < 0) {
                             return false;
                         }
                         if (_excludeGreaterThan.isPresent()
-                                && key.toStandardDuration().isLongerThan(_excludeGreaterThan.get().toStandardDuration())) {
+                                && key.compareTo(_excludeGreaterThan.get()) > 0) {
                             return false;
                         }
                         return true;
@@ -99,15 +99,15 @@ public final class PeriodFilteringSink extends BaseSink {
         _sink = builder._sink;
     }
 
-    private final LoadingCache<Period, Boolean> _cachedFilterResult;
-    private final Set<Period> _exclude;
-    private final Set<Period> _include;
-    private final Optional<Period> _excludeLessThan;
-    private final Optional<Period> _excludeGreaterThan;
+    private final LoadingCache<Duration, Boolean> _cachedFilterResult;
+    private final Set<Duration> _exclude;
+    private final Set<Duration> _include;
+    private final Optional<Duration> _excludeLessThan;
+    private final Optional<Duration> _excludeGreaterThan;
     private final Sink _sink;
 
     /**
-     * Base <code>Builder</code> implementation.
+     * Base {@link Builder} implementation.
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
@@ -124,9 +124,9 @@ public final class PeriodFilteringSink extends BaseSink {
          * Sets excluded periods. Optional. Default is no excluded periods.
          *
          * @param value The excluded periods.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
-        public Builder setExclude(final Set<Period> value) {
+        public Builder setExclude(final Set<Duration> value) {
             _exclude = value;
             return self();
         }
@@ -136,9 +136,9 @@ public final class PeriodFilteringSink extends BaseSink {
          * settings. Optional. Default is no included periods.
          *
          * @param value The included periods.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
-        public Builder setInclude(final Set<Period> value) {
+        public Builder setInclude(final Set<Duration> value) {
             _include = value;
             return self();
         }
@@ -147,9 +147,9 @@ public final class PeriodFilteringSink extends BaseSink {
          * Sets excluded periods less than this period. Optional. Default is no threshold.
          *
          * @param value The excluded period threshold.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
-        public Builder setExcludeLessThan(final Period value) {
+        public Builder setExcludeLessThan(final Duration value) {
             _excludeLessThan = value;
             return self();
         }
@@ -158,9 +158,9 @@ public final class PeriodFilteringSink extends BaseSink {
          * Sets excluded periods greater than this period. Optional. Default is no threshold.
          *
          * @param value The excluded period threshold.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
-        public Builder setExcludeGreaterThan(final Period value) {
+        public Builder setExcludeGreaterThan(final Duration value) {
             _excludeGreaterThan = value;
             return self();
         }
@@ -169,7 +169,7 @@ public final class PeriodFilteringSink extends BaseSink {
          * The aggregated data sink to filter. Cannot be null.
          *
          * @param value The aggregated data sink to filter.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setSink(final Sink value) {
             _sink = value;
@@ -182,11 +182,11 @@ public final class PeriodFilteringSink extends BaseSink {
         }
 
         @NotNull
-        private Set<Period> _exclude = Collections.emptySet();
+        private Set<Duration> _exclude = Collections.emptySet();
         @NotNull
-        private Set<Period> _include = Collections.emptySet();
-        private Period _excludeLessThan;
-        private Period _excludeGreaterThan;
+        private Set<Duration> _include = Collections.emptySet();
+        private Duration _excludeLessThan;
+        private Duration _excludeGreaterThan;
         @NotNull
         private Sink _sink;
     }

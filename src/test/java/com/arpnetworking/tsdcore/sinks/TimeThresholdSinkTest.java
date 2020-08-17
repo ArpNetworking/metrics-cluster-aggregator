@@ -19,14 +19,14 @@ import com.arpnetworking.test.TestBeanFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.google.common.collect.ImmutableList;
-import org.joda.time.DateTime;
-import org.joda.time.Period;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.Collections;
 
 /**
@@ -44,17 +44,17 @@ public class TimeThresholdSinkTest {
     public void doesNotDropFreshData() {
         final TimeThresholdSink periodFilteringSink = new TimeThresholdSink.Builder()
                 .setName("testKeepFresh")
-                .setThreshold(Period.minutes(10))
+                .setThreshold(Duration.ofMinutes(10))
                 .setSink(_sink)
                 .build();
         final PeriodicData periodicData = TestBeanFactory.createPeriodicDataBuilder()
-                .setPeriod(Period.minutes(1))
-                .setStart(DateTime.now())
+                .setPeriod(Duration.ofMinutes(1))
+                .setStart(ZonedDateTime.now())
                 .setData(
                         ImmutableList.of(
                                 TestBeanFactory.createAggregatedDataBuilder()
-                                        .setPeriod(Period.minutes(1))
-                                        .setStart(DateTime.now())
+                                        .setPeriod(Duration.ofMinutes(1))
+                                        .setStart(ZonedDateTime.now())
                                         .build()))
                 .build();
         periodFilteringSink.recordAggregateData(periodicData);
@@ -65,17 +65,17 @@ public class TimeThresholdSinkTest {
     public void dropsOldDataByDefault() {
         final TimeThresholdSink periodFilteringSink = new TimeThresholdSink.Builder()
                 .setName("testDropOld")
-                .setThreshold(Period.minutes(10))
+                .setThreshold(Duration.ofMinutes(10))
                 .setSink(_sink)
                 .build();
         final PeriodicData periodicData = TestBeanFactory.createPeriodicDataBuilder()
-                .setPeriod(Period.minutes(1))
-                .setStart(DateTime.now().minus(Period.minutes(30)))
+                .setPeriod(Duration.ofMinutes(1))
+                .setStart(ZonedDateTime.now().minus(Duration.ofMinutes(30)))
                 .setData(
                         ImmutableList.of(
                                 TestBeanFactory.createAggregatedDataBuilder()
-                                        .setPeriod(Period.minutes(1))
-                                        .setStart(DateTime.now().minus(Period.minutes(30)))
+                                        .setPeriod(Duration.ofMinutes(1))
+                                        .setStart(ZonedDateTime.now().minus(Duration.ofMinutes(30)))
                                         .build()))
                 .build();
         periodFilteringSink.recordAggregateData(periodicData);
@@ -86,18 +86,18 @@ public class TimeThresholdSinkTest {
     public void doesNotDropOldDataWhenLogOnly() {
         final TimeThresholdSink periodFilteringSink = new TimeThresholdSink.Builder()
                 .setName("testKeepLogOnly")
-                .setThreshold(Period.minutes(10))
+                .setThreshold(Duration.ofMinutes(10))
                 .setLogOnly(true)
                 .setSink(_sink)
                 .build();
         final PeriodicData periodicData = TestBeanFactory.createPeriodicDataBuilder()
-                .setPeriod(Period.minutes(1))
-                .setStart(DateTime.now().minus(Period.minutes(30)))
+                .setPeriod(Duration.ofMinutes(1))
+                .setStart(ZonedDateTime.now().minus(Duration.ofMinutes(30)))
                 .setData(
                         ImmutableList.of(
                                 TestBeanFactory.createAggregatedDataBuilder()
-                                        .setPeriod(Period.minutes(1))
-                                        .setStart(DateTime.now().minus(Period.minutes(30)))
+                                        .setPeriod(Duration.ofMinutes(1))
+                                        .setStart(ZonedDateTime.now().minus(Duration.ofMinutes(30)))
                                         .build()))
                 .build();
         periodFilteringSink.recordAggregateData(periodicData);
@@ -108,22 +108,22 @@ public class TimeThresholdSinkTest {
     public void doesNotDropDataForExcludedServices() {
         final TimeThresholdSink periodFilteringSink = new TimeThresholdSink.Builder()
                 .setName("testKeepsExcludedServices")
-                .setThreshold(Period.minutes(10))
+                .setThreshold(Duration.ofMinutes(10))
                 .setExcludedServices(Collections.singleton("excluded"))
                 .setSink(_sink)
                 .build();
         final AggregatedData datumLate = TestBeanFactory.createAggregatedDataBuilder()
-                .setPeriod(Period.minutes(1))
-                .setStart(DateTime.now().minus(Period.minutes(30)))
+                .setPeriod(Duration.ofMinutes(1))
+                .setStart(ZonedDateTime.now().minus(Duration.ofMinutes(30)))
                 .build();
         final AggregatedData datumLateExcluded = TestBeanFactory.createAggregatedDataBuilder()
-                .setPeriod(Period.minutes(1))
-                .setStart(DateTime.now().minus(Period.minutes(30)))
+                .setPeriod(Duration.ofMinutes(1))
+                .setStart(ZonedDateTime.now().minus(Duration.ofMinutes(30)))
                 .setFQDSN(TestBeanFactory.createFQDSNBuilder().setService("excluded").build())
                 .build();
         final PeriodicData.Builder periodicDataBuilder = TestBeanFactory.createPeriodicDataBuilder()
-                .setPeriod(Period.minutes(1))
-                .setStart(DateTime.now().minus(Period.minutes(30)));
+                .setPeriod(Duration.ofMinutes(1))
+                .setStart(ZonedDateTime.now().minus(Duration.ofMinutes(30)));
         final PeriodicData periodicDataIn = periodicDataBuilder
                 .setData(ImmutableList.of(datumLate, datumLateExcluded))
                 .build();

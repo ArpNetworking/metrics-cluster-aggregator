@@ -27,7 +27,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 /**
- * Tests for the <code>UnitMappingSink</code> class.
+ * Tests for the {@link UnitMappingSink} class.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */

@@ -26,14 +26,16 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.Iterables;
-import org.joda.time.Period;
+import net.sf.oval.constraint.NotNull;
 import scala.collection.JavaConversions;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 /**
  * Response model for the status http endpoint.
@@ -41,6 +43,8 @@ import java.util.Optional;
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public final class StatusResponse {
+
+    @Nullable
     public String getClusterLeader() {
         return _clusterLeader != null ? _clusterLeader.toString() : null;
     }
@@ -59,7 +63,7 @@ public final class StatusResponse {
         return Iterables.unmodifiableIterable(_members);
     }
 
-    public Map<Period, PeriodMetrics> getLocalMetrics() {
+    public Map<Duration, PeriodMetrics> getLocalMetrics() {
         return Collections.unmodifiableMap(_localMetrics);
     }
 
@@ -73,7 +77,7 @@ public final class StatusResponse {
     }
 
     private StatusResponse(final Builder builder) {
-        if (builder._clusterState == null) {
+        if (builder._clusterState == null || builder._clusterState.getClusterState() == null) {
             _clusterLeader = null;
             _members = Collections.emptyList();
         } else {
@@ -89,20 +93,18 @@ public final class StatusResponse {
     }
 
     private <T> Optional<T> flatten(final Optional<Optional<T>> value) {
-        if (value.isPresent()) {
-            return value.get();
-        }
-        return Optional.empty();
+        return value.orElseGet(Optional::empty);
     }
 
     private final Address _localAddress;
-    private final Address _clusterLeader;
+    @Nullable private final Address _clusterLeader;
     private final Iterable<Member> _members;
-    private final Map<Period, PeriodMetrics> _localMetrics;
+    private final Map<Duration, PeriodMetrics> _localMetrics;
     private final Optional<List<ShardAllocation>> _allocations;
 
     /**
-     * Builder for a {@link StatusResponse}.
+     * {@link com.arpnetworking.commons.builder.Builder} implementation for
+     * {@link StatusResponse}.
      */
     public static class Builder extends OvalBuilder<StatusResponse> {
         /**
@@ -118,7 +120,7 @@ public final class StatusResponse {
          * @param value The cluster state.
          * @return This builder.
          */
-        public Builder setClusterState(final ClusterStatusCache.StatusResponse value) {
+        public Builder setClusterState(@Nullable final ClusterStatusCache.StatusResponse value) {
             _clusterState = value;
             return this;
         }
@@ -140,14 +142,17 @@ public final class StatusResponse {
          * @param value The local metrics.
          * @return This builder.
          */
-        public Builder setLocalMetrics(final Map<Period, PeriodMetrics> value) {
+        public Builder setLocalMetrics(final Map<Duration, PeriodMetrics> value) {
             _localMetrics = value;
             return this;
         }
 
+        @Nullable
         private ClusterStatusCache.StatusResponse _clusterState;
+        @NotNull
         private Address _localAddress;
-        private Map<Period, PeriodMetrics> _localMetrics;
+        @NotNull
+        private Map<Duration, PeriodMetrics> _localMetrics = Collections.emptyMap();
     }
 
     private static final class MemberSerializer extends JsonSerializer<Member> {

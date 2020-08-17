@@ -33,7 +33,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * <code>JsonNode</code> based configuration sourced from a directory. This
+ * {@link JsonNode} based configuration sourced from a directory. This
  * is intended to monitor the files in a single directory and is not designed
  * to monitor a directory tree (e.g. it is not recursive).
  *
@@ -110,7 +110,7 @@ public final class JsonNodeDirectorySource extends BaseJsonNodeSource {
     private static final Logger LOGGER = LoggerFactory.getLogger(JsonNodeDirectorySource.class);
 
     /**
-     * Builder for <code>JsonNodeDirectorySource</code>.
+     * Builder for {@link JsonNodeDirectorySource}.
      */
     public static final class Builder extends BaseJsonNodeSource.Builder<Builder, JsonNodeDirectorySource> {
 
@@ -125,7 +125,7 @@ public final class JsonNodeDirectorySource extends BaseJsonNodeSource {
          * Set the directory.
          *
          * @param value The directory.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setDirectory(final File value) {
             _directory = value;
@@ -133,14 +133,14 @@ public final class JsonNodeDirectorySource extends BaseJsonNodeSource {
         }
 
         /**
-         * Set the <code>Collection</code> of file names. Optional. Default is
+         * Set the {@link Collection} of file names. Optional. Default is
          * an empty list (e.g. all files). Cannot be null.
          *
          * <b>Note:</b> Both the file names and file name patterns must be
          * empty (e.g. unset) in order to consider all files in the directory.
          *
-         * @param value The <code>Collection</code> of file names.
-         * @return This <code>Builder</code> instance.
+         * @param value The {@link Collection} of file names.
+         * @return This {@link Builder} instance.
          */
         public Builder setFileNames(final Collection<String> value) {
             _fileNames = Lists.newArrayList(value);
@@ -151,7 +151,7 @@ public final class JsonNodeDirectorySource extends BaseJsonNodeSource {
          * Add a file name.
          *
          * @param value The file name.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder addFileName(final String value) {
             if (_fileNames == null) {
@@ -163,14 +163,14 @@ public final class JsonNodeDirectorySource extends BaseJsonNodeSource {
         }
 
         /**
-         * Set the <code>Collection</code> of file name patterns. Optional.
+         * Set the {@link Collection} of file name patterns. Optional.
          * Default is an empty list (e.g. all files). Cannot be null.
          *
          * <b>Note:</b> Both the file names and file name patterns must be
          * empty (e.g. unset) in order to consider all files in the directory.
          *
-         * @param value The <code>Collection</code> of file name patterns.
-         * @return This <code>Builder</code> instance.
+         * @param value The {@link Collection} of file name patterns.
+         * @return This {@link Builder} instance.
          */
         public Builder setFileNamePatterns(final Collection<Pattern> value) {
             _fileNamePatterns = Lists.newArrayList(value);
@@ -181,7 +181,7 @@ public final class JsonNodeDirectorySource extends BaseJsonNodeSource {
          * Add a file name pattern.
          *
          * @param value The file name pattern.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder addFileNamePattern(final Pattern value) {
             if (_fileNamePatterns == null) {

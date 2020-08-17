@@ -78,7 +78,7 @@ public final class DomainInjectingSink extends BaseSink {
     private static final String DOMAIN_DIMENSION_NAME = "domain";
 
     /**
-     * Implementation of builder pattern for <code>DomainInjectingSink</code>.
+     * Implementation of builder pattern for {@link DomainInjectingSink}.
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
@@ -95,7 +95,7 @@ public final class DomainInjectingSink extends BaseSink {
          * Sets recognized domain suffixes.
          *
          * @param value The recognized suffixes.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setSuffixes(final ImmutableSet<String> value) {
             _suffixes = value;
@@ -106,7 +106,7 @@ public final class DomainInjectingSink extends BaseSink {
          * The sink to wrap. Cannot be null.
          *
          * @param value The sink to wrap.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setSink(final Sink value) {
             _sink = value;

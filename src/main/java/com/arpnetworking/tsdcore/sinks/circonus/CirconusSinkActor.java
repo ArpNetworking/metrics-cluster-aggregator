@@ -35,8 +35,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import it.unimi.dsi.fastutil.doubles.Double2LongMap;
-import org.joda.time.Period;
-import org.joda.time.format.ISOPeriodFormat;
 import play.libs.ws.StandaloneWSResponse;
 import scala.concurrent.ExecutionContextExecutor;
 import scala.concurrent.duration.FiniteDuration;
@@ -85,7 +83,7 @@ public final class CirconusSinkActor extends AbstractActor {
      * @param broker Circonus broker to push to
      * @param maximumConcurrency the maximum number of parallel metric submissions
      * @param maximumQueueSize the maximum size of the pending metrics queue
-     * @param spreadPeriod the maximum wait time before starting to send metrics
+     * @param spreadDuration the maximum wait time before starting to send metrics
      * @param enableHistograms true to turn on histogram publication
      * @param partitionSet the partition set to partition the check bundles with
      * @return A new {@link akka.actor.Props}
@@ -95,7 +93,7 @@ public final class CirconusSinkActor extends AbstractActor {
             final String broker,
             final int maximumConcurrency,
             final int maximumQueueSize,
-            final Period spreadPeriod,
+            final Duration spreadDuration,
             final boolean enableHistograms,
             final PartitionSet partitionSet) {
         return Props.create(
@@ -104,7 +102,7 @@ public final class CirconusSinkActor extends AbstractActor {
                 broker,
                 maximumConcurrency,
                 maximumQueueSize,
-                spreadPeriod,
+                spreadDuration,
                 enableHistograms,
                 partitionSet);
     }
@@ -116,7 +114,7 @@ public final class CirconusSinkActor extends AbstractActor {
      * @param broker Circonus broker to push to
      * @param maximumConcurrency the maximum number of parallel metric submissions
      * @param maximumQueueSize the maximum size of the pending metrics queue
-     * @param spreadPeriod the maximum wait time before starting to send metrics
+     * @param spreadDuration the maximum wait time before starting to send metrics
      * @param enableHistograms true to turn on histogram publication
      * @param partitionSet the partition set to partition the check bundles with
      */
@@ -125,7 +123,7 @@ public final class CirconusSinkActor extends AbstractActor {
             final String broker,
             final int maximumConcurrency,
             final int maximumQueueSize,
-            final Period spreadPeriod,
+            final Duration spreadDuration,
             final boolean enableHistograms,
             final PartitionSet partitionSet) {
         _client = client;
@@ -134,10 +132,10 @@ public final class CirconusSinkActor extends AbstractActor {
         _enableHistograms = enableHistograms;
         _partitionSet = partitionSet;
         _pendingRequests = EvictingQueue.create(maximumQueueSize);
-        if (Period.ZERO.equals(spreadPeriod)) {
+        if (Duration.ZERO.equals(spreadDuration)) {
             _spreadingDelayMillis = 0;
         } else {
-            _spreadingDelayMillis = new Random().nextInt((int) spreadPeriod.toStandardDuration().getMillis());
+            _spreadingDelayMillis = new Random().nextInt((int) spreadDuration.toMillis());
         }
         _dispatcher = getContext().system().dispatcher();
         context().actorOf(BrokerRefresher.props(_client), "broker-refresher");
@@ -277,7 +275,7 @@ public final class CirconusSinkActor extends AbstractActor {
         final Map<String, Object> dataNode = Maps.newHashMap();
         for (final AggregatedData aggregatedData : data) {
             final String name = new StringBuilder()
-                    .append(aggregatedData.getPeriod().toString(ISOPeriodFormat.standard()))
+                    .append(aggregatedData.getPeriod().toString())
                     .append("/")
                     .append(aggregatedData.getFQDSN().getMetric())
                     .append("/")
@@ -315,7 +313,7 @@ public final class CirconusSinkActor extends AbstractActor {
                 data.getFQDSN().getService(),
                 data.getFQDSN().getCluster(),
                 data.getHost(),
-                data.getPeriod().toString(ISOPeriodFormat.standard()),
+                data.getPeriod().toString(),
                 data.getFQDSN().getMetric(),
                 data.getFQDSN().getStatistic().getName());
     }

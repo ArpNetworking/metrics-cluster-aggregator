@@ -33,10 +33,9 @@ import net.sf.oval.constraint.NotNull;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.RequestBuilder;
-import org.joda.time.Period;
-import org.joda.time.format.ISOPeriodFormat;
 
 import java.nio.charset.Charset;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -65,7 +64,7 @@ public final class MonitordSink extends HttpPostSink {
 
     @Override
     protected Collection<byte[]> serialize(final PeriodicData periodicData) {
-        final Period period = periodicData.getPeriod();
+        final Duration period = periodicData.getPeriod();
         final Multimap<String, AggregatedData> indexedData = prepareData(periodicData);
         final Multimap<String, Condition> indexedConditions = prepareConditions(periodicData.getConditions());
 
@@ -80,7 +79,7 @@ public final class MonitordSink extends HttpPostSink {
                 final String name = new StringBuilder()
                         .append(first.getFQDSN().getService())
                         .append("_")
-                        .append(period.toString(ISOPeriodFormat.standard()))
+                        .append(period.toString())
                         .append("_")
                         .append(first.getFQDSN().getMetric())
                         .toString();
@@ -123,12 +122,14 @@ public final class MonitordSink extends HttpPostSink {
                     continue;
                 }
 
-                stringBuilder.append("run_every=").append(period.toStandardSeconds().getSeconds())
+                stringBuilder.append("run_every=").append(period.getSeconds())
                         .append("&path=").append(first.getFQDSN().getCluster())
                         .append("%2f").append(periodicData.getDimensions().get("host"))
                         .append("&monitor=").append(name)
                         .append("&status=").append(maxStatus)
-                        .append("&timestamp=").append((int) Unit.SECOND.convert(periodicData.getStart().getMillis(), Unit.MILLISECOND))
+                        .append("&timestamp=").append((int) Unit.SECOND.convert(
+                                periodicData.getStart().toInstant().toEpochMilli(),
+                                Unit.MILLISECOND))
                         .append("&output=").append(name)
                         .append("%7C")
                         .append(dataBuilder.toString());
@@ -172,7 +173,7 @@ public final class MonitordSink extends HttpPostSink {
         return Multimaps.index(
                 periodicData.getData(), input ->
                         input.getFQDSN().getService() + "_"
-                                + periodicData.getPeriod().toString(ISOPeriodFormat.standard()) + "_"
+                                + periodicData.getPeriod().toString() + "_"
                                 + input.getFQDSN().getMetric() + "_"
                                 + periodicData.getDimensions().get("host") + "_"
                                 + input.getFQDSN().getCluster());
@@ -188,7 +189,7 @@ public final class MonitordSink extends HttpPostSink {
     private final int _unknownSeverityStatus;
 
     /**
-     * Implementation of builder pattern for <code>MonitordSink</code>.
+     * Implementation of builder pattern for {@link MonitordSink}.
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
@@ -203,7 +204,7 @@ public final class MonitordSink extends HttpPostSink {
 
         /**
          * Set severity to status map. Optional. Cannot be null. By default is
-         * an <code>Map</code> containing the following:
+         * an {@link Map} containing the following:
          *
          * {@code
          * "warning" => 1
@@ -211,7 +212,7 @@ public final class MonitordSink extends HttpPostSink {
          * }
          *
          * @param value Map of severity to status.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setSeverityToStatus(final Map<String, Integer> value) {
             _severityToStatus = value;
@@ -219,12 +220,12 @@ public final class MonitordSink extends HttpPostSink {
         }
 
         /**
-         * The status for unknown <code>Condition</code> severities; e.g. those
+         * The status for unknown {@link Condition} severities; e.g. those
          * not found in the severity to status map. Optional. Cannot be null.
-         * By default the status for a <code>Condition</code> is <code>2</code>.
+         * By default the status for a {@link Condition} is {@code 2}.
          *
          * @param value Default status.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setUnknownSeverityStatus(final Integer value) {
             _unknownSeverityStatus = value;

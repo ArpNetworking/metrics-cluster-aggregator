@@ -25,7 +25,8 @@ import java.util.function.Function;
 
 /**
  * Abstract base class for common functionality for publishing
- * <code>AggregatedData</code>. This class is thread safe.
+ * {@link com.arpnetworking.tsdcore.model.AggregatedData}. This
+ * class is thread safe.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
@@ -59,7 +60,7 @@ public abstract class BaseSink implements Sink {
     /**
      * Protected constructor.
      *
-     * @param builder Instance of <code>Builder</code>.
+     * @param builder Instance of {@link Builder}.
      */
     protected BaseSink(final Builder<?, ?> builder) {
         _name = builder._name;
@@ -68,7 +69,8 @@ public abstract class BaseSink implements Sink {
     private final String _name;
 
     /**
-     * Base <code>Builder</code> implementation.
+     * Base {@link com.arpnetworking.commons.builder.Builder} implementation for
+     * {@link Sink} implementations.
      *
      * @param <B> type of the builder
      * @param <S> type of the object to be built
@@ -81,7 +83,7 @@ public abstract class BaseSink implements Sink {
          * Sets name. Cannot be null or empty.
          *
          * @param value The name.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public final B setName(final String value) {
             _name = value;
@@ -90,9 +92,9 @@ public abstract class BaseSink implements Sink {
 
         /**
          * Called by setters to always return appropriate subclass of
-         * <code>Builder</code>, even from setters of base class.
+         * {@link Builder}, even from setters of base class.
          *
-         * @return instance with correct <code>Builder</code> class type.
+         * @return instance with correct {@link Builder} class type.
          */
         protected abstract B self();
 

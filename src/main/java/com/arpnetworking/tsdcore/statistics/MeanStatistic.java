@@ -30,7 +30,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Takes the mean of the entries. Use <code>StatisticFactory</code> for construction.
+ * Takes the mean of the entries. Use {@link StatisticFactory} for construction.
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
@@ -106,7 +106,7 @@ public final class MeanStatistic extends BaseStatistic {
         /**
          * Public constructor.
          *
-         * @param statistic The <code>Statistic</code>.
+         * @param statistic The {@link Statistic}.
          */
         public MeanCalculator(final Statistic statistic) {
             super(statistic);

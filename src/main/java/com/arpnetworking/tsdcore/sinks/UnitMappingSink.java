@@ -30,7 +30,7 @@ import net.sf.oval.constraint.NotNull;
 import java.util.Map;
 
 /**
- * Implementation of <code>Sink</code> which maps values in one unit to another.
+ * Implementation of {@link Sink} which maps values in one unit to another.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
@@ -134,7 +134,7 @@ public final class UnitMappingSink extends BaseSink {
     private final Sink _sink;
 
     /**
-     * Implementation of builder pattern for <code>UnitMappingSink</code>.
+     * Implementation of builder pattern for {@link UnitMappingSink}.
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
@@ -151,7 +151,7 @@ public final class UnitMappingSink extends BaseSink {
          * The map of unit to unit. Cannot be null.
          *
          * @param value The map of unit to unit.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setMap(final Map<Unit, Unit> value) {
             _map = value;
@@ -162,7 +162,7 @@ public final class UnitMappingSink extends BaseSink {
          * The sink to wrap. Cannot be null.
          *
          * @param value The sink to wrap.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setSink(final Sink value) {
             _sink = value;

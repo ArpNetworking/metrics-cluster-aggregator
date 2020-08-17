@@ -26,7 +26,7 @@ import org.mockito.Mockito;
 import java.util.Collections;
 
 /**
- * Tests for the <code>FilteringSink</code> class.
+ * Tests for the {@link MetricNameFilteringSink} class.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */

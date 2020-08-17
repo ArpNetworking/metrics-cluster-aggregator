@@ -26,12 +26,12 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import org.joda.time.DateTime;
 import scala.collection.JavaConversions;
 import scala.collection.immutable.IndexedSeq;
 import scala.concurrent.Future;
 
 import java.io.Serializable;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
@@ -194,7 +194,7 @@ public final class ParallelLeastShardAllocationStrategy extends ShardCoordinator
             _currentAllocations = ImmutableMap.copyOf(currentAllocations);
             _inflightRebalances = ImmutableSet.copyOf(inflightRebalances);
             _pendingRebalances = ImmutableMap.copyOf(pendingRebalances);
-            _timestamp = DateTime.now();
+            _timestamp = Instant.now();
         }
 
         public Map<ActorRef, Set<String>> getCurrentAllocations() {
@@ -205,7 +205,7 @@ public final class ParallelLeastShardAllocationStrategy extends ShardCoordinator
             return _inflightRebalances;
         }
 
-        public DateTime getTimestamp() {
+        public Instant getTimestamp() {
             return _timestamp;
         }
 
@@ -216,7 +216,7 @@ public final class ParallelLeastShardAllocationStrategy extends ShardCoordinator
         private final ImmutableMap<ActorRef, Set<String>> _currentAllocations;
         private final ImmutableSet<String> _inflightRebalances;
         private final ImmutableMap<String, ActorRef> _pendingRebalances;
-        private final DateTime _timestamp;
+        private final Instant _timestamp;
 
         private static final long serialVersionUID = 1L;
     }

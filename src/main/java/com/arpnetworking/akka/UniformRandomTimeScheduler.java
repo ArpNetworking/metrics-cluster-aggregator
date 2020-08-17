@@ -105,7 +105,8 @@ public final class UniformRandomTimeScheduler {
     private static final Logger LOGGER = LoggerFactory.getLogger(UniformRandomTimeScheduler.class);
 
     /**
-     * Builder for {@link UniformRandomTimeScheduler}.
+     * {@link com.arpnetworking.commons.builder.Builder} implementation for
+     * {@link UniformRandomTimeScheduler}.
      */
     public static final class Builder extends OvalBuilder<UniformRandomTimeScheduler> {
         /**
@@ -119,7 +120,7 @@ public final class UniformRandomTimeScheduler {
          * The target actor. Required. Cannot be null.
          *
          * @param value The actor to send the message to.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setTarget(final ActorRef value) {
             _target = value;
@@ -130,7 +131,7 @@ public final class UniformRandomTimeScheduler {
          * The actor the message will be from. Optional. Defaults to ActorRef.noSender().
          *
          * @param value The actor the message will be from.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setSender(final ActorRef value) {
             _sender = value;
@@ -141,7 +142,7 @@ public final class UniformRandomTimeScheduler {
          * The scheduler to schedule with. Required. Cannot be null.
          *
          * @param value The scheduler to schedule with.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setScheduler(final Scheduler value) {
             _scheduler = value;
@@ -152,7 +153,7 @@ public final class UniformRandomTimeScheduler {
          * The message to send. Required. Cannot be null.
          *
          * @param value The message to send.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setMessage(final Object value) {
             _message = value;
@@ -163,7 +164,7 @@ public final class UniformRandomTimeScheduler {
          * The execution context to run the send on. Required. Cannot be null.
          *
          * @param value The execution context to send on.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setExecutionContext(final ExecutionContext value) {
             _executionContext = value;
@@ -174,7 +175,7 @@ public final class UniformRandomTimeScheduler {
          * The minimum time. Required. Cannot be null. Must be greater than or equal to 0.
          *
          * @param value The minimum time between message sends.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setMinimumTime(final FiniteDuration value) {
             _minimumTime = value;
@@ -185,7 +186,7 @@ public final class UniformRandomTimeScheduler {
          * The maximum time. Required. Cannot be null. Must be greater than minimum time.
          *
          * @param value The maximum time between message sends.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setMaximumTime(final FiniteDuration value) {
             _maximumTime = value;

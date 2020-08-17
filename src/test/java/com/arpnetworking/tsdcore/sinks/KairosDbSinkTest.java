@@ -36,8 +36,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import net.sf.oval.exception.ConstraintsViolatedException;
 import org.awaitility.Awaitility;
-import org.joda.time.DateTime;
-import org.joda.time.Period;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -47,10 +45,14 @@ import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.net.URI;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Tests for the <code>KairosDbSink</code> class.
+ * Tests for the {@link KairosDbSink} class.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
@@ -80,7 +82,7 @@ public class KairosDbSinkTest extends BaseActorTest {
 
     @Test(expected = ConstraintsViolatedException.class)
     public void testNegativeBaseBackOff() {
-        _kairosDbSinkBuilder.setBaseBackoff(Period.millis(-5)).build();
+        _kairosDbSinkBuilder.setBaseBackoff(Duration.ofMillis(-5)).build();
     }
 
     @Test
@@ -91,7 +93,9 @@ public class KairosDbSinkTest extends BaseActorTest {
                         .withStatus(200)));
 
         // Post data to KairosDb
-        final DateTime start = new DateTime(1457768160000L);
+        final ZonedDateTime start = ZonedDateTime.ofInstant(
+                Instant.ofEpochMilli(1457768160000L),
+                ZoneOffset.UTC);
         final FQDSN fqdsn = new FQDSN.Builder()
                 .setCluster("MyCluster")
                 .setMetric("MyMetric")
@@ -114,7 +118,7 @@ public class KairosDbSinkTest extends BaseActorTest {
                                         .setFQDSN(fqdsn)
                                         .setHost("MyHost")
                                         .setIsSpecified(true)
-                                        .setPeriod(Period.minutes(1))
+                                        .setPeriod(Duration.ofMinutes(1))
                                         .setPopulationSize(1L)
                                         .setStart(start)
                                         .setValue(new Quantity.Builder()
@@ -124,7 +128,7 @@ public class KairosDbSinkTest extends BaseActorTest {
                         .setDimensions(ImmutableMap.of(
                                 "host", "myhost.example.com",
                                 "domain", "example.com"))
-                        .setPeriod(Period.minutes(1))
+                        .setPeriod(Duration.ofMinutes(1))
                         .setStart(start)
                         .build());
         // Allow the request/response to complete
@@ -163,7 +167,7 @@ public class KairosDbSinkTest extends BaseActorTest {
         _wireMock.register(WireMock.post(WireMock.urlEqualTo(PATH))
                 .willReturn(WireMock.aResponse()
                         .withStatus(502)));
-        _kairosDbSinkBuilder.setMaximumAttempts(2).setBaseBackoff(Period.millis(1)).build()
+        _kairosDbSinkBuilder.setMaximumAttempts(2).setBaseBackoff(Duration.ofMillis(1)).build()
                 .recordAggregateData(TestBeanFactory.createPeriodicData());
 
         Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(

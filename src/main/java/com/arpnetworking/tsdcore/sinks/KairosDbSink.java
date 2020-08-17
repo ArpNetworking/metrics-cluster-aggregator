@@ -38,8 +38,6 @@ import com.google.common.collect.Lists;
 import it.unimi.dsi.fastutil.doubles.Double2LongMap;
 import net.sf.oval.constraint.Min;
 import net.sf.oval.constraint.NotNull;
-import org.joda.time.Period;
-import org.joda.time.format.ISOPeriodFormat;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -82,8 +80,8 @@ public final class KairosDbSink extends HttpPostSink {
         final ByteArrayOutputStream chunkStream = new ByteArrayOutputStream();
 
         // Extract and transform shared data
-        final long timestamp = periodicData.getStart().plus(periodicData.getPeriod()).getMillis();
-        final String serializedPeriod = periodicData.getPeriod().toString(ISOPeriodFormat.standard());
+        final long timestamp = periodicData.getStart().plus(periodicData.getPeriod()).toInstant().toEpochMilli();
+        final String serializedPeriod = periodicData.getPeriod().toString();
         final ImmutableMap<String, String> dimensions = periodicData.getDimensions();
         final Serializer serializer = new Serializer(timestamp, serializedPeriod, dimensions);
 
@@ -183,10 +181,10 @@ public final class KairosDbSink extends HttpPostSink {
     private KairosDbSink(final Builder builder) {
         super(builder);
         _maxRequestSize = builder._maxRequestSize;
-        _ttlSeconds = builder._ttl.toStandardSeconds().getSeconds();
+        _ttlSeconds = (int) builder._ttl.getSeconds();
         _publishStandardMetrics = builder._publishStandardMetrics;
         _publishHistograms = builder._publishHistograms;
-        _histogramTtlSeconds = builder._histogramTtl.toStandardSeconds().getSeconds();
+        _histogramTtlSeconds = (int) builder._histogramTtl.getSeconds();
     }
 
     private final int _maxRequestSize;
@@ -461,7 +459,7 @@ public final class KairosDbSink extends HttpPostSink {
     }
 
     /**
-     * Implementation of builder pattern for <code>KairosDbSink</code>.
+     * Implementation of builder pattern for {@link KairosDbSink}.
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
@@ -523,7 +521,7 @@ public final class KairosDbSink extends HttpPostSink {
          * @param value the time to retain histograms
          * @return This instance of {@link Builder}.
          */
-        public Builder setTtl(final Period value) {
+        public Builder setTtl(final Duration value) {
             _ttl = value;
             return this;
         }
@@ -536,7 +534,7 @@ public final class KairosDbSink extends HttpPostSink {
          * @param value the time to retain histograms
          * @return This instance of {@link Builder}.
          */
-        public Builder setHistogramTtl(final Period value) {
+        public Builder setHistogramTtl(final Duration value) {
             _histogramTtl = value;
             return this;
         }
@@ -549,8 +547,8 @@ public final class KairosDbSink extends HttpPostSink {
         @NotNull
         private Boolean _publishHistograms = false;
         @NotNull
-        private Period _histogramTtl = Period.seconds(0);
+        private Duration _histogramTtl = Duration.ofSeconds(0);
         @NotNull
-        private Period _ttl = Period.seconds(0);
+        private Duration _ttl = Duration.ofSeconds(0);
     }
 }

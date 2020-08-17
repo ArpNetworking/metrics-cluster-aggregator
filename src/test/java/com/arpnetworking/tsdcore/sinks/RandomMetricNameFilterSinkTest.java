@@ -23,7 +23,6 @@ import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.arpnetworking.tsdcore.statistics.StatisticFactory;
 import com.google.common.collect.ImmutableList;
 import org.hamcrest.Matchers;
-import org.joda.time.Period;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,6 +31,7 @@ import org.mockito.Captor;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.time.Duration;
 import java.util.List;
 
 /**
@@ -65,7 +65,7 @@ public class RandomMetricNameFilterSinkTest {
             final String metric = "metric" + x;
             final String service = "service" + x;
             final Statistic statistic = MEAN_STATISTIC;
-            final Period period = Period.minutes(1);
+            final Duration period = Duration.ofMinutes(1);
             final FQDSN fqdsn = TestBeanFactory.createFQDSNBuilder()
                     .setCluster(cluster)
                     .setMetric(metric)

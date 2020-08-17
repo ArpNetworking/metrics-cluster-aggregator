@@ -23,8 +23,8 @@ import com.arpnetworking.clusteraggregator.models.PeriodMetrics;
 import com.arpnetworking.metrics.MetricsFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.google.common.collect.Maps;
-import org.joda.time.Period;
 
+import java.time.Duration;
 import java.util.Map;
 
 /**
@@ -34,10 +34,10 @@ import java.util.Map;
  */
 public class PeriodicStatisticsActor extends AbstractActor {
     /**
-     * Creates a <code>Props</code> for construction in Akka.
+     * Creates a {@link Props} for construction in Akka.
      *
-     * @param metricsFactory A <code>MetricsFactory</code> to use for metrics creation.
-     * @return A new <code>Props</code>.
+     * @param metricsFactory A {@link MetricsFactory} to use for metrics creation.
+     * @return A new {@link Props}.
      */
     public static Props props(final MetricsFactory metricsFactory) {
         return Props.create(PeriodicStatisticsActor.class, metricsFactory);
@@ -46,7 +46,7 @@ public class PeriodicStatisticsActor extends AbstractActor {
     /**
      * Public constructor.
      *
-     * @param metricsFactory A <code>MetricsFactory</code> to use for metrics creation.
+     * @param metricsFactory A {@link MetricsFactory} to use for metrics creation.
      */
     public PeriodicStatisticsActor(final MetricsFactory metricsFactory) {
         _metricsFactory = metricsFactory;
@@ -57,7 +57,7 @@ public class PeriodicStatisticsActor extends AbstractActor {
     public Receive createReceive() {
         return receiveBuilder()
                 .match(AggregatedData.class, report -> {
-                    final Period period = report.getPeriod();
+                    final Duration period = report.getPeriod();
                     PeriodMetrics metrics = _periodMetrics.get(period);
                     if (metrics == null) {
                         metrics = new PeriodMetrics(_metricsFactory);
@@ -70,6 +70,6 @@ public class PeriodicStatisticsActor extends AbstractActor {
                 .build();
     }
 
-    private final Map<Period, PeriodMetrics> _periodMetrics = Maps.newHashMap();
+    private final Map<Duration, PeriodMetrics> _periodMetrics = Maps.newHashMap();
     private final MetricsFactory _metricsFactory;
 }

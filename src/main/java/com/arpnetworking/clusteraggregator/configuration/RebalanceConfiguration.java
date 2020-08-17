@@ -42,7 +42,8 @@ public final class RebalanceConfiguration {
     private final int _threshold;
 
     /**
-     * Implementation of builder pattern for {@link RebalanceConfiguration}.
+     * {@link com.arpnetworking.commons.builder.Builder} implementation for
+     * {@link RebalanceConfiguration}.
      *
      * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
      */
@@ -60,7 +61,7 @@ public final class RebalanceConfiguration {
          * Required. Cannot be null. Must be greater than 0.
          *
          * @param value Maximum parallel shards to rebalance.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setMaxParallel(final Integer value) {
             _maxParallel = value;
@@ -72,7 +73,7 @@ public final class RebalanceConfiguration {
          * Required. Cannot be null. Must be greater than 1.
          *
          * @param value Maximum parallel shards to rebalance.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setThreshold(final Integer value) {
             _threshold = value;

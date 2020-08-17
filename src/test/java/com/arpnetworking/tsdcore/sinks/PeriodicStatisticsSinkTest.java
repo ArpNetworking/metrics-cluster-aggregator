@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import net.sf.oval.exception.ConstraintsViolatedException;
 import org.hamcrest.Matchers;
-import org.joda.time.Period;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,10 +33,11 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.hamcrest.MockitoHamcrest;
 
+import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
 
 /**
- * Tests for the <code>PeriodicStatisticsSink</code> class.
+ * Tests for the {@link PeriodicStatisticsSink} class.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
@@ -191,7 +191,7 @@ public class PeriodicStatisticsSinkTest {
                 PeriodicStatisticsSink.computeKey(
                         k,
                         "_period",
-                        Period.minutes(1),
+                        Duration.ofMinutes(1),
                         ImmutableMultimap.of(),
                         ImmutableMap.of()));
 
@@ -203,7 +203,7 @@ public class PeriodicStatisticsSinkTest {
                 PeriodicStatisticsSink.computeKey(
                         k,
                         "_period",
-                        Period.minutes(1),
+                        Duration.ofMinutes(1),
                         ImmutableMultimap.of(
                                 "foo", "foo"),
                         ImmutableMap.of()));
@@ -216,7 +216,7 @@ public class PeriodicStatisticsSinkTest {
                 PeriodicStatisticsSink.computeKey(
                         k,
                         "_period",
-                        Period.minutes(1),
+                        Duration.ofMinutes(1),
                         ImmutableMultimap.of(
                                 "foo", "bar"),
                         ImmutableMap.of()));
@@ -230,7 +230,7 @@ public class PeriodicStatisticsSinkTest {
                 PeriodicStatisticsSink.computeKey(
                         k,
                         "_period",
-                        Period.minutes(1),
+                        Duration.ofMinutes(1),
                         ImmutableMultimap.of(
                                 "foo", "bar",
                                 "bar", "foo"),
@@ -253,7 +253,7 @@ public class PeriodicStatisticsSinkTest {
                 PeriodicStatisticsSink.computeKey(
                         k,
                         "_period",
-                        Period.minutes(1),
+                        Duration.ofMinutes(1),
                         ImmutableMultimap.of(
                                 "bar", "abc",
                                 "missing", "missing"
@@ -271,7 +271,7 @@ public class PeriodicStatisticsSinkTest {
                 PeriodicStatisticsSink.computeKey(
                         k,
                         "_period",
-                        Period.minutes(1),
+                        Duration.ofMinutes(1),
                         ImmutableMultimap.of(
                                 "bar", "bar",
                                 "foo", "foo"

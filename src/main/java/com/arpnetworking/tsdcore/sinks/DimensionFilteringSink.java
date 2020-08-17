@@ -58,7 +58,7 @@ public final class DimensionFilteringSink extends BaseSink {
     private final Sink _sink;
 
     /**
-     * Implementation of builder pattern for <code>DimensionFilteringSink</code>.
+     * Implementation of builder pattern for {@link DimensionFilteringSink}.
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
@@ -76,7 +76,7 @@ public final class DimensionFilteringSink extends BaseSink {
          * these dimensions present.
          *
          * @param value The exclude without dimensions.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setExcludeWithoutDimensions(final ImmutableSet<String> value) {
             _excludeWithoutDimensions = value;
@@ -88,7 +88,7 @@ public final class DimensionFilteringSink extends BaseSink {
          * these dimensions present.
          *
          * @param value The exclude with dimensions.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setExcludeWithDimensions(final ImmutableSet<String> value) {
             _excludeWithDimensions = value;
@@ -99,7 +99,7 @@ public final class DimensionFilteringSink extends BaseSink {
          * The sink to wrap. Cannot be null.
          *
          * @param value The sink to wrap.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setSink(final Sink value) {
             _sink = value;

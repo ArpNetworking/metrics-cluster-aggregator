@@ -25,7 +25,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 
 /**
- * Tests for the <code>Routes</code> class.
+ * Tests for the {@code Routes} class.
  *
  * @author Qinyan Li (lqy520s at hotmail dot com)
  */

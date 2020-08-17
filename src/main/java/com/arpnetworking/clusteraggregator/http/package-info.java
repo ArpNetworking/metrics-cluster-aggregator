@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Groupon.com
+ * Copyright 2020 Inscope Metrics
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,19 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.arpnetworking.tsdcore.sinks;
 
-import org.junit.Test;
+@ParametersAreNonnullByDefault
+@ReturnValuesAreNonnullByDefault
+package com.arpnetworking.clusteraggregator.http;
 
-/**
- * Tests for the <code>HttpSink</code> class.
- *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
- */
-public class HttpPostSinkTest {
+import com.arpnetworking.commons.javax.annotation.ReturnValuesAreNonnullByDefault;
 
-    @Test
-    public void placeHolder() {
-        // TODO(vkoskela): Complete tests using rest mock library [MAI-111]
-    }
-}
+import javax.annotation.ParametersAreNonnullByDefault;

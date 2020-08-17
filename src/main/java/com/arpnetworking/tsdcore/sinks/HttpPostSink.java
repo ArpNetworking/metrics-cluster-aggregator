@@ -39,9 +39,9 @@ import org.asynchttpclient.DefaultAsyncHttpClientConfig;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.RequestBuilder;
 import org.asynchttpclient.uri.Uri;
-import org.joda.time.Period;
 
 import java.net.URI;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.function.Function;
 
@@ -83,12 +83,12 @@ public abstract class HttpPostSink extends BaseSink {
     }
 
     /**
-     * Creates an HTTP request from a serialized data entry. Default is an <code>HttpPost</code> containing
+     * Creates an HTTP request from a serialized data entry. Default is an {@code POST} containing
      * serializedData as the body with content type of application/json
      *
      * @param client The http client to build the request with.
      * @param serializedData The serialized data.
-     * @return <code>HttpRequest</code> to execute
+     * @return {@link Request} to execute
      */
     protected Request createRequest(final AsyncHttpClient client, final byte[] serializedData) {
         return new RequestBuilder()
@@ -104,8 +104,8 @@ public abstract class HttpPostSink extends BaseSink {
      * guaranteed to be non-empty.
      *
      * @param client The http client to build the request with.
-     * @param periodicData The <code>PeriodicData</code> to be serialized.
-     * @return The <code>HttpRequest</code> instance to execute.
+     * @param periodicData The {@link PeriodicData} to be serialized.
+     * @return The {@link Request} instance to execute.
      */
     protected Collection<Request> createRequests(
             final AsyncHttpClient client,
@@ -119,18 +119,18 @@ public abstract class HttpPostSink extends BaseSink {
     }
 
     /**
-     * Accessor for the <code>URI</code>.
+     * Accessor for the {@link URI}.
      *
-     * @return The <code>URI</code>.
+     * @return The {@link URI}.
      */
     protected URI getUri() {
         return _uri;
     }
     
     /**
-     * Accessor for the AysncHttpClient <code>Uri</code>.
+     * Accessor for the AysncHttpClient {@link Uri}.
      *
-     * @return The AysncHttpClient <code>Uri</code>.
+     * @return The AysncHttpClient {@link Uri}.
      */
     protected Uri getAysncHttpClientUri() {
         return _aysncHttpClientUri;
@@ -146,36 +146,35 @@ public abstract class HttpPostSink extends BaseSink {
     }
 
     /**
-     * Accessor for the BaseBackoff of retries <code>Period</code>.
+     * Accessor for the BaseBackoff of retries {@link Duration}.
      *
-     * @return The BaseBackoff <code>Period</code>.
+     * @return The BaseBackoff {@link Duration}.
      */
-    protected Period getRetryBaseBackoff() {
+    protected Duration getRetryBaseBackoff() {
         return _baseBackoff;
     }
 
     /**
-     * Accessor for the MaximumDelay of retries <code>Period</code>.
+     * Accessor for the MaximumDelay of retries {@link Duration}.
      *
-     * @return The MaximumDelay <code>Period</code>.
+     * @return The MaximumDelay {@link Duration}.
      */
-    protected Period getRetryMaximumDelay() {
+    protected Duration getRetryMaximumDelay() {
         return _maximumDelay;
     }
 
     /**
-     * Serialize the <code>PeriodicData</code> and <code>Condition</code> instances
-     * for posting.
+     * Serialize the {@link PeriodicData} instance for posting.
      *
-     * @param periodicData The <code>PeriodicData</code> to be serialized.
-     * @return The serialized representation of <code>PeriodicData</code>.
+     * @param periodicData The {@link PeriodicData} to be serialized.
+     * @return The serialized representation of {@link PeriodicData}.
      */
     protected abstract Collection<byte[]> serialize(PeriodicData periodicData);
 
     /**
      * Protected constructor.
      *
-     * @param builder Instance of <code>Builder</code>.
+     * @param builder Instance of {@link Builder}.
      */
     protected HttpPostSink(final Builder<?, ?> builder) {
         super(builder);
@@ -200,8 +199,8 @@ public abstract class HttpPostSink extends BaseSink {
     private final Uri _aysncHttpClientUri;
     private final ActorRef _sinkActor;
     private final int _maximumAttempts;
-    private final Period _baseBackoff;
-    private final Period _maximumDelay;
+    private final Duration _baseBackoff;
+    private final Duration _maximumDelay;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpPostSink.class);
     private static final AsyncHttpClient CLIENT;
@@ -214,7 +213,7 @@ public abstract class HttpPostSink extends BaseSink {
     }
 
     /**
-     * Implementation of abstract builder pattern for <code>HttpPostSink</code>.
+     * Implementation of abstract builder pattern for {@link HttpPostSink}.
      *
      * @param <B> type of the builder
      * @param <S> type of the object to be built
@@ -223,10 +222,10 @@ public abstract class HttpPostSink extends BaseSink {
     public abstract static class Builder<B extends BaseSink.Builder<B, S>, S extends HttpPostSink> extends BaseSink.Builder<B, S> {
 
         /**
-         * The <code>URI</code> to post the aggregated data to. Cannot be null.
+         * The {@link URI} to post the aggregated data to. Cannot be null.
          *
-         * @param value The <code>URI</code> to post the aggregated data to.
-         * @return This instance of <code>Builder</code>.
+         * @param value The {@link URI} to post the aggregated data to.
+         * @return This instance of {@link Builder}.
          */
         public B setUri(final URI value) {
             _uri = value;
@@ -245,11 +244,11 @@ public abstract class HttpPostSink extends BaseSink {
         }
 
         /**
-         * Instance of <code>MetricsFactory</code>. Cannot be null. This field
+         * Instance of {@link MetricsFactory}. Cannot be null. This field
          * may be injected automatically by Jackson/Guice if setup to do so.
          *
-         * @param value Instance of <code>MetricsFactory</code>.
-         * @return This instance of <code>Builder</code>.
+         * @param value Instance of {@link MetricsFactory}.
+         * @return this builder
          */
         public B setMetricsFactory(final MetricsFactory value) {
             _metricsFactory = value;
@@ -275,7 +274,7 @@ public abstract class HttpPostSink extends BaseSink {
          * @param value the maximum delay before sending new data
          * @return this builder
          */
-        public B setSpreadPeriod(final Period value) {
+        public B setSpreadPeriod(final Duration value) {
             _spreadPeriod = value;
             return self();
         }
@@ -311,7 +310,7 @@ public abstract class HttpPostSink extends BaseSink {
          * @param value the base backoff period
          * @return this builder
          */
-        public B setBaseBackoff(final Period value) {
+        public B setBaseBackoff(final Duration value) {
             _baseBackoff = value;
             return self();
         }
@@ -323,7 +322,7 @@ public abstract class HttpPostSink extends BaseSink {
          * @param value the maximum delay for retries
          * @return this builder
          */
-        public B setMaximumDelay(final Period value) {
+        public B setMaximumDelay(final Duration value) {
             _maximumDelay = value;
             return self();
         }
@@ -349,7 +348,7 @@ public abstract class HttpPostSink extends BaseSink {
         @Min(1)
         private Integer _maximumQueueSize = 25000;
         @NotNull
-        private Period _spreadPeriod = Period.ZERO;
+        private Duration _spreadPeriod = Duration.ZERO;
         @JacksonInject
         @NotNull
         private MetricsFactory _metricsFactory;
@@ -357,10 +356,10 @@ public abstract class HttpPostSink extends BaseSink {
         @Min(1)
         private Integer _maximumAttempts = 1;
         @NotNull
-        private Period _baseBackoff = Period.millis(50);
+        private Duration _baseBackoff = Duration.ofMillis(50);
         @NotNull
         @CheckWith(CheckPeriod.class)
-        private Period _maximumDelay = Period.seconds(60);
+        private Duration _maximumDelay = Duration.ofSeconds(60);
 
 
         private static final class CheckPeriod implements CheckWithCheck.SimpleCheck {
@@ -373,7 +372,7 @@ public abstract class HttpPostSink extends BaseSink {
                     return false;
                 }
                 final HttpPostSink.Builder<?, ?> builder = (HttpPostSink.Builder<?, ?>) validatedObject;
-                return builder._baseBackoff.getMillis() >= 0 && builder._maximumDelay.getMillis() >= 0;
+                return builder._baseBackoff.toMillis() >= 0 && builder._maximumDelay.toMillis() >= 0;
             }
         }
     }

@@ -109,7 +109,7 @@ public final class RandomMetricNameFilterSink extends BaseSink {
          * Required.
          *
          * @param value The aggregated data sink to limit.
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setSink(final Sink value) {
             _sink = value;
@@ -117,9 +117,9 @@ public final class RandomMetricNameFilterSink extends BaseSink {
         }
 
         /**
-         * Return this instance of <code>Builder</code> as this sub-type.
+         * Return this instance of {@link Builder} as this sub-type.
          *
-         * @return This instance of <code>Buidler</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder self() {
             return this;
@@ -130,7 +130,7 @@ public final class RandomMetricNameFilterSink extends BaseSink {
          * Required.
          *
          * @param value The percentage to pass (0 - 100)
-         * @return This instance of <code>Builder</code>.
+         * @return This instance of {@link Builder}.
          */
         public Builder setPassPercent(final Integer value) {
             _passPercent = value;

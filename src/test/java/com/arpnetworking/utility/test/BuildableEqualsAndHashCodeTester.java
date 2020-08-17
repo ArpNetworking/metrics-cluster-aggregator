@@ -22,7 +22,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
- * Test utility class asserts that the <code>equals</code> and <code>hashCode</code>
+ * Test utility class asserts that the {@code equals} and {@code hashCode}
  * methods work as expected on a buildable class.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
@@ -30,15 +30,15 @@ import java.lang.reflect.Method;
 public final class BuildableEqualsAndHashCodeTester {
 
     /**
-     * Test the <code>equals</code> and <code>hashCode</code> methods on a
-     * buildable class <code>T</code> given two <code>Builder</code> instances
+     * Test the {@code equals} and {@code hashCode} methods on a
+     * buildable class {@link T} given two {@link Builder} instances
      * with entirely separate values.
      *
      * @param <T> The class being built.
-     * @param builderA Prepopulated <code>Builder</code> instance for <code>T</code>
-     * with all fields set to values different from <code>builderB</code>.
-     * @param builderB Prepopulated <code>Builder</code> instance for <code>T</code>
-     * with all fields set to values different from <code>builderA</code>.
+     * @param builderA Prepopulated {@link Builder} instance for {@link T}
+     * with all fields set to values different from {@code builderB}.
+     * @param builderB Prepopulated {@link Builder} instance for {@link T}
+     * with all fields set to values different from {@code builderA}.
      */
     public static <T> void assertEqualsAndHashCode(final Builder<T> builderA, final Builder<T> builderB) {
         // Create two instances of the buildable

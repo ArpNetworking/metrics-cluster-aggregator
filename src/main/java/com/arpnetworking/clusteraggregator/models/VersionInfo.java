@@ -85,7 +85,8 @@ public final class VersionInfo {
     }
 
     /**
-     * Builder for a {@link VersionInfo}.
+     * {@link com.arpnetworking.commons.builder.Builder} implementation for
+     * {@link VersionInfo}.
      */
     private static final class Builder extends OvalBuilder<VersionInfo> {
         /**

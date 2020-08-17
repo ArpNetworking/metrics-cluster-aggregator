@@ -24,10 +24,11 @@ import com.arpnetworking.metrics.jvm.JvmMetricsRunnable;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.google.common.base.MoreObjects;
-import org.joda.time.Period;
 import scala.concurrent.duration.FiniteDuration;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 
 /**
  * Actor responsible for collecting JVM metrics on a periodic basis.
@@ -37,14 +38,14 @@ import java.util.concurrent.TimeUnit;
 public final class JvmMetricsCollector extends AbstractActor {
 
     /**
-     * Creates a <code>Props</code> for construction in Akka.
+     * Creates a {@link Props} for construction in Akka.
      *
-     * @param interval An instance of <code>Period</code>.
-     * @param metricsFactory A <code>MetricsFactory</code> to use for metrics creation.
-     * @return A new <code>Props</code>.
+     * @param interval An instance of {@link Duration}.
+     * @param metricsFactory A {@link MetricsFactory} to use for metrics creation.
+     * @return A new {@link Props}.
      */
     public static Props props(
-            final Period interval,
+            final Duration interval,
             final MetricsFactory metricsFactory) {
         return Props.create(JvmMetricsCollector.class, interval, metricsFactory);
     }
@@ -90,13 +91,13 @@ public final class JvmMetricsCollector extends AbstractActor {
     /**
      * Package private constructor. Strictly for testing.
      *
-     * @param interval An instance of <code>FiniteDuration</code>.
-     * @param runnable An instance of <code>Runnable</code>.
+     * @param interval An instance of {@link FiniteDuration}.
+     * @param runnable An instance of {@link Runnable}.
      */
     /* package private */ JvmMetricsCollector(
             final FiniteDuration interval,
             final Runnable runnable,
-            final Scheduler scheduler) {
+            @Nullable final Scheduler scheduler) {
         _interval = interval;
         _jvmMetricsRunnable = runnable;
         if (scheduler == null) {
@@ -107,17 +108,17 @@ public final class JvmMetricsCollector extends AbstractActor {
     }
 
     private JvmMetricsCollector(
-            final Period interval,
+            final Duration interval,
             final MetricsFactory metricsFactory) {
         this(
                 FiniteDuration.create(
-                        interval.toStandardDuration().getMillis(),
+                        interval.toMillis(),
                         TimeUnit.MILLISECONDS),
                 new JvmMetricsRunnable.Builder()
                         .setMetricsFactory(metricsFactory)
                         .setSwallowException(false) // Relying on the default akka supervisor strategy here.
                         .build(),
-                null
+        null
         );
     }
     private Cancellable _cancellable;

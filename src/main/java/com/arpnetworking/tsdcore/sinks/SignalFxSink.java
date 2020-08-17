@@ -28,7 +28,6 @@ import net.sf.oval.constraint.NotNull;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.RequestBuilder;
-import org.joda.time.format.ISOPeriodFormat;
 
 import java.util.Collection;
 import java.util.List;
@@ -66,8 +65,9 @@ public final class SignalFxSink extends HttpPostSink {
 
     @Override
     protected Collection<byte[]> serialize(final PeriodicData periodicData) {
-        final String period = periodicData.getPeriod().toString(ISOPeriodFormat.standard());
-        final long timestamp = periodicData.getStart().getMillis() + periodicData.getPeriod().toStandardDuration().getMillis();
+        final String period = periodicData.getPeriod().toString();
+        final long timestamp = periodicData.getStart().toInstant().toEpochMilli()
+                + periodicData.getPeriod().toMillis();
 
         final List<byte[]> serializedData = Lists.newArrayList();
         SignalFxProtocolBuffers.DataPointUploadMessage.Builder sfxMessage = SignalFxProtocolBuffers.DataPointUploadMessage.newBuilder();
@@ -164,7 +164,7 @@ public final class SignalFxSink extends HttpPostSink {
     private final int _maxMetricDimensions;
 
     /**
-     * Implementation of builder pattern for <code>SignalFxSink</code>.
+     * Implementation of builder pattern for {@link SignalFxSink}.
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
@@ -181,7 +181,7 @@ public final class SignalFxSink extends HttpPostSink {
          * The source name. Optional.
          *
          * @param value Organization identifier.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setSource(final String value) {
             _source = value;
@@ -193,7 +193,7 @@ public final class SignalFxSink extends HttpPostSink {
          * www.signalfx.com. Required. Cannot be null or empty.
          *
          * @param value Organization identifier.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setOrganizationId(final String value) {
             _organizationId = value;
@@ -205,7 +205,7 @@ public final class SignalFxSink extends HttpPostSink {
          * www.signalfx.com. Required. Cannot be null or empty.
          *
          * @param value API token.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setApiToken(final String value) {
             _apiToken = value;

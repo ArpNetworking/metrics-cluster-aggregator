@@ -85,7 +85,8 @@ public class BrokerListResponse {
         private final List<BrokerDetails> _details;
 
         /**
-         * Builder for a {@link com.arpnetworking.tsdcore.sinks.circonus.api.BrokerListResponse.Broker}.
+         * {@link com.arpnetworking.commons.builder.Builder} implementation for
+         * {@link com.arpnetworking.tsdcore.sinks.circonus.api.BrokerListResponse.Broker}.
          */
         public static class Builder extends OvalBuilder<Broker> {
             /**
@@ -244,7 +245,8 @@ public class BrokerListResponse {
         private final String _ipAddress;
 
         /**
-         * Builder for a {@link com.arpnetworking.tsdcore.sinks.circonus.api.BrokerListResponse.BrokerDetails}.
+         * {@link com.arpnetworking.commons.builder.Builder} implementation for
+         * {@link com.arpnetworking.tsdcore.sinks.circonus.api.BrokerListResponse.BrokerDetails}.
          */
         public static class Builder extends OvalBuilder<BrokerDetails> {
             /**

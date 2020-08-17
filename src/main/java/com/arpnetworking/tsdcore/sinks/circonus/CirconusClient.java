@@ -333,7 +333,8 @@ public final class CirconusClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(CirconusClient.class);
 
     /**
-     * Implementation of the builder pattern for a {@link com.arpnetworking.tsdcore.sinks.circonus.CirconusClient}.
+     * {@link com.arpnetworking.commons.builder.Builder} implementation for
+     * {@link com.arpnetworking.tsdcore.sinks.circonus.CirconusClient}.
      */
     public static final class Builder extends OvalBuilder<CirconusClient> {
 

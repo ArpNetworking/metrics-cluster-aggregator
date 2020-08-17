@@ -25,9 +25,9 @@ import com.arpnetworking.utility.Launchable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import net.sf.oval.constraint.NotNull;
-import org.joda.time.DateTime;
-import org.joda.time.Duration;
 
+import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Dynamic configuration implementation of <code>Configuration</code>.
+ * Dynamic configuration implementation of {@link com.arpnetworking.configuration.Configuration}.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
@@ -194,7 +194,7 @@ public final class DynamicConfiguration extends BaseJacksonConfiguration impleme
 
     private ExecutorService _triggerEvaluatorExecutor;
 
-    private static final Duration TRIGGER_EVALUATION_INTERVAL = Duration.standardSeconds(60);
+    private static final Duration TRIGGER_EVALUATION_INTERVAL = Duration.ofSeconds(60);
     private static final Logger LOGGER = LoggerFactory.getLogger(DynamicConfiguration.class);
 
     private final class TriggerEvaluator implements Runnable {
@@ -250,8 +250,8 @@ public final class DynamicConfiguration extends BaseJacksonConfiguration impleme
 
                 // Wait for the next evaluation period
                 try {
-                    final DateTime sleepTimeout = DateTime.now().plus(TRIGGER_EVALUATION_INTERVAL);
-                    while (DateTime.now().isBefore(sleepTimeout) && _isRunning) {
+                    final ZonedDateTime sleepTimeout = ZonedDateTime.now().plus(TRIGGER_EVALUATION_INTERVAL);
+                    while (ZonedDateTime.now().isBefore(sleepTimeout) && _isRunning) {
                         Thread.sleep(100);
                     }
                 } catch (final InterruptedException e) {
@@ -282,7 +282,7 @@ public final class DynamicConfiguration extends BaseJacksonConfiguration impleme
     }
 
     /**
-     * Builder for <code>DynamicConfiguration</code>.
+     * Builder for {@link DynamicConfiguration}.
      */
     public static final class Builder extends BaseJacksonConfiguration.Builder<Builder, DynamicConfiguration> {
 
@@ -294,12 +294,12 @@ public final class DynamicConfiguration extends BaseJacksonConfiguration impleme
         }
 
         /**
-         * Set the <code>List</code> of <code>JsonSource</code> instance
-         * <code>Builder</code> instances. Cannot be null.
+         * Set the {@link List} of {@link JsonNodeSource} instance
+         * {@link Builder} instances. Cannot be null.
          *
-         * @param value The <code>List</code> of <code>JsonSource</code>
-         * instance <code>Builder</code> instances.
-         * @return This <code>Builder</code> instance.
+         * @param value The {@link List} of {@link JsonNodeSource}
+         * instance {@link Builder} instances.
+         * @return This {@link Builder} instance.
          */
         public Builder setSourceBuilders(final List<com.arpnetworking.commons.builder.Builder<? extends JsonNodeSource>> value) {
             _sourceBuilders = Lists.newArrayList(value);
@@ -307,10 +307,10 @@ public final class DynamicConfiguration extends BaseJacksonConfiguration impleme
         }
 
         /**
-         * Add a <code>JsonSource</code> <code>Builder</code> instance.
+         * Add a {@link JsonNodeSource} {@link Builder} instance.
          *
-         * @param value The <code>JsonSource</code> <code>Builder</code> instance.
-         * @return This <code>Builder</code> instance.
+         * @param value The {@link JsonNodeSource} {@link Builder} instance.
+         * @return This {@link Builder} instance.
          */
         public Builder addSourceBuilder(final com.arpnetworking.commons.builder.Builder<? extends JsonNodeSource> value) {
             if (_sourceBuilders == null) {
@@ -321,11 +321,11 @@ public final class DynamicConfiguration extends BaseJacksonConfiguration impleme
         }
 
         /**
-         * Set the <code>List</code> of <code>Trigger</code> instances. Cannot
+         * Set the {@link List} of {@link Trigger} instances. Cannot
          * be null.
          *
-         * @param value The <code>List</code> of <code>Trigger</code> instances.
-         * @return This <code>Builder</code> instance.
+         * @param value The {@link List} of {@link Trigger} instances.
+         * @return This {@link Builder} instance.
          */
         public Builder setTriggers(final List<Trigger> value) {
             _triggers = Lists.newArrayList(value);
@@ -333,10 +333,10 @@ public final class DynamicConfiguration extends BaseJacksonConfiguration impleme
         }
 
         /**
-         * Add a <code>ConfigurationTrigger</code> instance.
+         * Add a {@link Trigger} instance.
          *
-         * @param value The <code>ConfigurationTrigger</code> instance.
-         * @return This <code>Builder</code> instance.
+         * @param value The {@link Trigger} instance.
+         * @return This {@link Builder} instance.
          */
         public Builder addTrigger(final Trigger value) {
             if (_triggers == null) {
@@ -347,11 +347,11 @@ public final class DynamicConfiguration extends BaseJacksonConfiguration impleme
         }
 
         /**
-         * Set the <code>List</code> of <code>Listener</code> instances. Cannot
+         * Set the {@link List} of {@link Listener} instances. Cannot
          * be null.
          *
-         * @param value The <code>List</code> of <code>Listener</code> instances.
-         * @return This <code>Builder</code> instance.
+         * @param value The {@link List} of {@link Listener} instances.
+         * @return This {@link Builder} instance.
          */
         public Builder setListeners(final List<Listener> value) {
             _listeners = Lists.newArrayList(value);
@@ -359,10 +359,10 @@ public final class DynamicConfiguration extends BaseJacksonConfiguration impleme
         }
 
         /**
-         * Add a <code>ConfigurationListener</code> instance.
+         * Add a {@link Listener} instance.
          *
-         * @param value The <code>ConfigurationListener</code> instance.
-         * @return This <code>Builder</code> instance.
+         * @param value The {@link Listener} instance.
+         * @return This {@link Builder} instance.
          */
         public Builder addListener(final Listener value) {
             if (_listeners == null) {
@@ -387,7 +387,7 @@ public final class DynamicConfiguration extends BaseJacksonConfiguration impleme
 
 
     /**
-     * Used to keep track of this <code>Launchable</code>'s state.
+     * Used to keep track of this {@link Launchable}'s state.
      */
     private enum Stage {NEW, LAUNCHED, SHUTDOWN}
 }

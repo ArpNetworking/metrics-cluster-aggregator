@@ -30,8 +30,6 @@ import com.arpnetworking.tsdcore.model.Quantity;
 import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.arpnetworking.tsdcore.statistics.StatisticFactory;
 import com.arpnetworking.utility.BaseActorTest;
-import org.joda.time.DateTime;
-import org.joda.time.Period;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -40,6 +38,9 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import scala.concurrent.duration.FiniteDuration;
 
+import java.time.Duration;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -66,7 +67,9 @@ public class PeriodicStatisticsActorTest extends BaseActorTest {
     @Test
     public void storeMetric() {
         final TestActorRef<Actor> ref = TestActorRef.create(getSystem(), PeriodicStatisticsActor.props(_mfMock));
-        final AggregatedData metricReport = getAggregatedDataBuilder(DateTime.now().hourOfDay().roundFloorCopy(), Period.minutes(1))
+        final AggregatedData metricReport = getAggregatedDataBuilder(
+                ZonedDateTime.now().truncatedTo(ChronoUnit.HOURS),
+                Duration.ofMinutes(1))
                 .build();
 
         ref.tell(metricReport, ActorRef.noSender());
@@ -76,8 +79,8 @@ public class PeriodicStatisticsActorTest extends BaseActorTest {
     @Test
     public void singleAggregatedData() {
         final TestActorRef<Actor> ref = TestActorRef.create(getSystem(), PeriodicStatisticsActor.props(_mfMock));
-        final DateTime start = DateTime.now().hourOfDay().roundFloorCopy();
-        final Period period = Period.minutes(1);
+        final ZonedDateTime start = ZonedDateTime.now().truncatedTo(ChronoUnit.HOURS);
+        final Duration period = Duration.ofMinutes(1);
         final AggregatedData.Builder builder = getAggregatedDataBuilder(start, period);
 
         final AggregatedData metricReport1 = builder.build();
@@ -97,8 +100,8 @@ public class PeriodicStatisticsActorTest extends BaseActorTest {
                 getSystem(),
                 PeriodicStatisticsActor.props(
                         throwingFactory(true, false)));
-        final DateTime start = DateTime.now().hourOfDay().roundFloorCopy();
-        final Period period = Period.minutes(1);
+        final ZonedDateTime start = ZonedDateTime.now().truncatedTo(ChronoUnit.HOURS);
+        final Duration period = Duration.ofMinutes(1);
         final AggregatedData.Builder builder = getAggregatedDataBuilder(start, period);
 
         final AggregatedData metricReport1 = builder.build();
@@ -122,8 +125,8 @@ public class PeriodicStatisticsActorTest extends BaseActorTest {
                 getSystem(),
                 PeriodicStatisticsActor.props(
                         throwingFactory(true, false)));
-        final DateTime start = DateTime.now().hourOfDay().roundFloorCopy();
-        final Period period = Period.minutes(1);
+        final ZonedDateTime start = ZonedDateTime.now().truncatedTo(ChronoUnit.HOURS);
+        final Duration period = Duration.ofMinutes(1);
         final AggregatedData.Builder builder = getAggregatedDataBuilder(start, period);
 
         final AggregatedData metricReport1 = builder.build();
@@ -140,8 +143,8 @@ public class PeriodicStatisticsActorTest extends BaseActorTest {
                 getSystem(),
                 PeriodicStatisticsActor.props(
                         throwingFactory(false, true)));
-        final DateTime start = DateTime.now().hourOfDay().roundFloorCopy();
-        final Period period = Period.minutes(1);
+        final ZonedDateTime start = ZonedDateTime.now().truncatedTo(ChronoUnit.HOURS);
+        final Duration period = Duration.ofMinutes(1);
         final AggregatedData.Builder builder = getAggregatedDataBuilder(start, period);
 
         final AggregatedData metricReport1 = builder.build();
@@ -158,8 +161,8 @@ public class PeriodicStatisticsActorTest extends BaseActorTest {
                 getSystem(),
                 PeriodicStatisticsActor.props(
                         throwingFactory(true, true)));
-        final DateTime start = DateTime.now().hourOfDay().roundFloorCopy();
-        final Period period = Period.minutes(1);
+        final ZonedDateTime start = ZonedDateTime.now().truncatedTo(ChronoUnit.HOURS);
+        final Duration period = Duration.ofMinutes(1);
         final AggregatedData.Builder builder = getAggregatedDataBuilder(start, period);
 
         final AggregatedData metricReport1 = builder.build();
@@ -173,8 +176,8 @@ public class PeriodicStatisticsActorTest extends BaseActorTest {
     @Test
     public void twoAggregatedDatas() {
         final TestActorRef<Actor> ref = TestActorRef.create(getSystem(), PeriodicStatisticsActor.props(_mfMock));
-        final DateTime start = DateTime.now().hourOfDay().roundFloorCopy();
-        final Period period = Period.minutes(1);
+        final ZonedDateTime start = ZonedDateTime.now().truncatedTo(ChronoUnit.HOURS);
+        final Duration period = Duration.ofMinutes(1);
         final AggregatedData.Builder builder = getAggregatedDataBuilder(start, period);
 
         final AggregatedData metricReport1 = builder.build();
@@ -197,8 +200,8 @@ public class PeriodicStatisticsActorTest extends BaseActorTest {
     @Test
     public void twoAggregatedDatasDifferentService() {
         final TestActorRef<Actor> ref = TestActorRef.create(getSystem(), PeriodicStatisticsActor.props(_mfMock));
-        final DateTime start = DateTime.now().hourOfDay().roundFloorCopy();
-        final Period period = Period.minutes(1);
+        final ZonedDateTime start = ZonedDateTime.now().truncatedTo(ChronoUnit.HOURS);
+        final Duration period = Duration.ofMinutes(1);
         final AggregatedData.Builder builder = getAggregatedDataBuilder(start, period);
 
         final AggregatedData metricReport1 = builder.build();
@@ -221,8 +224,8 @@ public class PeriodicStatisticsActorTest extends BaseActorTest {
     @Test
     public void twoDeliveriesSameFQSN() {
         final TestActorRef<Actor> ref = TestActorRef.create(getSystem(), PeriodicStatisticsActor.props(_mfMock));
-        final DateTime start = DateTime.now().hourOfDay().roundFloorCopy();
-        final Period period = Period.minutes(1);
+        final ZonedDateTime start = ZonedDateTime.now().truncatedTo(ChronoUnit.HOURS);
+        final Duration period = Duration.ofMinutes(1);
         final AggregatedData.Builder builder = getAggregatedDataBuilder(start, period);
 
         final AggregatedData metricReport1 = builder.build();
@@ -243,8 +246,8 @@ public class PeriodicStatisticsActorTest extends BaseActorTest {
     @Test
     public void outOfDate() {
         final TestActorRef<Actor> ref = TestActorRef.create(getSystem(), PeriodicStatisticsActor.props(_mfMock));
-        final DateTime start = DateTime.now().hourOfDay().roundFloorCopy();
-        final Period period = Period.minutes(1);
+        final ZonedDateTime start = ZonedDateTime.now().truncatedTo(ChronoUnit.HOURS);
+        final Duration period = Duration.ofMinutes(1);
         final AggregatedData.Builder builder = getAggregatedDataBuilder(start, period);
 
         final AggregatedData metricReport1 = builder.build();
@@ -270,7 +273,7 @@ public class PeriodicStatisticsActorTest extends BaseActorTest {
         probe.expectMsgClass(FiniteDuration.apply(3, TimeUnit.SECONDS), UnhandledMessage.class);
     }
 
-    private AggregatedData.Builder getAggregatedDataBuilder(final DateTime start, final Period period) {
+    private AggregatedData.Builder getAggregatedDataBuilder(final ZonedDateTime start, final Duration period) {
         return new AggregatedData.Builder()
                 .setFQDSN(getFQDSNBuilder().build())
                 .setPeriod(period)

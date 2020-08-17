@@ -32,7 +32,6 @@ import net.sf.oval.constraint.NotNull;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.RequestBuilder;
-import org.joda.time.format.ISOPeriodFormat;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -65,8 +64,9 @@ public final class DataDogSink extends HttpPostSink {
 
     @Override
     protected Collection<byte[]> serialize(final PeriodicData periodicData) {
-        final String period = periodicData.getPeriod().toString(ISOPeriodFormat.standard());
-        final long timestamp = (periodicData.getStart().getMillis() + periodicData.getPeriod().toStandardDuration().getMillis()) / 1000;
+        final String period = periodicData.getPeriod().toString();
+        final long timestamp = (periodicData.getStart().toInstant().toEpochMilli()
+                + periodicData.getPeriod().toMillis()) / 1000;
 
         final List<Datum> dataDogData = Lists.newArrayList();
         for (final AggregatedData datum : periodicData.getData()) {
@@ -169,7 +169,7 @@ public final class DataDogSink extends HttpPostSink {
     }
 
     /**
-     * Implementation of builder pattern for <code>DataDogSink</code>.
+     * Implementation of builder pattern for {@link DataDogSink}.
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
@@ -186,7 +186,7 @@ public final class DataDogSink extends HttpPostSink {
          * The API key. Required. Cannot be null or empty.
          *
          * @param value API key.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setApiKey(final String value) {
             _apiKey = value;

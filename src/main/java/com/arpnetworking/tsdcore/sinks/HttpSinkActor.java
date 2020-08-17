@@ -34,7 +34,6 @@ import org.asynchttpclient.AsyncCompletionHandler;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.Response;
-import org.joda.time.Period;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.time.Duration;
@@ -69,7 +68,7 @@ public class HttpSinkActor extends AbstractActor {
             final HttpPostSink sink,
             final int maximumConcurrency,
             final int maximumQueueSize,
-            final Period spreadPeriod,
+            final Duration spreadPeriod,
             final MetricsFactory metricsFactory) {
         return Props.create(
                 HttpSinkActor.class,
@@ -96,17 +95,17 @@ public class HttpSinkActor extends AbstractActor {
             final HttpPostSink sink,
             final int maximumConcurrency,
             final int maximumQueueSize,
-            final Period spreadPeriod,
+            final Duration spreadPeriod,
             final MetricsFactory metricsFactory) {
         _client = client;
         _sink = sink;
         _maximumConcurrency = maximumConcurrency;
         _pendingRequests = EvictingQueue.create(maximumQueueSize);
         _metricsFactory = metricsFactory;
-        if (Period.ZERO.equals(spreadPeriod)) {
+        if (Duration.ZERO.equals(spreadPeriod)) {
             _spreadingDelayMillis = 0;
         } else {
-            _spreadingDelayMillis = new Random().nextInt((int) spreadPeriod.toStandardDuration().getMillis());
+            _spreadingDelayMillis = new Random().nextInt((int) spreadPeriod.toMillis());
         }
 
         _evictedRequestsName = "sinks/http_post/" + _sink.getMetricSafeName() + "/evicted_requests";
@@ -372,8 +371,8 @@ public class HttpSinkActor extends AbstractActor {
     private void scheduleRetry(final Request request, final int attempt) {
         final Duration delay = Duration.ofMillis(
                 Math.min(
-                        _sink.getRetryBaseBackoff().getMillis() * ThreadLocalRandom.current().nextInt((int) Math.pow(2, attempt - 1)),
-                        _sink.getRetryMaximumDelay().getMillis()
+                        _sink.getRetryBaseBackoff().toMillis() * ThreadLocalRandom.current().nextInt((int) Math.pow(2, attempt - 1)),
+                        _sink.getRetryMaximumDelay().toMillis()
                 )
 
         );
