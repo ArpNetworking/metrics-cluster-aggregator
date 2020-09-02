@@ -40,8 +40,9 @@ public class HistogramStatisticTest {
         final CalculatedValue<HistogramStatistic.HistogramSupportingData> value = accumulator.calculate(Collections.emptyMap());
         final HistogramStatistic.HistogramSupportingData supportingData = value.getData();
         final HistogramStatistic.HistogramSnapshot histogram = supportingData.getHistogramSnapshot();
+        Assert.assertEquals(100L, histogram.getEntriesCount());
         for (final Double2LongMap.Entry entry : histogram.getValues()) {
-            Assert.assertEquals(entry.getLongValue(), 1L);
+            Assert.assertEquals(1L, entry.getLongValue());
         }
     }
 
@@ -59,8 +60,9 @@ public class HistogramStatisticTest {
         final CalculatedValue<HistogramStatistic.HistogramSupportingData> value = merged.calculate(Collections.emptyMap());
         final HistogramStatistic.HistogramSupportingData supportingData = value.getData();
         final HistogramStatistic.HistogramSnapshot histogram = supportingData.getHistogramSnapshot();
+        Assert.assertEquals(100L, histogram.getEntriesCount());
         for (final Double2LongMap.Entry entry : histogram.getValues()) {
-            Assert.assertEquals(entry.getLongValue(), 1L);
+            Assert.assertEquals(1L, entry.getLongValue());
         }
     }
 
@@ -90,6 +92,7 @@ public class HistogramStatisticTest {
         final CalculatedValue<HistogramStatistic.HistogramSupportingData> value = merged.calculate(Collections.emptyMap());
         final HistogramStatistic.HistogramSupportingData supportingData = value.getData();
         final HistogramStatistic.HistogramSnapshot histogram = supportingData.getHistogramSnapshot();
+        Assert.assertEquals(251L, histogram.getEntriesCount());
         for (final Double2LongMap.Entry entry : histogram.getValues()) {
             final int val = (int) entry.getDoubleKey();
             if (val < 50) {
@@ -102,6 +105,38 @@ public class HistogramStatisticTest {
         }
 
         Assert.assertEquals(2000d, histogram.getValueAtPercentile(99.9d), 1d);
+    }
+
+    /**
+     * Check that neither the entries count or bucket values overflow an integer while accumulating.
+     */
+    @Test
+    public void histogramAccumulateHistogramsCheckNoOverflow() {
+        final Accumulator<HistogramStatistic.HistogramSupportingData> merged = HISTOGRAM_STATISTIC.createCalculator();
+
+        for (int i = 0; i < 3; ++i) {
+            final HistogramStatistic.Histogram histogram = new HistogramStatistic.Histogram();
+            histogram.recordValue(0, 1000000000);
+            final HistogramStatistic.HistogramSupportingData supportingData = new HistogramStatistic.HistogramSupportingData.Builder()
+                    .setHistogramSnapshot(histogram.getSnapshot())
+                    .build();
+            final CalculatedValue<HistogramStatistic.HistogramSupportingData> calculatedValue =
+                    new CalculatedValue.Builder<HistogramStatistic.HistogramSupportingData>()
+                        .setValue(new Quantity.Builder().setValue((double) 1000000000).build())
+                        .setData(supportingData)
+                        .build();
+            merged.accumulate(calculatedValue);
+        }
+
+        final CalculatedValue<HistogramStatistic.HistogramSupportingData> value = merged.calculate(Collections.emptyMap());
+        final HistogramStatistic.HistogramSupportingData supportingData = value.getData();
+        final HistogramStatistic.HistogramSnapshot histogram = supportingData.getHistogramSnapshot();
+        Assert.assertEquals(3000000000L, histogram.getEntriesCount());
+        for (final Double2LongMap.Entry entry : histogram.getValues()) {
+            if (entry.getDoubleKey() == 0) {
+                Assert.assertEquals(3000000000L, entry.getLongValue());
+            }
+        }
     }
 
     @Test
@@ -185,6 +220,7 @@ public class HistogramStatisticTest {
         }
 
         Assert.assertEquals(99.5d, histogram.getValueAtPercentile(99.9d), 1d);
+        Assert.assertEquals(100, histogram.getEntriesCount());
     }
 
     @Test
@@ -199,6 +235,7 @@ public class HistogramStatisticTest {
 
         Assert.assertEquals(10d, histogram.getValueAtPercentile(0), 1d);
         Assert.assertEquals(50d, histogram.getValueAtPercentile(100), 1d);
+        Assert.assertEquals(2, histogram.getEntriesCount());
     }
 
     private static final StatisticFactory STATISTIC_FACTORY = new StatisticFactory();
