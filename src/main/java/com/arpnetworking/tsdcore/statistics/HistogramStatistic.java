@@ -342,7 +342,7 @@ public final class HistogramStatistic extends BaseStatistic {
             _packMask = (1 << (_precision + EXPONENT_BITS + 1)) - 1;
         }
 
-        private int _entriesCount = 0;
+        private long _entriesCount = 0;
         private final Double2LongSortedMap _data = new Double2LongAVLTreeMap();
         private final int _precision;
         private final long _truncateMask;
