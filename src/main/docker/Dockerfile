@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM openjdk:8u151-jre-alpine
+FROM openjdk:8u212-jre-alpine
 
 MAINTAINER arpnetworking
 
@@ -21,6 +21,9 @@ EXPOSE 7066
 WORKDIR /opt/cluster-aggregator
 
 # Configuration
+ENV CAGG_USER="cagg"
+ENV CAGG_UID=1000
+ENV CAGG_GID=1000
 ENV JVM_XMS="64m"
 ENV JVM_XMX="1024m"
 ENV LOGBACK_CONFIG="-Dlogback.configurationFile=/opt/cluster-aggregator/config/logback.xml"
@@ -28,7 +31,7 @@ ENV CAGG_CONFIG="/opt/cluster-aggregator/config/config.conf"
 ENV JAVA_OPTS=""
 
 # Build
-RUN apk -U add libstdc++ && \
+RUN apk add --no-cache libstdc++ su-exec && \
     mkdir -p /opt/cluster-aggregator/lib/ext && \
     mkdir -p /opt/cluster-aggregator/logs && \
     mkdir -p /opt/cluster-aggregator/config
@@ -38,7 +41,19 @@ ADD config /opt/cluster-aggregator/config/
 ADD lib /opt/cluster-aggregator/lib/
 
 # Entry point
-ENTRYPOINT [ \
+ENTRYPOINT [ "/opt/cluster-aggregator/bin/docker-entrypoint.sh" ]
+
+# Default arguments
+CMD [ \
+    "-n", \
+    "${CAGG_USER}", \
+    "-u", \
+    "${CAGG_UID}", \
+    "-g", \
+    "${CAGG_GID}", \
+    "-d", \
+    "/opt/cluster-aggregator", \
+    "--", \
     "/opt/cluster-aggregator/bin/cluster-aggregator", \
     "${LOGBACK_CONFIG}", \
     "-XX:+HeapDumpOnOutOfMemoryError", \

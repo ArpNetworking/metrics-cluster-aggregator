@@ -59,7 +59,9 @@ import com.arpnetworking.utility.ConfiguredLaunchableFactory;
 import com.arpnetworking.utility.Database;
 import com.arpnetworking.utility.ParallelLeastShardAllocationStrategy;
 import com.arpnetworking.utility.partitioning.PartitionSet;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -79,11 +81,13 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
+import javax.annotation.Nullable;
 
 /**
  * The primary Guice module used to bootstrap the cluster aggregator. NOTE: this module will be constructed whenever
@@ -143,19 +147,30 @@ public class GuiceModule extends AbstractModule {
 
     @Provides
     @Singleton
+    @SuppressWarnings("deprecation")
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
     private MetricsFactory provideMetricsFactory() throws URISyntaxException {
-        final Sink sink = new ApacheHttpSink.Builder()
-                .setUri(new URI(String.format(
-                        "http://%s:%d/metrics/v3/application",
-                        _configuration.getMonitoringHost(),
-                        _configuration.getMonitoringPort())))
-                .build();
+        final ImmutableList.Builder<com.arpnetworking.metrics.Sink> monitoringSinksBuilder =
+                new ImmutableList.Builder<>();
+        if (_configuration.getMonitoringHost().isPresent()
+                || _configuration.getMonitoringPort().isPresent()) {
+            final String endpoint = String.format(
+                    "http://%s:%d/metrics/v3/application",
+                    _configuration.getMonitoringHost().orElse("localhost"),
+                    _configuration.getMonitoringPort().orElse(7090));
+
+            monitoringSinksBuilder.add(
+                    new ApacheHttpSink.Builder()
+                            .setUri(URI.create(endpoint))
+                            .build());
+        } else {
+            monitoringSinksBuilder.addAll(createSinks(_configuration.getMonitoringSinks()));
+        }
 
         return new TsdMetricsFactory.Builder()
                 .setClusterName(_configuration.getMonitoringCluster())
                 .setServiceName(_configuration.getMonitoringService())
-                .setSinks(Collections.singletonList(sink))
+                .setSinks(monitoringSinksBuilder.build())
                 .build();
     }
 
@@ -355,6 +370,35 @@ public class GuiceModule extends AbstractModule {
                         1000,
                         Integer.MAX_VALUE);
         return new DatabasePartitionSet(database, partitionSet);
+    }
+
+    @SuppressFBWarnings("REC_CATCH_EXCEPTION")
+    static List<Sink> createSinks(final ImmutableList<JsonNode> monitoringSinks) {
+        // Until we implement the Commons Builder pattern in the metrics client
+        // library we need to resort to a more brute-force deserialization
+        // style. The benefit of this approach is that it will be forwards
+        // compatible with the Commons Builder approach. The drawbacks are
+        // the ugly way the configuration is passed around (as JsonNode) and
+        // then two-step deserialized.
+        final List<com.arpnetworking.metrics.Sink> sinks = new ArrayList<>();
+        for (final JsonNode sinkNode : monitoringSinks) {
+            @Nullable final JsonNode classNode = sinkNode.get("class");
+            try {
+                if (classNode != null) {
+                    final Class<?> builderClass = Class.forName(classNode.textValue() + "$Builder");
+                    final Object builder = OBJECT_MAPPER.treeToValue(sinkNode, builderClass);
+                    @SuppressWarnings("unchecked")
+                    final com.arpnetworking.metrics.Sink sink =
+                            (com.arpnetworking.metrics.Sink) builderClass.getMethod("build").invoke(builder);
+                    sinks.add(sink);
+                }
+                // CHECKSTYLE.OFF: IllegalCatch - There are so many ways this hack can fail!
+            } catch (final Exception e) {
+                // CHECKSTYLE.ON: IllegalCatch
+                throw new RuntimeException("Unable to create sink from: " + sinkNode.toString(), e);
+            }
+        }
+        return sinks;
     }
 
     private final ClusterAggregatorConfiguration _configuration;
