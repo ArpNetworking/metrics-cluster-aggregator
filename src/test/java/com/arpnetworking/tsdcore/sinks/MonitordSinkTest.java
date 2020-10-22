@@ -82,7 +82,7 @@ public class MonitordSinkTest {
         final PeriodicData periodicData = TestBeanFactory.createPeriodicDataBuilder()
                 .setData(data)
                 .build();
-        final Collection<byte[]> results = monitordSink.serialize(periodicData);
+        final Collection<HttpPostSink.SerializedDatum> results = monitordSink.serialize(periodicData);
         Assert.assertEquals(1, results.size());
     }
 
@@ -110,7 +110,7 @@ public class MonitordSinkTest {
         final PeriodicData periodicData = TestBeanFactory.createPeriodicDataBuilder()
                 .setData(data)
                 .build();
-        final Collection<byte[]> results = monitordSink.serialize(periodicData);
+        final Collection<HttpPostSink.SerializedDatum> results = monitordSink.serialize(periodicData);
         Assert.assertEquals(2, results.size());
     }
 
@@ -138,7 +138,7 @@ public class MonitordSinkTest {
         final PeriodicData periodicData = TestBeanFactory.createPeriodicDataBuilder()
                 .setData(data)
                 .build();
-        final Collection<byte[]> results = monitordSink.serialize(periodicData);
+        final Collection<HttpPostSink.SerializedDatum> results = monitordSink.serialize(periodicData);
         Assert.assertEquals(2, results.size());
     }
 
@@ -165,7 +165,7 @@ public class MonitordSinkTest {
         final PeriodicData periodicData = TestBeanFactory.createPeriodicDataBuilder()
                 .setData(data)
                 .build();
-        final Collection<byte[]> results = monitordSink.serialize(periodicData);
+        final Collection<HttpPostSink.SerializedDatum> results = monitordSink.serialize(periodicData);
         Assert.assertEquals(2, results.size());
     }
 

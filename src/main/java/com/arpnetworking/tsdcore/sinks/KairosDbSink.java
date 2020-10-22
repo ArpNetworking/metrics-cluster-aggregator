@@ -85,8 +85,7 @@ public final class KairosDbSink extends HttpPostSink {
         // Extract and transform shared data
         final long timestamp = periodicData.getStart().plus(periodicData.getPeriod()).toInstant().toEpochMilli();
         final String serializedPeriod = periodicData.getPeriod().toString();
-        final ImmutableMap<String, String> dimensions = periodicData.getDimensions();
-        final Serializer serializer = new Serializer(timestamp, serializedPeriod, dimensions);
+        final Serializer serializer = new Serializer(timestamp, serializedPeriod, periodicData.getDimensions());
 
         final KairosHistogramAdditionalData histogramAdditionalData = new KairosHistogramAdditionalData();
         AggregatedData histogram = null;
@@ -126,7 +125,13 @@ public final class KairosDbSink extends HttpPostSink {
         }
 
         if (_publishHistograms && histogram != null) {
-            serializer.serializeHistogram(completeChunks, currentChunk, chunkStream, histogram, histogramAdditionalData, currentChunkPopulationSize);
+            serializer.serializeHistogram(
+                    completeChunks,
+                    currentChunk,
+                    chunkStream,
+                    histogram,
+                    histogramAdditionalData,
+                    currentChunkPopulationSize);
         } else if (_publishHistograms) {
             NO_HISTOGRAM_LOGGER.warn()
                     .setMessage("Expected to publish histogram, but none found")
@@ -384,11 +389,23 @@ public final class KairosDbSink extends HttpPostSink {
                     + "/status";
             try {
                 // Value for condition threshold
-                serializeConditionThreshold(completeChunks, currentChunk, chunkStream, condition, conditionName, currentChunkPopulationSize);
+                serializeConditionThreshold(
+                        completeChunks,
+                        currentChunk,
+                        chunkStream,
+                        condition,
+                        conditionName,
+                        currentChunkPopulationSize);
 
                 if (condition.isTriggered().isPresent()) {
                     // Value for condition trigger (or status)
-                    serializeConditionStatus(completeChunks, currentChunk, chunkStream, condition, conditionStatusName, currentChunkPopulationSize);
+                    serializeConditionStatus(
+                            completeChunks,
+                            currentChunk,
+                            chunkStream,
+                            condition,
+                            conditionStatusName,
+                            currentChunkPopulationSize);
 
                 }
             } catch (final IOException e) {
