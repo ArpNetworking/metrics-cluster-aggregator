@@ -37,6 +37,7 @@ import org.asynchttpclient.Response;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Random;
@@ -201,9 +202,8 @@ public class HttpSinkActor extends AbstractActor {
 
         try (Metrics metrics = _metricsFactory.create()) {
             metrics.incrementCounter(_requestSuccessName, 0);
-            if (failure.getRequestEntry().getPopulationSize().isPresent()) {
-                metrics.incrementCounter(_samplesDroppedName, failure.getRequestEntry().getPopulationSize().get());
-            }
+            failure.getRequestEntry().getPopulationSize().ifPresent(
+                    populationSize -> metrics.incrementCounter(_samplesDroppedName, populationSize));
         }
 
         LOGGER.error()
@@ -223,9 +223,8 @@ public class HttpSinkActor extends AbstractActor {
 
         try (Metrics metrics = _metricsFactory.create()) {
             metrics.incrementCounter(_requestSuccessName, 0);
-            if (rejected.getRequestEntry().getPopulationSize().isPresent()) {
-                metrics.incrementCounter(_samplesDroppedName, rejected.getRequestEntry().getPopulationSize().get());
-            }
+            rejected.getRequestEntry().getPopulationSize().ifPresent(
+                    populationSize -> metrics.incrementCounter(_samplesDroppedName, populationSize));
             final int responseStatusClass = responseStatusCode / 100;
             for (final int i : STATUS_CLASSES) {
                 metrics.incrementCounter(
@@ -255,9 +254,8 @@ public class HttpSinkActor extends AbstractActor {
         try (Metrics metrics = _metricsFactory.create()) {
             metrics.incrementCounter(_httpSinkAttemptsName, success.getAttempt());
             metrics.incrementCounter(_requestSuccessName, 1);
-            if (success.getRequestEntry().getPopulationSize().isPresent()) {
-                metrics.incrementCounter(_samplesSentName, success.getRequestEntry().getPopulationSize().get());
-            }
+            success.getRequestEntry().getPopulationSize().ifPresent(
+                    populationSize -> metrics.incrementCounter(_samplesSentName, populationSize));
             final int responseStatusClass = responseStatusCode / 100;
             for (final int i : STATUS_CLASSES) {
                 metrics.incrementCounter(
@@ -293,7 +291,7 @@ public class HttpSinkActor extends AbstractActor {
             for (final RequestEntry.Builder requestEntryBuilder : requestEntryBuilders) {
                 // TODO(vkoskela): Add logging to client [MAI-89]
                 // TODO(vkoskela): Add instrumentation to client [MAI-90]
-                _pendingRequests.offer(requestEntryBuilder.setEnterTime(System.currentTimeMillis()).build());
+                _pendingRequests.offer(requestEntryBuilder.setEnterTime(Instant.now()).build());
             }
 
             if (evicted > 0) {
@@ -346,7 +344,8 @@ public class HttpSinkActor extends AbstractActor {
     private void fireNextRequest() {
         final RequestEntry requestEntry = _pendingRequests.poll();
         try (Metrics metrics = _metricsFactory.create()) {
-            metrics.setTimer(_inQueueLatencyName, System.currentTimeMillis() - requestEntry.getEnterTime(), TimeUnit.MILLISECONDS);
+            final long latencyInMillis = Duration.between(requestEntry.getEnterTime(), Instant.now()).toMillis();
+            metrics.setTimer(_inQueueLatencyName, latencyInMillis, TimeUnit.MILLISECONDS);
         }
 
         _inflightRequestsCount++;

@@ -48,7 +48,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  * Publishes to a KairosDbSink endpoint. This class is thread safe.
@@ -79,7 +79,7 @@ public final class KairosDbSink extends HttpPostSink {
         // Initialize serialization structures
         final List<SerializedDatum> completeChunks = Lists.newArrayList();
         final ByteBuffer currentChunk = ByteBuffer.allocate(_maxRequestSize);
-        final AtomicLong currentChunkPopulationSize = new AtomicLong(0L);
+        final LongAdder currentChunkPopulationSize = new LongAdder();
         final ByteArrayOutputStream chunkStream = new ByteArrayOutputStream();
 
         // Extract and transform shared data
@@ -149,7 +149,7 @@ public final class KairosDbSink extends HttpPostSink {
             currentChunk.put(currentChunk.position() - 1, FOOTER);
             completeChunks.add(new SerializedDatum(
                     Arrays.copyOf(currentChunk.array(), currentChunk.position()),
-                    Optional.of(currentChunkPopulationSize.get())));
+                    Optional.of(currentChunkPopulationSize.sumThenReset())));
         }
 
         return completeChunks;
@@ -160,7 +160,7 @@ public final class KairosDbSink extends HttpPostSink {
             final ByteBuffer currentChunk,
             final Collection<SerializedDatum> completedChunks,
             final long populationSize,
-            final AtomicLong currentChunkPopulationSize) {
+            final LongAdder currentChunkPopulationSize) {
         final byte[] nextChunk = chunkStream.toByteArray();
         final int nextChunkSize = nextChunk.length;
         if (currentChunk.position() + nextChunkSize > _maxRequestSize) {
@@ -171,11 +171,10 @@ public final class KairosDbSink extends HttpPostSink {
                 currentChunk.put(currentChunk.position() - 1, FOOTER);
                 completedChunks.add(new SerializedDatum(
                         Arrays.copyOf(currentChunk.array(), currentChunk.position()),
-                        Optional.of(currentChunkPopulationSize.get())));
+                        Optional.of(currentChunkPopulationSize.sumThenReset())));
 
                 // Truncate all but the beginning '[' to prepare the next entries
                 currentChunk.clear();
-                currentChunkPopulationSize.set(0L);
                 currentChunk.put(HEADER);
             } else {
                 CHUNK_TOO_BIG_LOGGER.warn()
@@ -189,7 +188,7 @@ public final class KairosDbSink extends HttpPostSink {
         }
 
         currentChunk.put(nextChunk);
-        currentChunkPopulationSize.addAndGet(populationSize);
+        currentChunkPopulationSize.add(populationSize);
         currentChunk.put(SEPARATOR);
         chunkStream.reset();
     }
@@ -276,7 +275,7 @@ public final class KairosDbSink extends HttpPostSink {
                 final ByteBuffer currentChunk,
                 final ByteArrayOutputStream chunkStream,
                 final AggregatedData datum,
-                final AtomicLong currentChunkPopulationSize) {
+                final LongAdder currentChunkPopulationSize) {
             final String name = _serializedPeriod
                     + "/" + datum.getFQDSN().getMetric()
                     + "/" + datum.getFQDSN().getStatistic().getName();
@@ -321,7 +320,7 @@ public final class KairosDbSink extends HttpPostSink {
                final ByteArrayOutputStream chunkStream,
                final AggregatedData data,
                final KairosHistogramAdditionalData additionalData,
-               final AtomicLong currentChunkPopulationSize) {
+               final LongAdder currentChunkPopulationSize) {
            final FQDSN fqdsn = data.getFQDSN();
 
            try {
@@ -380,7 +379,7 @@ public final class KairosDbSink extends HttpPostSink {
                 final ByteBuffer currentChunk,
                 final ByteArrayOutputStream chunkStream,
                 final Condition condition,
-                final AtomicLong currentChunkPopulationSize) {
+                final LongAdder currentChunkPopulationSize) {
             final String conditionName = _serializedPeriod
                     + "/" + condition.getFQDSN().getMetric()
                     + "/" + condition.getFQDSN().getStatistic().getName()
@@ -423,7 +422,7 @@ public final class KairosDbSink extends HttpPostSink {
                 final ByteArrayOutputStream chunkStream,
                 final Condition condition,
                 final String conditionStatusName,
-                final AtomicLong currentChunkPopulationSize)
+                final LongAdder currentChunkPopulationSize)
                 throws IOException {
             // 0 = Not triggered
             // 1 = Triggered
@@ -460,7 +459,7 @@ public final class KairosDbSink extends HttpPostSink {
                 final ByteArrayOutputStream chunkStream,
                 final Condition condition,
                 final String conditionName,
-                final AtomicLong currentChunkPopulationSize)
+                final LongAdder currentChunkPopulationSize)
                 throws IOException {
             final JsonGenerator chunkGenerator = OBJECT_MAPPER.getFactory().createGenerator(chunkStream, JsonEncoding.UTF8);
 
