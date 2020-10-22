@@ -39,6 +39,7 @@ import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Publishes aggregations to KMonD. This class is thread safe.
@@ -64,13 +65,13 @@ public final class KMonDSink extends HttpPostSink {
     }
 
     @Override
-    protected Collection<byte[]> serialize(final PeriodicData periodicData) {
+    protected Collection<SerializedDatum> serialize(final PeriodicData periodicData) {
         final Duration period = periodicData.getPeriod();
         final Multimap<String, AggregatedData> indexedData = prepareData(periodicData);
         final Multimap<String, Condition> indexedConditions = prepareConditions(periodicData.getConditions());
 
         // Serialize
-        final List<byte[]> serializedData = Lists.newArrayListWithCapacity(indexedData.size());
+        final List<SerializedDatum> serializedData = Lists.newArrayListWithCapacity(indexedData.size());
         final StringBuilder stringBuilder = new StringBuilder();
         for (final String key : indexedData.keySet()) {
             final Collection<AggregatedData> namedData = indexedData.get(key);
@@ -126,7 +127,9 @@ public final class KMonDSink extends HttpPostSink {
                         .append(dataBuilder.toString());
 
                 stringBuilder.setLength(stringBuilder.length() - 3);
-                serializedData.add(stringBuilder.toString().getBytes(Charset.forName("UTF-8")));
+                serializedData.add(new SerializedDatum(
+                        stringBuilder.toString().getBytes(Charset.forName("UTF-8")),
+                        Optional.empty()));
             }
         }
 

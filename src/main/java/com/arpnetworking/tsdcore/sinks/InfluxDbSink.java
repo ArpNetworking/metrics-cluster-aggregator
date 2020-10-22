@@ -31,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.StringJoiner;
 import javax.annotation.Nonnull;
 
@@ -53,7 +54,7 @@ public final class InfluxDbSink extends HttpPostSink {
     }
 
     @Override
-    protected Collection<byte[]> serialize(final PeriodicData periodicData) {
+    protected Collection<SerializedDatum> serialize(final PeriodicData periodicData) {
         final String period = periodicData.getPeriod()
             .toString();
 
@@ -81,20 +82,24 @@ public final class InfluxDbSink extends HttpPostSink {
             );
         }
 
-        final List<byte[]> requests = Lists.newArrayList();
+        final List<SerializedDatum> requests = Lists.newArrayList();
         int currentRequestLineCount = 0;
         StringJoiner currentRequestData = new StringJoiner("\n");
         for (final MetricFormat metric : metrics.values()) {
             currentRequestData.add(metric.buildMetricString());
             ++currentRequestLineCount;
             if (currentRequestLineCount >= _linesPerRequest) {
-                requests.add(currentRequestData.toString().getBytes(StandardCharsets.UTF_8));
+                requests.add(new SerializedDatum(
+                        currentRequestData.toString().getBytes(StandardCharsets.UTF_8),
+                        Optional.empty()));
                 currentRequestLineCount = 0;
                 currentRequestData = new StringJoiner("\n");
             }
         }
         if (currentRequestLineCount > 0) {
-            requests.add(currentRequestData.toString().getBytes(StandardCharsets.UTF_8));
+            requests.add(new SerializedDatum(
+                    currentRequestData.toString().getBytes(StandardCharsets.UTF_8),
+                    Optional.empty()));
         }
 
         return requests;

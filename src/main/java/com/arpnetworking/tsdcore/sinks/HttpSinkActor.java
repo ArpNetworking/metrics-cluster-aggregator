@@ -26,6 +26,7 @@ import com.arpnetworking.steno.LogValueMapFactory;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.model.PeriodicData;
+import com.arpnetworking.tsdcore.model.RequestEntry;
 import com.google.common.base.Charsets;
 import com.google.common.collect.EvictingQueue;
 import com.google.common.collect.ImmutableList;
@@ -114,6 +115,7 @@ public class HttpSinkActor extends AbstractActor {
         _requestSuccessName = "sinks/http_post/" + _sink.getMetricSafeName() + "/success";
         _responseStatusName = "sinks/http_post/" + _sink.getMetricSafeName() + "/status";
         _httpSinkAttemptsName = "sinks/http_post/" + _sink.getMetricSafeName() + "/attempts";
+        _samplesSentName = "sinks/http_post/" + sink.getMetricSafeName() + "/samples_sent";
         _samplesDroppedName = "sinks/http_post/" + _sink.getMetricSafeName() + "/samples_dropped";
     }
 
@@ -157,12 +159,12 @@ public class HttpSinkActor extends AbstractActor {
                             .addData("sink", _sink)
                             .addData("status", response.getStatusCode())
                             // CHECKSTYLE.OFF: IllegalInstantiation - This is ok for String from byte[]
-                            .addData("request", new String(rejected.getRequest().getByteData(), Charsets.UTF_8))
+                            .addData("request", new String(rejected.getRequestEntry().getRequest().getByteData(), Charsets.UTF_8))
                             // CHECKSTYLE.ON: IllegalInstantiation
                             .addData("response", response.getResponseBody())
                             .addContext("actor", self())
                             .log();
-                        scheduleRetry(rejected.getRequest(), attempt);
+                        scheduleRetry(rejected.getRequestEntry(), attempt);
                     } else {
                         processRejectedRequest(rejected);
                         dispatchPending();
@@ -177,13 +179,13 @@ public class HttpSinkActor extends AbstractActor {
                                 .addData("error", failure.getCause())
                                 .addContext("actor", self())
                                 .log();
-                        scheduleRetry(failure.getRequest(), attempt);
+                        scheduleRetry(failure.getRequestEntry(), attempt);
                     } else {
                         processFailedRequest(failure);
                         dispatchPending();
                     }
                 })
-                .match(Retry.class, retry -> fireRequest(retry.getRequest(), retry.getAttempt()))
+                .match(Retry.class, retry -> fireRequest(retry.getRequestEntry(), retry.getAttempt()))
                 .match(WaitTimeExpired.class, message -> {
                     LOGGER.debug()
                             .setMessage("Received WaitTimeExpired message")
@@ -200,6 +202,9 @@ public class HttpSinkActor extends AbstractActor {
 
         try (Metrics metrics = _metricsFactory.create()) {
             metrics.incrementCounter(_requestSuccessName, 0);
+            if (failure.getRequestEntry().getPopulationSize().isPresent()) {
+                metrics.incrementCounter(_samplesDroppedName, failure.getRequestEntry().getPopulationSize().get());
+            }
         }
 
         LOGGER.error()
@@ -219,6 +224,9 @@ public class HttpSinkActor extends AbstractActor {
 
         try (Metrics metrics = _metricsFactory.create()) {
             metrics.incrementCounter(_requestSuccessName, 0);
+            if (rejected.getRequestEntry().getPopulationSize().isPresent()) {
+                metrics.incrementCounter(_samplesDroppedName, rejected.getRequestEntry().getPopulationSize().get());
+            }
             final int responseStatusClass = responseStatusCode / 100;
             for (final int i : STATUS_CLASSES) {
                 metrics.incrementCounter(
@@ -232,7 +240,7 @@ public class HttpSinkActor extends AbstractActor {
                 .addData("sink", _sink)
                 .addData("status", responseStatusCode)
                 // CHECKSTYLE.OFF: IllegalInstantiation - This is ok for String from byte[]
-                .addData("request", new String(rejected.getRequest().getByteData(), Charsets.UTF_8))
+                .addData("request", new String(rejected.getRequestEntry().getRequest().getByteData(), Charsets.UTF_8))
                 // CHECKSTYLE.ON: IllegalInstantiation
                 .addData("response", responseBody)
                 .addContext("actor", self())
@@ -248,6 +256,9 @@ public class HttpSinkActor extends AbstractActor {
         try (Metrics metrics = _metricsFactory.create()) {
             metrics.incrementCounter(_httpSinkAttemptsName, success.getAttempt());
             metrics.incrementCounter(_requestSuccessName, 1);
+            if (success.getRequestEntry().getPopulationSize().isPresent()) {
+                metrics.incrementCounter(_samplesSentName, success.getRequestEntry().getPopulationSize().get());
+            }
             final int responseStatusClass = responseStatusCode / 100;
             for (final int i : STATUS_CLASSES) {
                 metrics.incrementCounter(
@@ -276,14 +287,14 @@ public class HttpSinkActor extends AbstractActor {
                 .log();
 
         if (!periodicData.getData().isEmpty() || !periodicData.getConditions().isEmpty()) {
-            final Collection<Request> requests = _sink.createRequests(_client, periodicData);
+            final Collection<RequestEntry.Builder> requestEntryBuilders = _sink.createRequests(_client, periodicData);
             final boolean pendingWasEmpty = _pendingRequests.isEmpty();
 
-            final int evicted = Math.max(0, requests.size() - _pendingRequests.remainingCapacity());
-            for (final Request request : requests) {
+            final int evicted = Math.max(0, requestEntryBuilders.size() - _pendingRequests.remainingCapacity());
+            for (final RequestEntry.Builder requestEntryBuilder : requestEntryBuilders) {
                 // TODO(vkoskela): Add logging to client [MAI-89]
                 // TODO(vkoskela): Add instrumentation to client [MAI-90]
-                _pendingRequests.offer(new RequestEntry(request, System.currentTimeMillis()));
+                _pendingRequests.offer(requestEntryBuilder.setEnterTime(System.currentTimeMillis()).build());
             }
 
             if (evicted > 0) {
@@ -339,17 +350,15 @@ public class HttpSinkActor extends AbstractActor {
             metrics.setTimer(_inQueueLatencyName, System.currentTimeMillis() - requestEntry.getEnterTime(), TimeUnit.MILLISECONDS);
         }
 
-        final Request request = requestEntry.getRequest();
         _inflightRequestsCount++;
-
-        fireRequest(request, 1);
+        fireRequest(requestEntry, 1);
     }
 
 
-    private void fireRequest(final Request request, final int attempt) {
+    private void fireRequest(final RequestEntry request, final int attempt) {
         final CompletableFuture<Response> promise = new CompletableFuture<>();
         final long requestStartTime = System.currentTimeMillis();
-        _client.executeRequest(request, new ResponseAsyncCompletionHandler(promise));
+        _client.executeRequest(request.getRequest(), new ResponseAsyncCompletionHandler(promise));
         final CompletionStage<Object> responsePromise = promise
                 .handle((result, err) -> {
                     try (Metrics metrics = _metricsFactory.create()) {
@@ -357,7 +366,7 @@ public class HttpSinkActor extends AbstractActor {
                     }
                     if (err == null) {
                         if (ACCEPTED_STATUS_CODES.contains(result.getStatusCode())) {
-                             return new PostSuccess(attempt, result);
+                             return new PostSuccess(attempt, request, result);
                         } else {
                              return new PostRejected(attempt, request, result);
                         }
@@ -368,7 +377,7 @@ public class HttpSinkActor extends AbstractActor {
         PatternsCS.pipe(responsePromise, context().dispatcher()).to(self());
     }
 
-    private void scheduleRetry(final Request request, final int attempt) {
+    private void scheduleRetry(final RequestEntry requestEntry, final int attempt) {
         final Duration delay = Duration.ofMillis(
                 Math.min(
                         _sink.getRetryBaseBackoff().toMillis() * ThreadLocalRandom.current().nextInt((int) Math.pow(2, attempt - 1)),
@@ -378,7 +387,7 @@ public class HttpSinkActor extends AbstractActor {
         );
         LOGGER.debug()
                 .setMessage("Retry scheduled")
-                .addData("request", request)
+                .addData("request", requestEntry.getRequest())
                 .addData("backoff time", delay)
                 .addData("attempt", attempt)
                 .addContext("actor", self())
@@ -386,7 +395,7 @@ public class HttpSinkActor extends AbstractActor {
         getContext().system().scheduler().scheduleOnce(
                                 delay,
                                 self(),
-                                new Retry(attempt + 1, request),
+                                new Retry(attempt + 1, requestEntry),
                                 getContext().dispatcher(),
                                 self());
     }
@@ -417,6 +426,7 @@ public class HttpSinkActor extends AbstractActor {
     private final String _requestSuccessName;
     private final String _responseStatusName;
     private final String _httpSinkAttemptsName;
+    private final String _samplesSentName;
     private final String _samplesDroppedName;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpPostSink.class);
@@ -479,38 +489,44 @@ public class HttpSinkActor extends AbstractActor {
     /**
      * Message class to wrap an errored HTTP request.
      */
-    private static final class PostFailure extends PostStatus{
-        private PostFailure(final int attempt, final Request request, final Throwable throwable) {
+    private static final class PostFailure extends PostStatus {
+        private PostFailure(final int attempt, final RequestEntry requestEntry, final Throwable throwable) {
             super(attempt);
             _throwable = throwable;
-            _request = request;
+            _requestEntry = requestEntry;
         }
 
-        public Request getRequest() {
-            return _request;
+        public RequestEntry getRequestEntry() {
+            return _requestEntry;
         }
 
         public Throwable getCause() {
             return _throwable;
         }
 
-        private final Request _request;
+        private final RequestEntry _requestEntry;
         private final Throwable _throwable;
     }
 
     /**
      * Message class to wrap a success HTTP request.
      */
-    private static final class PostSuccess extends PostStatus{
-        private PostSuccess(final int attempt, final Response response) {
+    private static final class PostSuccess extends PostStatus {
+        private PostSuccess(final int attempt, final RequestEntry requestEntry, final Response response) {
             super(attempt);
+            _requestEntry = requestEntry;
             _response = response;
+        }
+
+        public RequestEntry getRequestEntry() {
+            return _requestEntry;
         }
 
         public Response getResponse() {
             return _response;
         }
 
+        private final RequestEntry _requestEntry;
         private final Response _response;
     }
 
@@ -518,21 +534,21 @@ public class HttpSinkActor extends AbstractActor {
      * Message class to wrap a rejected HTTP request.
      */
     private static final class PostRejected extends PostStatus {
-        private PostRejected(final int attempt, final Request request, final Response response) {
+        private PostRejected(final int attempt, final RequestEntry requestEntry, final Response response) {
             super(attempt);
-            _request = request;
+            _requestEntry = requestEntry;
             _response = response;
         }
 
-        public Request getRequest() {
-            return   _request;
+        public RequestEntry getRequestEntry() {
+            return _requestEntry;
         }
 
         public Response getResponse() {
-            return   _response;
+            return _response;
         }
 
-        private final Request _request;
+        private final RequestEntry _requestEntry;
         private final Response _response;
     }
 
@@ -540,16 +556,16 @@ public class HttpSinkActor extends AbstractActor {
      * Message class to do retries.
      */
     private static final class Retry extends PostStatus{
-        private Retry(final int attempt, final Request request) {
+        private Retry(final int attempt, final RequestEntry requestEntry) {
             super(attempt);
-            _request = request;
+            _requestEntry = requestEntry;
         }
 
-        public Request getRequest() {
-            return _request;
+        public RequestEntry getRequestEntry() {
+            return _requestEntry;
         }
         
-        private final Request _request;
+        private final RequestEntry _requestEntry;
     }
 
     /**
@@ -575,23 +591,5 @@ public class HttpSinkActor extends AbstractActor {
         }
 
         private final CompletableFuture<Response> _promise;
-    }
-
-    private static final class RequestEntry {
-        private RequestEntry(final Request request, final long enterTime) {
-            _request = request;
-            _enterTime = enterTime;
-        }
-
-        public Request getRequest() {
-            return _request;
-        }
-
-        public long getEnterTime() {
-            return _enterTime;
-        }
-
-        private final Request _request;
-        private final long _enterTime;
     }
 }

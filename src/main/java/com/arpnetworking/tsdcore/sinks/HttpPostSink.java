@@ -26,6 +26,7 @@ import com.arpnetworking.steno.LogValueMapFactory;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.model.PeriodicData;
+import com.arpnetworking.tsdcore.model.RequestEntry;
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.google.common.collect.Lists;
 import net.sf.oval.constraint.CheckWith;
@@ -43,6 +44,7 @@ import org.asynchttpclient.uri.Uri;
 import java.net.URI;
 import java.time.Duration;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.function.Function;
 
 /**
@@ -67,11 +69,6 @@ public abstract class HttpPostSink extends BaseSink {
         _sinkActor.tell(PoisonPill.getInstance(), ActorRef.noSender());
     }
 
-    /**
-     * Generate a Steno log compatible representation.
-     *
-     * @return Steno log compatible representation.
-     */
     @LogValue
     @Override
     public Object toLogValue() {
@@ -107,15 +104,21 @@ public abstract class HttpPostSink extends BaseSink {
      * @param periodicData The {@link PeriodicData} to be serialized.
      * @return The {@link Request} instance to execute.
      */
-    protected Collection<Request> createRequests(
+    protected Collection<RequestEntry.Builder> createRequests(
             final AsyncHttpClient client,
             final PeriodicData periodicData) {
-        final Collection<byte[]> serializedData = serialize(periodicData);
-        final Collection<Request> requests = Lists.newArrayListWithExpectedSize(serializedData.size());
-        for (final byte[] serializedDatum : serializedData) {
-            requests.add(createRequest(client, serializedDatum));
+        final Collection<SerializedDatum> serializedData = serialize(periodicData);
+        final Collection<RequestEntry.Builder> requestEntryBuilders = Lists.newArrayListWithExpectedSize(serializedData.size());
+        for (final SerializedDatum serializedDatum : serializedData) {
+            // TODO(ville): Convert RequestEntry.Builder would be a ThreadLocalBuilder
+            // Unfortunately, the split builder logic across HttpPostSink and
+            // HttpSinkActor does not permit this as-is. The logic would need
+            // to be refactored to permit the use of a TLB.
+            requestEntryBuilders.add(new RequestEntry.Builder()
+                    .setRequest(createRequest(client, serializedDatum.getDatum()))
+                    .setPopulationSize(serializedDatum.getPopulationSize()));
         }
-        return requests;
+        return requestEntryBuilders;
     }
 
     /**
@@ -169,7 +172,7 @@ public abstract class HttpPostSink extends BaseSink {
      * @param periodicData The {@link PeriodicData} to be serialized.
      * @return The serialized representation of {@link PeriodicData}.
      */
-    protected abstract Collection<byte[]> serialize(PeriodicData periodicData);
+    protected abstract Collection<SerializedDatum> serialize(PeriodicData periodicData);
 
     /**
      * Protected constructor.
@@ -375,5 +378,23 @@ public abstract class HttpPostSink extends BaseSink {
                 return builder._baseBackoff.toMillis() >= 0 && builder._maximumDelay.toMillis() >= 0;
             }
         }
+    }
+
+    static final class SerializedDatum {
+        SerializedDatum(final byte[] datum, final Optional<Long> populationSize) {
+            _datum = datum;
+            _populationSize = populationSize;
+        }
+
+        public byte[] getDatum() {
+            return _datum;
+        }
+
+        public Optional<Long> getPopulationSize() {
+            return _populationSize;
+        }
+
+        private final byte[] _datum;
+        private final Optional<Long> _populationSize;
     }
 }
