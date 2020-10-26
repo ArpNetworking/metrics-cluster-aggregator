@@ -64,12 +64,12 @@ public final class SignalFxSink extends HttpPostSink {
     }
 
     @Override
-    protected Collection<byte[]> serialize(final PeriodicData periodicData) {
+    protected Collection<SerializedDatum> serialize(final PeriodicData periodicData) {
         final String period = periodicData.getPeriod().toString();
         final long timestamp = periodicData.getStart().toInstant().toEpochMilli()
                 + periodicData.getPeriod().toMillis();
 
-        final List<byte[]> serializedData = Lists.newArrayList();
+        final List<SerializedDatum> serializedData = Lists.newArrayList();
         SignalFxProtocolBuffers.DataPointUploadMessage.Builder sfxMessage = SignalFxProtocolBuffers.DataPointUploadMessage.newBuilder();
         int count = 0;
         for (final AggregatedData datum : periodicData.getData()) {
@@ -86,14 +86,14 @@ public final class SignalFxSink extends HttpPostSink {
             count += Math.max(1, sfxDimensions.size());
 
             if (count >= _maxMetricDimensions) {
-                serializedData.add(sfxMessage.build().toByteArray());
+                serializedData.add(new SerializedDatum(sfxMessage.build().toByteArray(), Optional.empty()));
                 sfxMessage = SignalFxProtocolBuffers.DataPointUploadMessage.newBuilder();
                 count = 0;
             }
         }
 
         if (count > 0) {
-            serializedData.add(sfxMessage.build().toByteArray());
+            serializedData.add(new SerializedDatum(sfxMessage.build().toByteArray(), Optional.empty()));
         }
         return serializedData;
     }

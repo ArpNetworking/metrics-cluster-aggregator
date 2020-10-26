@@ -47,6 +47,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  * Publishes to a KairosDbSink endpoint. This class is thread safe.
@@ -73,17 +75,17 @@ public final class KairosDbSink extends HttpPostSink {
     }
 
     @Override
-    protected Collection<byte[]> serialize(final PeriodicData periodicData) {
+    protected Collection<SerializedDatum> serialize(final PeriodicData periodicData) {
         // Initialize serialization structures
-        final List<byte[]> completeChunks = Lists.newArrayList();
+        final List<SerializedDatum> completeChunks = Lists.newArrayList();
         final ByteBuffer currentChunk = ByteBuffer.allocate(_maxRequestSize);
+        final LongAdder currentChunkPopulationSize = new LongAdder();
         final ByteArrayOutputStream chunkStream = new ByteArrayOutputStream();
 
         // Extract and transform shared data
         final long timestamp = periodicData.getStart().plus(periodicData.getPeriod()).toInstant().toEpochMilli();
         final String serializedPeriod = periodicData.getPeriod().toString();
-        final ImmutableMap<String, String> dimensions = periodicData.getDimensions();
-        final Serializer serializer = new Serializer(timestamp, serializedPeriod, dimensions);
+        final Serializer serializer = new Serializer(timestamp, serializedPeriod, periodicData.getDimensions());
 
         final KairosHistogramAdditionalData histogramAdditionalData = new KairosHistogramAdditionalData();
         AggregatedData histogram = null;
@@ -118,12 +120,18 @@ public final class KairosDbSink extends HttpPostSink {
             }
 
             if (_publishStandardMetrics && !(statistic instanceof HistogramStatistic)) {
-                serializer.serializeDatum(completeChunks, currentChunk, chunkStream, datum);
+                serializer.serializeDatum(completeChunks, currentChunk, chunkStream, datum, currentChunkPopulationSize);
             }
         }
 
         if (_publishHistograms && histogram != null) {
-            serializer.serializeHistogram(completeChunks, currentChunk, chunkStream, histogram, histogramAdditionalData);
+            serializer.serializeHistogram(
+                    completeChunks,
+                    currentChunk,
+                    chunkStream,
+                    histogram,
+                    histogramAdditionalData,
+                    currentChunkPopulationSize);
         } else if (_publishHistograms) {
             NO_HISTOGRAM_LOGGER.warn()
                     .setMessage("Expected to publish histogram, but none found")
@@ -133,13 +141,15 @@ public final class KairosDbSink extends HttpPostSink {
 
         // Add conditions
         for (final Condition condition : periodicData.getConditions()) {
-            serializer.serializeCondition(completeChunks, currentChunk, chunkStream, condition);
+            serializer.serializeCondition(completeChunks, currentChunk, chunkStream, condition, currentChunkPopulationSize);
         }
 
         // Add the current chunk (if any) to the completed chunks
         if (currentChunk.position() > HEADER_BYTE_LENGTH) {
             currentChunk.put(currentChunk.position() - 1, FOOTER);
-            completeChunks.add(Arrays.copyOf(currentChunk.array(), currentChunk.position()));
+            completeChunks.add(new SerializedDatum(
+                    Arrays.copyOf(currentChunk.array(), currentChunk.position()),
+                    Optional.of(currentChunkPopulationSize.sumThenReset())));
         }
 
         return completeChunks;
@@ -148,7 +158,9 @@ public final class KairosDbSink extends HttpPostSink {
     private void addChunk(
             final ByteArrayOutputStream chunkStream,
             final ByteBuffer currentChunk,
-            final Collection<byte[]> completedChunks) {
+            final Collection<SerializedDatum> completedChunks,
+            final long populationSize,
+            final LongAdder currentChunkPopulationSize) {
         final byte[] nextChunk = chunkStream.toByteArray();
         final int nextChunkSize = nextChunk.length;
         if (currentChunk.position() + nextChunkSize > _maxRequestSize) {
@@ -157,7 +169,9 @@ public final class KairosDbSink extends HttpPostSink {
 
                 // Copy the relevant part of the buffer
                 currentChunk.put(currentChunk.position() - 1, FOOTER);
-                completedChunks.add(Arrays.copyOf(currentChunk.array(), currentChunk.position()));
+                completedChunks.add(new SerializedDatum(
+                        Arrays.copyOf(currentChunk.array(), currentChunk.position()),
+                        Optional.of(currentChunkPopulationSize.sumThenReset())));
 
                 // Truncate all but the beginning '[' to prepare the next entries
                 currentChunk.clear();
@@ -174,6 +188,7 @@ public final class KairosDbSink extends HttpPostSink {
         }
 
         currentChunk.put(nextChunk);
+        currentChunkPopulationSize.add(populationSize);
         currentChunk.put(SEPARATOR);
         chunkStream.reset();
     }
@@ -256,10 +271,11 @@ public final class KairosDbSink extends HttpPostSink {
         }
 
         public void serializeDatum(
-                final List<byte[]> completeChunks,
+                final List<SerializedDatum> completeChunks,
                 final ByteBuffer currentChunk,
                 final ByteArrayOutputStream chunkStream,
-                final AggregatedData datum) {
+                final AggregatedData datum,
+                final LongAdder currentChunkPopulationSize) {
             final String name = _serializedPeriod
                     + "/" + datum.getFQDSN().getMetric()
                     + "/" + datum.getFQDSN().getStatistic().getName();
@@ -288,7 +304,7 @@ public final class KairosDbSink extends HttpPostSink {
 
                 chunkGenerator.close();
 
-                addChunk(chunkStream, currentChunk, completeChunks);
+                addChunk(chunkStream, currentChunk, completeChunks, datum.getPopulationSize(), currentChunkPopulationSize);
             } catch (final IOException e) {
                 SERIALIZATION_FAILURE_LOGGER.error()
                         .setMessage("Serialization failure")
@@ -299,11 +315,12 @@ public final class KairosDbSink extends HttpPostSink {
         }
 
        public void serializeHistogram(
-               final List<byte[]> completeChunks,
+               final List<SerializedDatum> completeChunks,
                final ByteBuffer currentChunk,
                final ByteArrayOutputStream chunkStream,
                final AggregatedData data,
-               final KairosHistogramAdditionalData additionalData) {
+               final KairosHistogramAdditionalData additionalData,
+               final LongAdder currentChunkPopulationSize) {
            final FQDSN fqdsn = data.getFQDSN();
 
            try {
@@ -347,7 +364,7 @@ public final class KairosDbSink extends HttpPostSink {
 
                 chunkGenerator.close();
 
-                addChunk(chunkStream, currentChunk, completeChunks);
+                addChunk(chunkStream, currentChunk, completeChunks, data.getPopulationSize(), currentChunkPopulationSize);
             } catch (final IOException e) {
                 SERIALIZATION_FAILURE_LOGGER.error()
                         .setMessage("Serialization failure")
@@ -358,10 +375,11 @@ public final class KairosDbSink extends HttpPostSink {
         }
 
         public void serializeCondition(
-                final List<byte[]> completeChunks,
+                final List<SerializedDatum> completeChunks,
                 final ByteBuffer currentChunk,
                 final ByteArrayOutputStream chunkStream,
-                final Condition condition) {
+                final Condition condition,
+                final LongAdder currentChunkPopulationSize) {
             final String conditionName = _serializedPeriod
                     + "/" + condition.getFQDSN().getMetric()
                     + "/" + condition.getFQDSN().getStatistic().getName()
@@ -370,11 +388,23 @@ public final class KairosDbSink extends HttpPostSink {
                     + "/status";
             try {
                 // Value for condition threshold
-                serializeConditionThreshold(completeChunks, currentChunk, chunkStream, condition, conditionName);
+                serializeConditionThreshold(
+                        completeChunks,
+                        currentChunk,
+                        chunkStream,
+                        condition,
+                        conditionName,
+                        currentChunkPopulationSize);
 
                 if (condition.isTriggered().isPresent()) {
                     // Value for condition trigger (or status)
-                    serializeConditionStatus(completeChunks, currentChunk, chunkStream, condition, conditionStatusName);
+                    serializeConditionStatus(
+                            completeChunks,
+                            currentChunk,
+                            chunkStream,
+                            condition,
+                            conditionStatusName,
+                            currentChunkPopulationSize);
 
                 }
             } catch (final IOException e) {
@@ -387,11 +417,12 @@ public final class KairosDbSink extends HttpPostSink {
         }
 
         private void serializeConditionStatus(
-                final List<byte[]> completeChunks,
+                final List<SerializedDatum> completeChunks,
                 final ByteBuffer currentChunk,
                 final ByteArrayOutputStream chunkStream,
                 final Condition condition,
-                final String conditionStatusName)
+                final String conditionStatusName,
+                final LongAdder currentChunkPopulationSize)
                 throws IOException {
             // 0 = Not triggered
             // 1 = Triggered
@@ -419,15 +450,16 @@ public final class KairosDbSink extends HttpPostSink {
 
             chunkGenerator.close();
 
-            addChunk(chunkStream, currentChunk, completeChunks);
+            addChunk(chunkStream, currentChunk, completeChunks, 0L, currentChunkPopulationSize);
         }
 
         private void serializeConditionThreshold(
-                final List<byte[]> completeChunks,
+                final List<SerializedDatum> completeChunks,
                 final ByteBuffer currentChunk,
                 final ByteArrayOutputStream chunkStream,
                 final Condition condition,
-                final String conditionName)
+                final String conditionName,
+                final LongAdder currentChunkPopulationSize)
                 throws IOException {
             final JsonGenerator chunkGenerator = OBJECT_MAPPER.getFactory().createGenerator(chunkStream, JsonEncoding.UTF8);
 
@@ -450,7 +482,7 @@ public final class KairosDbSink extends HttpPostSink {
 
             chunkGenerator.close();
 
-            addChunk(chunkStream, currentChunk, completeChunks);
+            addChunk(chunkStream, currentChunk, completeChunks, 0L, currentChunkPopulationSize);
         }
 
         private final long _timestamp;

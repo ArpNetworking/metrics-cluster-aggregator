@@ -37,6 +37,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Publishes aggregations to Data Dog. This class is thread safe.
@@ -63,7 +64,7 @@ public final class DataDogSink extends HttpPostSink {
     }
 
     @Override
-    protected Collection<byte[]> serialize(final PeriodicData periodicData) {
+    protected Collection<SerializedDatum> serialize(final PeriodicData periodicData) {
         final String period = periodicData.getPeriod().toString();
         final long timestamp = (periodicData.getStart().toInstant().toEpochMilli()
                 + periodicData.getPeriod().toMillis()) / 1000;
@@ -94,7 +95,9 @@ public final class DataDogSink extends HttpPostSink {
                     .log();
             return Collections.emptyList();
         }
-        return Collections.singletonList(dataDogDataAsJson.getBytes(Charsets.UTF_8));
+        return Collections.singletonList(new SerializedDatum(
+                dataDogDataAsJson.getBytes(Charsets.UTF_8),
+                Optional.empty()));
     }
 
     private static List<String> createTags(final PeriodicData periodicData, final AggregatedData datum) {

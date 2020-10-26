@@ -107,12 +107,12 @@ public final class InfluxDbSinkTest {
                 .setStart(dateTime)
                 .setDimensions(ImmutableMap.of("host", host))
                 .build();
-        final Collection<byte[]> results = influxDbSink.serialize(periodicData);
+        final Collection<HttpPostSink.SerializedDatum> results = influxDbSink.serialize(periodicData);
         Assert.assertEquals(1, results.size());
         final String expectedResponse =
             "PT5M.metric-testSerializeMerge,cluster=test-cluster,service=service-testSerializeMerge,host=test-host "
                 + "mean=0.2,count=50.0 1456361906636";
-        Assert.assertArrayEquals(expectedResponse.getBytes(StandardCharsets.UTF_8), Iterables.getFirst(results, null));
+        Assert.assertArrayEquals(expectedResponse.getBytes(StandardCharsets.UTF_8), Iterables.getFirst(results, null).getDatum());
 
     }
 
@@ -168,14 +168,14 @@ public final class InfluxDbSinkTest {
                 .setStart(dateTime)
                 .setDimensions(ImmutableMap.of("host", host))
                 .build();
-        final Collection<byte[]> results = influxDbSink.serialize(periodicData);
+        final Collection<HttpPostSink.SerializedDatum> results = influxDbSink.serialize(periodicData);
         Assert.assertEquals(1, results.size());
         final String expectedResponse =
             "PT5M.metric-testSerializeMerge2,cluster=test-cluster,service=service-testSerializeMerge,host=test-host "
                 + "count=0.2 1456361906636\n"
             + "PT5M.metric-testSerializeMerge,cluster=test-cluster,service=service-testSerializeMerge,host=test-host "
                 + "count=50.0 1456361906636";
-        Assert.assertArrayEquals(expectedResponse.getBytes(StandardCharsets.UTF_8), Iterables.getFirst(results, null));
+        Assert.assertArrayEquals(expectedResponse.getBytes(StandardCharsets.UTF_8), Iterables.getFirst(results, null).getDatum());
     }
 
     @Test
@@ -229,12 +229,12 @@ public final class InfluxDbSinkTest {
                 .setStart(dateTime)
                 .setDimensions(ImmutableMap.of("host", host))
                 .build();
-        final Collection<byte[]> results = influxDbSink.serialize(periodicData);
+        final Collection<HttpPostSink.SerializedDatum> results = influxDbSink.serialize(periodicData);
         Assert.assertEquals(1, results.size());
         final String expectedResponse =
             "PT5M.metric\\ test\\,Serialize_Merge,cluster=test\\ cluster,service=service\\ test\\,Serialize_Merge,"
                 + "host=test\\ host mean=0.2,count=50.0 1456361906636";
-        Assert.assertArrayEquals(expectedResponse.getBytes(StandardCharsets.UTF_8), Iterables.getFirst(results, null));
+        Assert.assertArrayEquals(expectedResponse.getBytes(StandardCharsets.UTF_8), Iterables.getFirst(results, null).getDatum());
 
     }
 

@@ -19,7 +19,6 @@ import akka.http.javadsl.model.MediaTypes;
 import com.arpnetworking.commons.jackson.databind.ObjectMapperFactory;
 import com.arpnetworking.metrics.Metrics;
 import com.arpnetworking.metrics.MetricsFactory;
-import com.arpnetworking.test.TestBeanFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.Condition;
 import com.arpnetworking.tsdcore.model.FQDSN;
@@ -93,44 +92,7 @@ public class KairosDbSinkTest extends BaseActorTest {
                         .withStatus(200)));
 
         // Post data to KairosDb
-        final ZonedDateTime start = ZonedDateTime.ofInstant(
-                Instant.ofEpochMilli(1457768160000L),
-                ZoneOffset.UTC);
-        final FQDSN fqdsn = new FQDSN.Builder()
-                .setCluster("MyCluster")
-                .setMetric("MyMetric")
-                .setService("MyService")
-                .setStatistic(STATISTIC_FACTORY.getStatistic("max"))
-                .build();
-        _kairosDbSinkBuilder.build().recordAggregateData(
-                new PeriodicData.Builder()
-                        .setConditions(ImmutableList.of(
-                                new Condition.Builder()
-                                        .setFQDSN(fqdsn)
-                                        .setName("critical")
-                                        .setThreshold(new Quantity.Builder()
-                                                .setValue(2.46)
-                                                .build())
-                                        .setTriggered(true)
-                                        .build()))
-                        .setData(ImmutableList.of(
-                                new AggregatedData.Builder()
-                                        .setFQDSN(fqdsn)
-                                        .setHost("MyHost")
-                                        .setIsSpecified(true)
-                                        .setPeriod(Duration.ofMinutes(1))
-                                        .setPopulationSize(1L)
-                                        .setStart(start)
-                                        .setValue(new Quantity.Builder()
-                                                .setValue(1.23)
-                                                .build())
-                                        .build()))
-                        .setDimensions(ImmutableMap.of(
-                                "host", "myhost.example.com",
-                                "domain", "example.com"))
-                        .setPeriod(Duration.ofMinutes(1))
-                        .setStart(start)
-                        .build());
+        _kairosDbSinkBuilder.build().recordAggregateData(createPeriodicData(10L));
         // Allow the request/response to complete
         Thread.sleep(1000);
 
@@ -150,6 +112,7 @@ public class KairosDbSinkTest extends BaseActorTest {
         Mockito.verify(_mockMetricsFactory, Mockito.times(3)).create();
         Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/success", 1);
         Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/status/2xx", 1);
+        Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/samples_sent", 10);
         Mockito.verify(_mockMetrics, Mockito.times(1)).setTimer(
                 Mockito.matches("sinks/http_post/kairosdb_sink_test/queue_time"),
                 Mockito.anyLong(),
@@ -168,7 +131,7 @@ public class KairosDbSinkTest extends BaseActorTest {
                 .willReturn(WireMock.aResponse()
                         .withStatus(502)));
         _kairosDbSinkBuilder.setMaximumAttempts(2).setBaseBackoff(Duration.ofMillis(1)).build()
-                .recordAggregateData(TestBeanFactory.createPeriodicData());
+                .recordAggregateData(createPeriodicData(10L));
 
         Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(
                 () -> _wireMock.verifyThat(2, WireMock.postRequestedFor(WireMock.urlEqualTo(PATH)))
@@ -176,6 +139,7 @@ public class KairosDbSinkTest extends BaseActorTest {
 
         Mockito.verify(_mockMetricsFactory, Mockito.times(4)).create();
         Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/status/5xx", 1);
+        Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/samples_dropped", 10L);
         Mockito.verify(_mockMetrics, Mockito.times(1)).setTimer(
                 Mockito.matches("sinks/http_post/kairosdb_sink_test/queue_time"),
                 Mockito.anyLong(),
@@ -196,6 +160,46 @@ public class KairosDbSinkTest extends BaseActorTest {
     private static final String PATH = "/kairos/post/path";
     private static final StatisticFactory STATISTIC_FACTORY = new StatisticFactory();
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.getInstance();
+
+    private PeriodicData createPeriodicData(final long populationSize) {
+        final ZonedDateTime start = ZonedDateTime.ofInstant(
+                Instant.ofEpochMilli(1457768160000L),
+                ZoneOffset.UTC);
+        final FQDSN fqdsn = new FQDSN.Builder()
+                .setCluster("MyCluster")
+                .setMetric("MyMetric")
+                .setService("MyService")
+                .setStatistic(STATISTIC_FACTORY.getStatistic("max"))
+                .build();
+        return new PeriodicData.Builder()
+                .setConditions(ImmutableList.of(
+                        new Condition.Builder()
+                                .setFQDSN(fqdsn)
+                                .setName("critical")
+                                .setThreshold(new Quantity.Builder()
+                                        .setValue(2.46)
+                                        .build())
+                                .setTriggered(true)
+                                .build()))
+                .setData(ImmutableList.of(
+                        new AggregatedData.Builder()
+                                .setFQDSN(fqdsn)
+                                .setHost("MyHost")
+                                .setIsSpecified(true)
+                                .setPeriod(Duration.ofMinutes(1))
+                                .setPopulationSize(populationSize)
+                                .setStart(start)
+                                .setValue(new Quantity.Builder()
+                                        .setValue(1.23)
+                                        .build())
+                                .build()))
+                .setDimensions(ImmutableMap.of(
+                        "host", "myhost.example.com",
+                        "domain", "example.com"))
+                .setPeriod(Duration.ofMinutes(1))
+                .setStart(start)
+                .build();
+    }
 
     @Mock
     private Metrics _mockMetrics;
