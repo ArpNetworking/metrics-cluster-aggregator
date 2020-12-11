@@ -551,17 +551,17 @@ public final class ClusterAggregatorConfiguration {
 
         /**
          * How often an aggregator actor should check for liveliness. An actor is considered live
-         * if any data is received between subsequent checks.
+         * if any data is received between consecutive checks.
          *
-         * This control is useful for culling aggregator instances for very infrequently occurring
-         * dimension sets, especially if the application is long-lived.
+         * This control is useful for culling instances which aggregate very infrequent dimension
+         * sets, especially if the application itself is long-lived.
          *
          * This must be greater than the reaggregation timeout, otherwise an actor could be
          * incorrectly marked as stale before flushing its data.
          *
          * Optional. Defaults to twice the reaggregation timeout. Cannot be null.
          *
-         * @param value Timeout from period start to wait for all data to arrive.
+         * @param value Timeout between consecutive liveliness checks.
          * @return This instance of {@link Builder}.
          */
         public Builder setAggregatorLivelinessTimeout(final Duration value) {
@@ -604,7 +604,7 @@ public final class ClusterAggregatorConfiguration {
         }
 
         /**
-         * Validate that the aggregator liveliness timeout is less than the reaggregation timeout.
+         * Validate that the aggregator liveliness timeout is greater than the reaggregation timeout.
          *
          * @param aggregatorLivelinessTimeout the configured liveliness timeout
          * @return true if the given value is valid
