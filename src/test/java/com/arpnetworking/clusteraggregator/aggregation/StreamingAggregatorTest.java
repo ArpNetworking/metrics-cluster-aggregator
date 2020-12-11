@@ -21,6 +21,7 @@ import akka.actor.Terminated;
 import akka.cluster.sharding.ShardRegion;
 import akka.testkit.TestActorRef;
 import akka.testkit.TestProbe;
+import com.arpnetworking.metrics.aggregation.protocol.Messages;
 import com.arpnetworking.utility.BaseActorTest;
 import com.google.common.collect.ImmutableSet;
 import org.junit.Assert;
@@ -31,20 +32,42 @@ import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Tests for the Aggregator actor.
+ * Tests for the {@link StreamingAggregator} actor.
  *
- * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
+ * @author Christian Briones (cbriones at dropbox dot com)
  */
-public class AggregatorTest extends BaseActorTest {
+public class StreamingAggregatorTest extends BaseActorTest {
 
     @Test
-    public void passivatesProperly() {
+    public void passivatesProperlyWhenLivelinessTimeoutIsExceeded() {
         final TestProbe probe = TestProbe.apply(getSystem());
-
         final ActorRef aggregator = createAggregator(probe);
-        aggregator.tell(ReceiveTimeout.getInstance(), aggregator);
         probe.watch(aggregator);
-        final ShardRegion.Passivate passivate = probe.expectMsgClass(TIMEOUT, ShardRegion.Passivate.class);
+
+        // We expect a passivate message after at least LIVELINESS_TIMEOUT_SECS
+        final ShardRegion.Passivate passivate = probe.expectMsgClass(PROBE_TIMEOUT, ShardRegion.Passivate.class);
+        aggregator.tell(passivate.stopMessage(), aggregator);
+        final Terminated terminated = probe.expectMsgClass(Terminated.class);
+        Assert.assertEquals(aggregator, terminated.getActor());
+    }
+
+    @Test
+    public void dataKeepsActorLive() {
+        final TestProbe probe = TestProbe.apply(getSystem());
+        final ActorRef aggregator = createAggregator(probe);
+        probe.watch(aggregator);
+
+        final Messages.StatisticSetRecord record = Messages.StatisticSetRecord.newBuilder()
+                .setMetric("my_metric")
+                .setPeriod("PT1M")
+                .setPeriodStart("2020-12-10T19:00:00Z")
+                .build();
+
+        aggregator.tell(record, probe.ref());
+        probe.expectNoMessage(FiniteDuration.apply(LIVELINESS_TIMEOUT_SEC, TimeUnit.SECONDS));
+
+        aggregator.tell(ReceiveTimeout.getInstance(), aggregator);
+        final ShardRegion.Passivate passivate = probe.expectMsgClass(PROBE_TIMEOUT, ShardRegion.Passivate.class);
         aggregator.tell(passivate.stopMessage(), aggregator);
         final Terminated terminated = probe.expectMsgClass(Terminated.class);
         Assert.assertEquals(aggregator, terminated.getActor());
@@ -53,18 +76,19 @@ public class AggregatorTest extends BaseActorTest {
     public ActorRef createAggregator(final TestProbe probe) {
         final TestProbe ignored = TestProbe.apply(getSystem());
         return TestActorRef.apply(
-                AggregationRouter.props(
+                StreamingAggregator.props(
                         ignored.ref(),
                         ignored.ref(),
                         "",
                         ImmutableSet.of(),
                         true,
-                        Duration.ofMinutes(1),
-                        Duration.ofMinutes(2)),
-                probe.ref(),
+                        Duration.ofSeconds(5),
+                        Duration.ofSeconds(LIVELINESS_TIMEOUT_SEC)),
+        probe.ref(),
                 "agg",
                 getSystem());
     }
 
-    private static final FiniteDuration TIMEOUT = FiniteDuration.apply(10, TimeUnit.SECONDS);
+    private static final int LIVELINESS_TIMEOUT_SEC = 5;
+    private static final FiniteDuration PROBE_TIMEOUT = FiniteDuration.apply(10, TimeUnit.SECONDS);
 }
