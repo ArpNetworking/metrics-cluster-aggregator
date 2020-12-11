@@ -603,9 +603,15 @@ public final class ClusterAggregatorConfiguration {
             return this;
         }
 
+        /**
+         * Validate that the aggregator liveliness timeout is less than the reaggregation timeout.
+         *
+         * @param aggregatorLivelinessTimeout the configured liveliness timeout
+         * @return true if the given value is valid
+         */
         @SuppressFBWarnings(value = "UPM_UNCALLED_PRIVATE_METHOD", justification = "invoked reflectively by @ValidateWithMethod")
         public boolean validateAggregatorLivelinessTimeout(final Duration aggregatorLivelinessTimeout) {
-            return aggregatorLivelinessTimeout.compareTo(_reaggregationTimeout) < 0;
+            return aggregatorLivelinessTimeout.compareTo(_reaggregationTimeout) > 0;
         }
 
         @NotNull
@@ -655,7 +661,7 @@ public final class ClusterAggregatorConfiguration {
         @NotNull
         private Duration _reaggregationTimeout = Duration.ofMinutes(1);
         @NotNull
-        @ValidateWithMethod(methodName = "validateAggregatorLivelinessTimeout", parameterType=Duration.class)
+        @ValidateWithMethod(methodName = "validateAggregatorLivelinessTimeout", parameterType = Duration.class)
         private Duration _aggregatorLivelinessTimeout = _reaggregationTimeout.multipliedBy(2);
         @NotNull
         private File _hostPipelineConfiguration;
