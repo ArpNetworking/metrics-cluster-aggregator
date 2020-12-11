@@ -49,6 +49,7 @@ public class AggregationRouter extends AbstractActor {
      * @param reaggregationDimensions The dimensions to reaggregate over.
      * @param injectClusterAsHost Whether to inject a host dimension based on cluster.
      * @param aggregatorTimeout The time to wait from the start of the period for all data.
+     * @param livelinessTimeout How often to check that a child is still receiving data.
      * @return A new {@link Props}.
      */
     public static Props props(
@@ -57,7 +58,8 @@ public class AggregationRouter extends AbstractActor {
             final String clusterHostSuffix,
             final ImmutableSet<String> reaggregationDimensions,
             final boolean injectClusterAsHost,
-            final Duration aggregatorTimeout) {
+            final Duration aggregatorTimeout,
+            final Duration livelinessTimeout) {
         return Props.create(
                 AggregationRouter.class,
                 metricsListener,
@@ -65,7 +67,8 @@ public class AggregationRouter extends AbstractActor {
                 clusterHostSuffix,
                 reaggregationDimensions,
                 injectClusterAsHost,
-                aggregatorTimeout);
+                aggregatorTimeout,
+                livelinessTimeout);
     }
 
     /**
@@ -77,6 +80,7 @@ public class AggregationRouter extends AbstractActor {
      * @param reaggregationDimensions The dimensions to reaggregate over.
      * @param injectClusterAsHost Whether to inject a host dimension based on cluster.
      * @param aggregatorTimeout The time to wait from the start of the period for all data.
+     * @param livelinessTimeout How often to check that a child is still receiving data.
      */
     @Inject
     public AggregationRouter(
@@ -85,15 +89,18 @@ public class AggregationRouter extends AbstractActor {
             @Named("cluster-host-suffix") final String clusterHostSuffix,
             @Named("reaggregation-dimensions") final ImmutableSet<String> reaggregationDimensions,
             @Named("reaggregation-cluster-as-host") final boolean injectClusterAsHost,
-            @Named("reaggregation-timeout") final Duration aggregatorTimeout) {
-        _streamingChild = context().actorOf(
+            @Named("reaggregation-timeout") final Duration aggregatorTimeout,
+            @Named("aggregator-liveliness-timeout") final Duration livelinessTimeout) {
+            _streamingChild = context().actorOf(
                 StreamingAggregator.props(
                         periodicStatistics,
                         emitter,
                         clusterHostSuffix,
                         reaggregationDimensions,
                         injectClusterAsHost,
-                        aggregatorTimeout),
+                        aggregatorTimeout,
+                        livelinessTimeout
+                ),
                 "streaming");
         context().setReceiveTimeout(FiniteDuration.apply(30, TimeUnit.MINUTES));
     }

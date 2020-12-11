@@ -25,9 +25,11 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import net.sf.oval.constraint.NotEmpty;
 import net.sf.oval.constraint.NotNull;
 import net.sf.oval.constraint.Range;
+import net.sf.oval.constraint.ValidateWithMethod;
 
 import java.io.File;
 import java.time.Duration;
@@ -132,6 +134,10 @@ public final class ClusterAggregatorConfiguration {
         return _reaggregationTimeout;
     }
 
+    public Duration getAggregatorLivelinessTimeout() {
+        return _aggregatorLivelinessTimeout;
+    }
+
     public RebalanceConfiguration getRebalanceConfiguration() {
         return _rebalanceConfiguration;
     }
@@ -180,6 +186,7 @@ public final class ClusterAggregatorConfiguration {
                 .add("ReaggregationDimensions", _reaggregationDimensions)
                 .add("ReaggregationInjectClusterAsHost", _reaggregationInjectClusterAsHost)
                 .add("ReaggregationTimeout", _reaggregationTimeout)
+                .add("AggregatorLivelinessTimeout", _aggregatorLivelinessTimeout)
                 .add("MinConnectionTimeout", _minConnectionTimeout)
                 .add("MaxConnectionTimeout", _maxConnectionTimeout)
                 .add("RebalanceConfiguration", _rebalanceConfiguration)
@@ -208,6 +215,7 @@ public final class ClusterAggregatorConfiguration {
         _reaggregationDimensions = builder._reaggregationDimensions;
         _reaggregationInjectClusterAsHost = builder._reaggregationInjectClusterAsHost;
         _reaggregationTimeout = builder._reaggregationTimeout;
+        _aggregatorLivelinessTimeout = builder._aggregatorLivelinessTimeout;
         _minConnectionTimeout = builder._minConnectionTimeout;
         _maxConnectionTimeout = builder._maxConnectionTimeout;
         _jvmMetricsCollectionInterval = builder._jvmMetricsCollectionInterval;
@@ -236,6 +244,7 @@ public final class ClusterAggregatorConfiguration {
     private final ImmutableSet<String> _reaggregationDimensions;
     private final boolean _reaggregationInjectClusterAsHost;
     private final Duration _reaggregationTimeout;
+    private final Duration _aggregatorLivelinessTimeout;
     private final Duration _minConnectionTimeout;
     private final Duration _maxConnectionTimeout;
     private final Duration _jvmMetricsCollectionInterval;
@@ -541,6 +550,26 @@ public final class ClusterAggregatorConfiguration {
         }
 
         /**
+         * How often an aggregator actor should check for liveliness. An actor is considered live
+         * if any data is received between subsequent checks.
+         *
+         * This control is useful for culling aggregator instances for very infrequently occurring
+         * dimension sets, especially if the application is long-lived.
+         *
+         * This must be greater than the reaggregation timeout, otherwise an actor could be
+         * incorrectly marked as stale before flushing its data.
+         *
+         * Optional. Defaults to twice the reaggregation timeout. Cannot be null.
+         *
+         * @param value Timeout from period start to wait for all data to arrive.
+         * @return This instance of {@link Builder}.
+         */
+        public Builder setAggregatorLivelinessTimeout(final Duration value) {
+            _aggregatorLivelinessTimeout = value;
+            return this;
+        }
+
+        /**
          * Configuration for the shard rebalance settings.
          *
          * @param value The rebalacing configuration.
@@ -572,6 +601,11 @@ public final class ClusterAggregatorConfiguration {
         public Builder setCalculateClusterAggregations(final Boolean value) {
             _calculateClusterAggregations = value;
             return this;
+        }
+
+        @SuppressFBWarnings(value = "UPM_UNCALLED_PRIVATE_METHOD", justification = "invoked reflectively by @ValidateWithMethod")
+        public boolean validateAggregatorLivelinessTimeout(final Duration aggregatorLivelinessTimeout) {
+            return aggregatorLivelinessTimeout.compareTo(_reaggregationTimeout) < 0;
         }
 
         @NotNull
@@ -620,6 +654,9 @@ public final class ClusterAggregatorConfiguration {
         private Boolean _reaggregationInjectClusterAsHost = Boolean.TRUE;
         @NotNull
         private Duration _reaggregationTimeout = Duration.ofMinutes(1);
+        @NotNull
+        @ValidateWithMethod(methodName = "validateAggregatorLivelinessTimeout", parameterType=Duration.class)
+        private Duration _aggregatorLivelinessTimeout = _reaggregationTimeout.multipliedBy(2);
         @NotNull
         private File _hostPipelineConfiguration;
         @NotNull
