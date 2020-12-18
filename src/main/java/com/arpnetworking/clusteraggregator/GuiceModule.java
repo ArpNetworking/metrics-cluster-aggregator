@@ -361,7 +361,7 @@ public class GuiceModule extends AbstractModule {
     @Provides
     @Named("aggregator-liveliness-timeout")
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
-    private Duration provideLivelinessTimeout(final ClusterAggregatorConfiguration config) {
+    private Optional<Duration> provideLivelinessTimeout(final ClusterAggregatorConfiguration config) {
         return config.getAggregatorLivelinessTimeout();
     }
 
