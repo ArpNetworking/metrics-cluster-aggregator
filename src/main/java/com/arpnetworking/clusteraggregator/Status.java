@@ -21,7 +21,7 @@ import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.cluster.Cluster;
 import akka.cluster.MemberStatus;
-import akka.pattern.PatternsCS;
+import akka.pattern.Patterns;
 import akka.remote.AssociationErrorEvent;
 import com.arpnetworking.clusteraggregator.models.MetricsRequest;
 import com.arpnetworking.clusteraggregator.models.PeriodMetrics;
@@ -106,7 +106,7 @@ public class Status extends AbstractActor {
     private void processStatusRequest() {
         // Call the bookkeeper
         final CompletableFuture<ClusterStatusCache.StatusResponse> clusterStateFuture =
-                PatternsCS.ask(
+                Patterns.ask(
                         _clusterStatusCache,
                         new ClusterStatusCache.GetRequest(),
                         Duration.ofSeconds(3))
@@ -115,7 +115,7 @@ public class Status extends AbstractActor {
                 .toCompletableFuture();
 
         final CompletableFuture<Map<Duration, PeriodMetrics>> localMetricsFuture =
-                PatternsCS.ask(
+                Patterns.ask(
                         _localMetrics,
                         new MetricsRequest(),
                         Duration.ofSeconds(3))
@@ -123,7 +123,7 @@ public class Status extends AbstractActor {
                 .exceptionally(new AsNullRecovery<>())
                 .toCompletableFuture();
 
-        PatternsCS.pipe(
+        Patterns.pipe(
                 CompletableFuture.allOf(
                         clusterStateFuture.toCompletableFuture(),
                         localMetricsFuture.toCompletableFuture())

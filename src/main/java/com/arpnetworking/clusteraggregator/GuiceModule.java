@@ -262,8 +262,7 @@ public class GuiceModule extends AbstractModule {
         final akka.stream.javadsl.Source<IncomingConnection, CompletionStage<ServerBinding>> binding = http.bind(
                 ConnectHttp.toHost(
                         _configuration.getHttpHost(),
-                        _configuration.getHttpPort()),
-                materializer);
+                        _configuration.getHttpPort()));
         return binding.to(
                 akka.stream.javadsl.Sink.foreach(
                         connection -> connection.handleWithAsyncHandler(routes, materializer)))
@@ -285,13 +284,21 @@ public class GuiceModule extends AbstractModule {
     private ActorRef provideAggregatorShardRegion(
             final ActorSystem system,
             final Injector injector,
-            final AggMessageExtractor extractor) {
+            final AggMessageExtractor extractor,
+            final ClusterAggregatorConfiguration configuration) {
         final ClusterSharding clusterSharding = ClusterSharding.get(system);
         final RebalanceConfiguration rebalanceConfiguration = _configuration.getRebalanceConfiguration();
+
+        ClusterShardingSettings settings = ClusterShardingSettings.create(system);
+
+        if (configuration.getAggregatorLivelinessTimeout().isPresent()) {
+            settings = settings.withPassivateIdleAfter(configuration.getAggregatorLivelinessTimeout().get());
+        }
+
         return clusterSharding.start(
                 "Aggregator",
                 GuiceActorCreator.props(injector, AggregationRouter.class),
-                ClusterShardingSettings.create(system),
+                settings,
                 extractor,
                 new ParallelLeastShardAllocationStrategy(
                         rebalanceConfiguration.getMaxParallel(),
@@ -356,13 +363,6 @@ public class GuiceModule extends AbstractModule {
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
     private Duration provideReaggregationTimeout(final ClusterAggregatorConfiguration config) {
         return config.getReaggregationTimeout();
-    }
-
-    @Provides
-    @Named("aggregator-liveliness-timeout")
-    @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
-    private Duration provideLivelinessTimeout(final ClusterAggregatorConfiguration config) {
-        return config.getAggregatorLivelinessTimeout();
     }
 
     @Provides

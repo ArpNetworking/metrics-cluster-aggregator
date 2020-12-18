@@ -18,7 +18,7 @@ package com.arpnetworking.tsdcore.sinks;
 import akka.actor.AbstractActor;
 import akka.actor.Props;
 import akka.http.javadsl.model.StatusCodes;
-import akka.pattern.PatternsCS;
+import akka.pattern.Patterns;
 import com.arpnetworking.logback.annotations.LogValue;
 import com.arpnetworking.metrics.Metrics;
 import com.arpnetworking.metrics.MetricsFactory;
@@ -372,7 +372,7 @@ public class HttpSinkActor extends AbstractActor {
                         return new PostFailure(attempt, request, err);
                     }
                 });
-        PatternsCS.pipe(responsePromise, context().dispatcher()).to(self());
+        Patterns.pipe(responsePromise, context().dispatcher()).to(self());
     }
 
     private void scheduleRetry(final RequestEntry requestEntry, final int attempt) {

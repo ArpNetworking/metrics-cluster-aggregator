@@ -59,8 +59,7 @@ public class AggregatorTest extends BaseActorTest {
                         "",
                         ImmutableSet.of(),
                         true,
-                        Duration.ofMinutes(1),
-                        Duration.ofMinutes(2)),
+                        Duration.ofMinutes(1)),
                 probe.ref(),
                 "agg",
                 getSystem());

@@ -17,7 +17,7 @@ package com.arpnetworking.tsdcore.sinks.circonus;
 
 import akka.actor.AbstractActor;
 import akka.actor.Props;
-import akka.pattern.PatternsCS;
+import akka.pattern.Patterns;
 import com.arpnetworking.akka.UniformRandomTimeScheduler;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
@@ -111,7 +111,7 @@ public class BrokerRefresher extends AbstractActor {
         final CompletionStage<Object> promise = _client.getBrokers()
                 .<Object>thenApply(BrokerLookupComplete::new)
                 .exceptionally(BrokerLookupFailure::new);
-        PatternsCS.pipe(promise, context().dispatcher()).to(self());
+        Patterns.pipe(promise, context().dispatcher()).to(self());
     }
 
     private final CirconusClient _client;
