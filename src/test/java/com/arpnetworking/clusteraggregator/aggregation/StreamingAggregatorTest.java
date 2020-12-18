@@ -29,6 +29,7 @@ import org.junit.Test;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.time.Duration;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -83,7 +84,7 @@ public class StreamingAggregatorTest extends BaseActorTest {
                         ImmutableSet.of(),
                         true,
                         Duration.ofSeconds(5),
-                        Duration.ofSeconds(LIVELINESS_TIMEOUT_SEC)),
+                        Optional.of(Duration.ofSeconds(LIVELINESS_TIMEOUT_SEC))),
         probe.ref(),
                 "agg",
                 getSystem());

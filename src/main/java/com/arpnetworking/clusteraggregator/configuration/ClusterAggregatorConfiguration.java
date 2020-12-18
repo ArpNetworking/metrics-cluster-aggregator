@@ -134,7 +134,7 @@ public final class ClusterAggregatorConfiguration {
         return _reaggregationTimeout;
     }
 
-    public Duration getAggregatorLivelinessTimeout() {
+    public Optional<Duration> getAggregatorLivelinessTimeout() {
         return _aggregatorLivelinessTimeout;
     }
 
@@ -244,7 +244,7 @@ public final class ClusterAggregatorConfiguration {
     private final ImmutableSet<String> _reaggregationDimensions;
     private final boolean _reaggregationInjectClusterAsHost;
     private final Duration _reaggregationTimeout;
-    private final Duration _aggregatorLivelinessTimeout;
+    private final Optional<Duration> _aggregatorLivelinessTimeout;
     private final Duration _minConnectionTimeout;
     private final Duration _maxConnectionTimeout;
     private final Duration _jvmMetricsCollectionInterval;
@@ -565,7 +565,7 @@ public final class ClusterAggregatorConfiguration {
          * @return This instance of {@link Builder}.
          */
         public Builder setAggregatorLivelinessTimeout(final Duration value) {
-            _aggregatorLivelinessTimeout = value;
+            _aggregatorLivelinessTimeout = Optional.of(value);
             return this;
         }
 
@@ -610,8 +610,10 @@ public final class ClusterAggregatorConfiguration {
          * @return true if the given value is valid
          */
         @SuppressFBWarnings(value = "UPM_UNCALLED_PRIVATE_METHOD", justification = "invoked reflectively by @ValidateWithMethod")
-        public boolean validateAggregatorLivelinessTimeout(final Duration aggregatorLivelinessTimeout) {
-            return aggregatorLivelinessTimeout.compareTo(_reaggregationTimeout) > 0;
+        public boolean validateAggregatorLivelinessTimeout(final Optional<Duration> aggregatorLivelinessTimeout) {
+            return aggregatorLivelinessTimeout
+                    .map(duration -> duration.compareTo(_reaggregationTimeout) > 0)
+                    .orElse(true);
         }
 
         @NotNull
@@ -661,8 +663,8 @@ public final class ClusterAggregatorConfiguration {
         @NotNull
         private Duration _reaggregationTimeout = Duration.ofMinutes(1);
         @NotNull
-        @ValidateWithMethod(methodName = "validateAggregatorLivelinessTimeout", parameterType = Duration.class)
-        private Duration _aggregatorLivelinessTimeout = _reaggregationTimeout.multipliedBy(2);
+        @ValidateWithMethod(methodName = "validateAggregatorLivelinessTimeout", parameterType = Optional.class)
+        private Optional<Duration> _aggregatorLivelinessTimeout = Optional.empty();
         @NotNull
         private File _hostPipelineConfiguration;
         @NotNull

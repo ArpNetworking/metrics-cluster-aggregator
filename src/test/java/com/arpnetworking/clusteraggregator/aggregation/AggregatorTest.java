@@ -28,6 +28,7 @@ import org.junit.Test;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.time.Duration;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -60,7 +61,7 @@ public class AggregatorTest extends BaseActorTest {
                         ImmutableSet.of(),
                         true,
                         Duration.ofMinutes(1),
-                        Duration.ofMinutes(2)),
+                        Optional.empty()),
                 probe.ref(),
                 "agg",
                 getSystem());

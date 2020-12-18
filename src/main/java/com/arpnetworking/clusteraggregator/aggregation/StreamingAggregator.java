@@ -78,7 +78,7 @@ public class StreamingAggregator extends AbstractActorWithTimers {
             final ImmutableSet<String> reaggregationDimensions,
             final boolean injectClusterAsHost,
             final Duration aggregatorTimeout,
-            final Duration livelinessTimeout) {
+            final Optional<Duration> livelinessTimeout) {
         return Props.create(
                 StreamingAggregator.class,
                 metricsListener,
@@ -109,7 +109,7 @@ public class StreamingAggregator extends AbstractActorWithTimers {
             @Named("reaggregation-dimensions") final ImmutableSet<String> reaggregationDimensions,
             @Named("reaggregation-cluster-as-host") final boolean injectClusterAsHost,
             @Named("reaggregation-timeout") final Duration aggregatorTimeout,
-            @Named("aggregator-liveliness-timeout") final Duration livelinessTimeout) {
+            @Named("aggregator-liveliness-timeout") final Optional<Duration> livelinessTimeout) {
         _periodicStatistics = periodicStatistics;
         _clusterHostSuffix = clusterHostSuffix;
         _reaggregationDimensions = reaggregationDimensions;
@@ -118,8 +118,9 @@ public class StreamingAggregator extends AbstractActorWithTimers {
         context().setReceiveTimeout(FiniteDuration.apply(30, TimeUnit.MINUTES));
 
         timers().startPeriodicTimer(BUCKET_CHECK_TIMER_KEY, BucketCheck.getInstance(), FiniteDuration.apply(5, TimeUnit.SECONDS));
-        timers().startPeriodicTimer(LIVELINESS_CHECK_TIMER, LIVELINESS_CHECK_MSG, livelinessTimeout);
-
+        livelinessTimeout.ifPresent(timeout -> {
+            timers().startPeriodicTimer(LIVELINESS_CHECK_TIMER, LIVELINESS_CHECK_MSG, timeout);
+        });
         _emitter = emitter;
     }
 

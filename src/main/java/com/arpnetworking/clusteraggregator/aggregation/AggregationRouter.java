@@ -59,7 +59,7 @@ public class AggregationRouter extends AbstractActor {
             final ImmutableSet<String> reaggregationDimensions,
             final boolean injectClusterAsHost,
             final Duration aggregatorTimeout,
-            final Duration livelinessTimeout) {
+            final Optional<Duration> livelinessTimeout) {
         return Props.create(
                 AggregationRouter.class,
                 metricsListener,
@@ -90,7 +90,7 @@ public class AggregationRouter extends AbstractActor {
             @Named("reaggregation-dimensions") final ImmutableSet<String> reaggregationDimensions,
             @Named("reaggregation-cluster-as-host") final boolean injectClusterAsHost,
             @Named("reaggregation-timeout") final Duration aggregatorTimeout,
-            @Named("aggregator-liveliness-timeout") final Duration livelinessTimeout) {
+            @Named("aggregator-liveliness-timeout") final Optional<Duration> livelinessTimeout) {
             _streamingChild = context().actorOf(
                 StreamingAggregator.props(
                         periodicStatistics,
