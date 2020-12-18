@@ -285,14 +285,14 @@ public class GuiceModule extends AbstractModule {
             final ActorSystem system,
             final Injector injector,
             final AggMessageExtractor extractor,
-            final ClusterAggregatorConfiguration configuration) {
+            @Named("aggregator-liveliness-timeout") final Optional<Duration> livelinessTimeout) {
         final ClusterSharding clusterSharding = ClusterSharding.get(system);
         final RebalanceConfiguration rebalanceConfiguration = _configuration.getRebalanceConfiguration();
 
         ClusterShardingSettings settings = ClusterShardingSettings.create(system);
 
-        if (configuration.getAggregatorLivelinessTimeout().isPresent()) {
-            settings = settings.withPassivateIdleAfter(configuration.getAggregatorLivelinessTimeout().get());
+        if (livelinessTimeout.isPresent()) {
+            settings = settings.withPassivateIdleAfter(livelinessTimeout.get());
         }
 
         return clusterSharding.start(
@@ -366,6 +366,11 @@ public class GuiceModule extends AbstractModule {
     }
 
     @Provides
+    @Named("aggregator-liveliness-timeout")
+    @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
+    private Optional<Duration> provideLivelinessTimeout(final ClusterAggregatorConfiguration config) {
+        return config.getAggregatorLivelinessTimeout();
+    }
     @Named("circonus-partition-set")
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
     private PartitionSet provideDatabasePartitionSet(final Injector injector) {
