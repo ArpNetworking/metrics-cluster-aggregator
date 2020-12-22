@@ -27,7 +27,7 @@ import akka.http.javadsl.model.StatusCodes;
 import akka.http.javadsl.model.headers.CacheControl;
 import akka.http.javadsl.model.headers.CacheDirectives;
 import akka.japi.function.Function;
-import akka.pattern.PatternsCS;
+import akka.pattern.Patterns;
 import akka.util.ByteString;
 import com.arpnetworking.clusteraggregator.Status;
 import com.arpnetworking.clusteraggregator.models.StatusResponse;
@@ -224,7 +224,7 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
     @SuppressWarnings("unchecked")
     private <T> CompletionStage<T> ask(final String actorPath, final Object request, final T defaultValue) {
         return
-                PatternsCS.ask(
+                Patterns.ask(
                         _actorSystem.actorSelection(actorPath),
                         request,
                         Duration.ofSeconds(5))

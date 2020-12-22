@@ -17,7 +17,7 @@ package com.arpnetworking.tsdcore.sinks.circonus;
 
 import akka.actor.AbstractActor;
 import akka.actor.Props;
-import akka.pattern.PatternsCS;
+import akka.pattern.Patterns;
 import com.arpnetworking.akka.UniformRandomTimeScheduler;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
@@ -164,7 +164,7 @@ public class CheckBundleActivator extends AbstractActor {
                             }
                         })
                 .exceptionally(CheckBundleRefreshFailure::new);
-        PatternsCS.pipe(requestPromise, _dispatcher).to(self());
+        Patterns.pipe(requestPromise, _dispatcher).to(self());
     }
 
     private final CirconusClient _client;

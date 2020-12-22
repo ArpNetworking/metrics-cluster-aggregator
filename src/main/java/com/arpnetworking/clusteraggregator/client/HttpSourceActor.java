@@ -86,7 +86,7 @@ public class HttpSourceActor extends AbstractActor {
             final ActorRef shardRegion,
             final ActorRef emitter,
             final ClusterAggregatorConfiguration configuration) {
-        return Props.create(() -> new HttpSourceActor(shardRegion, emitter, configuration));
+        return Props.create(HttpSourceActor.class, () -> new HttpSourceActor(shardRegion, emitter, configuration));
     }
 
     /**

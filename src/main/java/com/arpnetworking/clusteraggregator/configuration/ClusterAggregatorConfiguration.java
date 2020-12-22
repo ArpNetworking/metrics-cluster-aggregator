@@ -662,7 +662,7 @@ public final class ClusterAggregatorConfiguration {
         private Duration _reaggregationTimeout = Duration.ofMinutes(1);
         @NotNull
         @ValidateWithMethod(methodName = "validateAggregatorLivelinessTimeout", parameterType = Duration.class)
-        private Duration _aggregatorLivelinessTimeout = _reaggregationTimeout.multipliedBy(2);
+        private Duration _aggregatorLivelinessTimeout = Duration.ofMinutes(10);
         @NotNull
         private File _hostPipelineConfiguration;
         @NotNull

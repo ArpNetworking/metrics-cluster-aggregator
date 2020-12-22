@@ -68,7 +68,6 @@ public class StreamingAggregator extends AbstractActorWithTimers {
      * @param reaggregationDimensions The dimensions to reaggregate over.
      * @param injectClusterAsHost Whether to inject a host dimension based on cluster.
      * @param aggregatorTimeout The time to wait from the start of the period for all data.
-     * @param livelinessTimeout How often to check that this actor is still receiving data.
      * @return A new {@link Props}.
      */
     public static Props props(
@@ -77,8 +76,7 @@ public class StreamingAggregator extends AbstractActorWithTimers {
             final String clusterHostSuffix,
             final ImmutableSet<String> reaggregationDimensions,
             final boolean injectClusterAsHost,
-            final Duration aggregatorTimeout,
-            final Duration livelinessTimeout) {
+            final Duration aggregatorTimeout) {
         return Props.create(
                 StreamingAggregator.class,
                 metricsListener,
@@ -86,8 +84,7 @@ public class StreamingAggregator extends AbstractActorWithTimers {
                 clusterHostSuffix,
                 reaggregationDimensions,
                 injectClusterAsHost,
-                aggregatorTimeout,
-                livelinessTimeout);
+                aggregatorTimeout);
     }
 
     /**
@@ -99,7 +96,6 @@ public class StreamingAggregator extends AbstractActorWithTimers {
      * @param reaggregationDimensions The dimensions to reaggregate over.
      * @param injectClusterAsHost Whether to inject a host dimension based on cluster.
      * @param aggregatorTimeout The time to wait from the start of the period for all data.
-     * @param livelinessTimeout How often to check that this actor is still receiving data.
      */
     @Inject
     public StreamingAggregator(
@@ -108,8 +104,7 @@ public class StreamingAggregator extends AbstractActorWithTimers {
             @Named("cluster-host-suffix") final String clusterHostSuffix,
             @Named("reaggregation-dimensions") final ImmutableSet<String> reaggregationDimensions,
             @Named("reaggregation-cluster-as-host") final boolean injectClusterAsHost,
-            @Named("reaggregation-timeout") final Duration aggregatorTimeout,
-            @Named("aggregator-liveliness-timeout") final Duration livelinessTimeout) {
+            @Named("reaggregation-timeout") final Duration aggregatorTimeout) {
         _periodicStatistics = periodicStatistics;
         _clusterHostSuffix = clusterHostSuffix;
         _reaggregationDimensions = reaggregationDimensions;
@@ -118,7 +113,6 @@ public class StreamingAggregator extends AbstractActorWithTimers {
         context().setReceiveTimeout(FiniteDuration.apply(30, TimeUnit.MINUTES));
 
         timers().startPeriodicTimer(BUCKET_CHECK_TIMER_KEY, BucketCheck.getInstance(), FiniteDuration.apply(5, TimeUnit.SECONDS));
-        timers().startPeriodicTimer(LIVELINESS_CHECK_TIMER, LIVELINESS_CHECK_MSG, livelinessTimeout);
 
         _emitter = emitter;
     }
@@ -127,8 +121,6 @@ public class StreamingAggregator extends AbstractActorWithTimers {
     public Receive createReceive() {
         return receiveBuilder()
                 .match(Messages.StatisticSetRecord.class, record -> {
-                    // Mark this actor as live since we're still receiving data.
-                    _live = true;
                     LOGGER.debug()
                             .setMessage("Processing a StatisticSetRecord")
                             .addData("workItem", record)
@@ -190,25 +182,10 @@ public class StreamingAggregator extends AbstractActorWithTimers {
                         }
                     }
                 })
-                .matchEquals(LIVELINESS_CHECK_MSG, msg -> {
-                    // If we've received data since our last check, reset and wait until another round.
-                    // otherwise shutdown.
-                    if (_live) {
-                        LOGGER.debug()
-                                .setMessage("aggregator is still live, continuing.")
-                                .addContext("actor", self())
-                                .log();
-                        _live = false;
-                        return;
-                    }
-                    LOGGER.debug()
-                            .setMessage("aggregator is stale, requesting shutdown.")
-                            .addContext("actor", self())
-                            .log();
-                    requestShutdownFromParent();
-                })
                 .match(ShutdownAggregator.class, message -> context().stop(self()))
-                .match(ReceiveTimeout.class, message -> requestShutdownFromParent())
+                .match(ReceiveTimeout.class, message -> {
+                    getContext().parent().tell(new ShardRegion.Passivate(ShutdownAggregator.getInstance()), getSelf());
+                })
                 .build();
     }
 
@@ -332,10 +309,6 @@ public class StreamingAggregator extends AbstractActorWithTimers {
         }
     }
 
-    private void requestShutdownFromParent() {
-        getContext().parent().tell(new ShardRegion.Passivate(ShutdownAggregator.getInstance()), getSelf());
-    }
-
     private ImmutableMap<String, String> dimensionsToMap(final Messages.StatisticSetRecord statisticSetRecord) {
         // Build a map of dimension key-value pairs dropping any that are to be reaggregated over
         final ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
@@ -383,9 +356,6 @@ public class StreamingAggregator extends AbstractActorWithTimers {
     private final Set<Statistic> _statistics = Sets.newHashSet();
     private final Duration _aggregatorTimeout;
     private boolean _initialized = false;
-    // This actor is _live if it's received data since the last LIVELINESS_CHECK_MSG.
-    // If this is ever false during a check, the actor will shutdown.
-    private boolean _live = false;
     private Duration _period;
     private String _cluster;
     private String _metric;
@@ -397,9 +367,6 @@ public class StreamingAggregator extends AbstractActorWithTimers {
                     || entry.getKey().equals(CombinedMetricData.HOST_KEY)
                     || entry.getKey().equals(CombinedMetricData.SERVICE_KEY));
     private static final String BUCKET_CHECK_TIMER_KEY = "bucketcheck";
-    private static final String LIVELINESS_CHECK_TIMER = "livelinesscheck";
-
-    private static final String LIVELINESS_CHECK_MSG = "LIVELINESS_CHECK_MSG";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StreamingAggregator.class);
     private static final Logger WORK_TOO_OLD_LOGGER = LoggerFactory.getRateLimitLogger(

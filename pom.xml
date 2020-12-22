@@ -101,7 +101,7 @@
 
   <properties>
     <!--Dependency versions-->
-    <akka.version>2.5.16</akka.version>
+    <akka.version>2.5.32</akka.version>
     <akka.http.version>10.1.5</akka.http.version>
     <akka.persistence.cassandra.version>0.89</akka.persistence.cassandra.version>
     <akka.kryo.version>0.5.2</akka.kryo.version>
