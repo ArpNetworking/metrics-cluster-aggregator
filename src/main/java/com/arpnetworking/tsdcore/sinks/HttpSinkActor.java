@@ -17,7 +17,6 @@ package com.arpnetworking.tsdcore.sinks;
 
 import akka.actor.AbstractActor;
 import akka.actor.Props;
-import akka.http.javadsl.model.StatusCodes;
 import akka.pattern.Patterns;
 import com.arpnetworking.logback.annotations.LogValue;
 import com.arpnetworking.metrics.Metrics;
@@ -30,7 +29,7 @@ import com.arpnetworking.tsdcore.model.RequestEntry;
 import com.google.common.base.Charsets;
 import com.google.common.collect.EvictingQueue;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableSet;
 import org.asynchttpclient.AsyncCompletionHandler;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.Response;
@@ -41,7 +40,6 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Random;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ThreadLocalRandom;
@@ -100,6 +98,8 @@ public class HttpSinkActor extends AbstractActor {
             final MetricsFactory metricsFactory) {
         _client = client;
         _sink = sink;
+        _acceptedStatusCodes = sink.getAcceptedStatusCodes();
+        _retryableStatusCodes = sink.getRetryableStatusCodes();
         _maximumConcurrency = maximumConcurrency;
         _pendingRequests = EvictingQueue.create(maximumQueueSize);
         _metricsFactory = metricsFactory;
@@ -128,6 +128,8 @@ public class HttpSinkActor extends AbstractActor {
     public Object toLogValue() {
         return LogValueMapFactory.builder(this)
                 .put("sink", _sink)
+                .put("acceptedStatusCodes", _acceptedStatusCodes)
+                .put("retryableStatusCodes", _retryableStatusCodes)
                 .put("maximumConcurrency", _maximumConcurrency)
                 .put("spreadingDelayMillis", _spreadingDelayMillis)
                 .put("waiting", _waiting)
@@ -153,7 +155,7 @@ public class HttpSinkActor extends AbstractActor {
                 .match(PostRejected.class, rejected -> {
                     final int attempt = rejected.getAttempt();
                     final Response response = rejected.getResponse();
-                    if (RETRYABLE_STATUS_CODES.contains(response.getStatusCode()) && attempt < _sink.getMaximumAttempts()) {
+                    if (_retryableStatusCodes.contains(response.getStatusCode()) && attempt < _sink.getMaximumAttempts()) {
                         LOGGER.warn()
                             .setMessage("Attempt rejected")
                             .addData("sink", _sink)
@@ -363,7 +365,7 @@ public class HttpSinkActor extends AbstractActor {
                         metrics.setTimer(_requestLatencyName, System.currentTimeMillis() - requestStartTime, TimeUnit.MILLISECONDS);
                     }
                     if (err == null) {
-                        if (ACCEPTED_STATUS_CODES.contains(result.getStatusCode())) {
+                        if (_acceptedStatusCodes.contains(result.getStatusCode())) {
                              return new PostSuccess(attempt, request, result);
                         } else {
                              return new PostRejected(attempt, request, result);
@@ -417,6 +419,8 @@ public class HttpSinkActor extends AbstractActor {
     private final HttpPostSink _sink;
     private final int _spreadingDelayMillis;
     private final MetricsFactory _metricsFactory;
+    private final ImmutableSet<Integer> _acceptedStatusCodes;
+    private final ImmutableSet<Integer> _retryableStatusCodes;
 
     private final String _evictedRequestsName;
     private final String _requestLatencyName;
@@ -429,24 +433,7 @@ public class HttpSinkActor extends AbstractActor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpPostSink.class);
     private static final Logger EVICTED_LOGGER = LoggerFactory.getRateLimitLogger(HttpPostSink.class, Duration.ofSeconds(30));
-    private static final Set<Integer> ACCEPTED_STATUS_CODES = Sets.newHashSet();
-    private static final Set<Integer> RETRYABLE_STATUS_CODES = Sets.newHashSet();
     private static final ImmutableList<Integer> STATUS_CLASSES = com.google.common.collect.ImmutableList.of(2, 3, 4, 5);
-
-    static {
-        // TODO(vkoskela): Make accepted status codes configurable [AINT-682]
-        ACCEPTED_STATUS_CODES.add(StatusCodes.OK.intValue());
-        ACCEPTED_STATUS_CODES.add(StatusCodes.CREATED.intValue());
-        ACCEPTED_STATUS_CODES.add(StatusCodes.ACCEPTED.intValue());
-        ACCEPTED_STATUS_CODES.add(StatusCodes.NO_CONTENT.intValue());
-    }
-
-    static {
-        RETRYABLE_STATUS_CODES.add(StatusCodes.TOO_MANY_REQUESTS.intValue());
-        RETRYABLE_STATUS_CODES.add(StatusCodes.BAD_GATEWAY.intValue());
-        RETRYABLE_STATUS_CODES.add(StatusCodes.SERVICE_UNAVAILABLE.intValue());
-        RETRYABLE_STATUS_CODES.add(StatusCodes.REQUEST_TIMEOUT.intValue());
-    }
 
     /**
      * Message class to wrap a list of {@link com.arpnetworking.tsdcore.model.AggregatedData}.
