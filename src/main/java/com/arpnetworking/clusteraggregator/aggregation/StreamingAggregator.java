@@ -22,6 +22,7 @@ import akka.actor.ReceiveTimeout;
 import akka.cluster.sharding.ShardRegion;
 import com.arpnetworking.clusteraggregator.models.CombinedMetricData;
 import com.arpnetworking.metrics.aggregation.protocol.Messages;
+import com.arpnetworking.metrics.incubator.PeriodicMetrics;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
@@ -68,6 +69,7 @@ public class StreamingAggregator extends AbstractActorWithTimers {
      * @param reaggregationDimensions The dimensions to reaggregate over.
      * @param injectClusterAsHost Whether to inject a host dimension based on cluster.
      * @param aggregatorTimeout The time to wait from the start of the period for all data.
+     * @param periodicMetrics The {@link PeriodicMetrics} instance.
      * @return A new {@link Props}.
      */
     public static Props props(
@@ -76,7 +78,8 @@ public class StreamingAggregator extends AbstractActorWithTimers {
             final String clusterHostSuffix,
             final ImmutableSet<String> reaggregationDimensions,
             final boolean injectClusterAsHost,
-            final Duration aggregatorTimeout) {
+            final Duration aggregatorTimeout,
+            final PeriodicMetrics periodicMetrics) {
         return Props.create(
                 StreamingAggregator.class,
                 metricsListener,
@@ -84,7 +87,8 @@ public class StreamingAggregator extends AbstractActorWithTimers {
                 clusterHostSuffix,
                 reaggregationDimensions,
                 injectClusterAsHost,
-                aggregatorTimeout);
+                aggregatorTimeout,
+                periodicMetrics);
     }
 
     /**
@@ -96,6 +100,7 @@ public class StreamingAggregator extends AbstractActorWithTimers {
      * @param reaggregationDimensions The dimensions to reaggregate over.
      * @param injectClusterAsHost Whether to inject a host dimension based on cluster.
      * @param aggregatorTimeout The time to wait from the start of the period for all data.
+     * @param periodicMetrics The {@link PeriodicMetrics} instance.
      */
     @Inject
     public StreamingAggregator(
@@ -104,12 +109,14 @@ public class StreamingAggregator extends AbstractActorWithTimers {
             @Named("cluster-host-suffix") final String clusterHostSuffix,
             @Named("reaggregation-dimensions") final ImmutableSet<String> reaggregationDimensions,
             @Named("reaggregation-cluster-as-host") final boolean injectClusterAsHost,
-            @Named("reaggregation-timeout") final Duration aggregatorTimeout) {
+            @Named("reaggregation-timeout") final Duration aggregatorTimeout,
+            final PeriodicMetrics periodicMetrics) {
         _periodicStatistics = periodicStatistics;
         _clusterHostSuffix = clusterHostSuffix;
         _reaggregationDimensions = reaggregationDimensions;
         _injectClusterAsHost = injectClusterAsHost;
         _aggregatorTimeout = aggregatorTimeout;
+        _periodicMetrics = periodicMetrics;
         context().setReceiveTimeout(FiniteDuration.apply(30, TimeUnit.MINUTES));
 
         timers().startPeriodicTimer(BUCKET_CHECK_TIMER_KEY, BucketCheck.getInstance(), FiniteDuration.apply(5, TimeUnit.SECONDS));
@@ -190,7 +197,18 @@ public class StreamingAggregator extends AbstractActorWithTimers {
     }
 
     @Override
+    public void preStart() {
+        _periodicMetrics.recordCounter("actors/streaming_aggregator/started", 1);
+    }
+
+    @Override
+    public void postStop() {
+        _periodicMetrics.recordCounter("actors/streaming_aggregator/stopped", 1);
+    }
+
+    @Override
     public void preRestart(final Throwable reason, final Optional<Object> message) throws Exception {
+        _periodicMetrics.recordCounter("actors/streaming_aggregator/restarted", 1);
         LOGGER.error()
                 .setMessage("Aggregator crashing")
                 .setThrowable(reason)
@@ -355,6 +373,7 @@ public class StreamingAggregator extends AbstractActorWithTimers {
     private final boolean _injectClusterAsHost;
     private final Set<Statistic> _statistics = Sets.newHashSet();
     private final Duration _aggregatorTimeout;
+    private final PeriodicMetrics _periodicMetrics;
     private boolean _initialized = false;
     private Duration _period;
     private String _cluster;

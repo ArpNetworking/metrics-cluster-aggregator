@@ -133,6 +133,7 @@
     <logback.steno.version>1.18.0</logback.steno.version>
     <log4j.over.slf4j.version>1.7.22</log4j.over.slf4j.version>
     <metrics.client.version>0.11.3</metrics.client.version>
+    <metrics.client.incubator.version>0.11.2</metrics.client.incubator.version>
     <metrics.jvm.extra.version>0.11.2</metrics.jvm.extra.version>
     <metrics.http.extra.version>0.11.2</metrics.http.extra.version>
     <metrics.aggregator.protocol.version>1.0.10</metrics.aggregator.protocol.version>
@@ -577,6 +578,18 @@
       <version>${metrics.http.extra.version}</version>
       <exclusions>
         <!-- TODO(ville): Remove suppression once findbugs to spotbugs migration is complete in CAGG -->
+        <exclusion>
+          <groupId>com.google.code.findbugs</groupId>
+          <artifactId>findbugs-annotations</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.arpnetworking.metrics.extras</groupId>
+      <artifactId>incubator-extra</artifactId>
+      <version>${metrics.client.incubator.version}</version>
+      <exclusions>
+        <!-- TODO(ville): Remove suppression once findbugs to spotbugs migration is complete -->
         <exclusion>
           <groupId>com.google.code.findbugs</groupId>
           <artifactId>findbugs-annotations</artifactId>

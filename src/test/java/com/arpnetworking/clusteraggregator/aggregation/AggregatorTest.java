@@ -21,6 +21,7 @@ import akka.actor.Terminated;
 import akka.cluster.sharding.ShardRegion;
 import akka.testkit.TestActorRef;
 import akka.testkit.TestProbe;
+import com.arpnetworking.metrics.incubator.PeriodicMetrics;
 import com.arpnetworking.utility.BaseActorTest;
 import com.google.common.collect.ImmutableSet;
 import org.junit.Assert;
@@ -29,6 +30,8 @@ import scala.concurrent.duration.FiniteDuration;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
+
+import static org.mockito.Mockito.mock;
 
 /**
  * Tests for the Aggregator actor.
@@ -59,7 +62,8 @@ public class AggregatorTest extends BaseActorTest {
                         "",
                         ImmutableSet.of(),
                         true,
-                        Duration.ofMinutes(1)),
+                        Duration.ofMinutes(1),
+                        mock(PeriodicMetrics.class)),
                 probe.ref(),
                 "agg",
                 getSystem());

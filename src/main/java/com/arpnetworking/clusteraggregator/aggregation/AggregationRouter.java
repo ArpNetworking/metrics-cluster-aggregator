@@ -21,6 +21,7 @@ import akka.actor.Props;
 import akka.actor.ReceiveTimeout;
 import akka.cluster.sharding.ShardRegion;
 import com.arpnetworking.metrics.aggregation.protocol.Messages;
+import com.arpnetworking.metrics.incubator.PeriodicMetrics;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.google.common.collect.ImmutableSet;
@@ -49,6 +50,7 @@ public class AggregationRouter extends AbstractActor {
      * @param reaggregationDimensions The dimensions to reaggregate over.
      * @param injectClusterAsHost Whether to inject a host dimension based on cluster.
      * @param aggregatorTimeout The time to wait from the start of the period for all data.
+     * @param periodicMetrics The {@link PeriodicMetrics} instance.
      * @return A new {@link Props}.
      */
     public static Props props(
@@ -57,7 +59,8 @@ public class AggregationRouter extends AbstractActor {
             final String clusterHostSuffix,
             final ImmutableSet<String> reaggregationDimensions,
             final boolean injectClusterAsHost,
-            final Duration aggregatorTimeout) {
+            final Duration aggregatorTimeout,
+            final PeriodicMetrics periodicMetrics) {
         return Props.create(
                 AggregationRouter.class,
                 metricsListener,
@@ -65,7 +68,8 @@ public class AggregationRouter extends AbstractActor {
                 clusterHostSuffix,
                 reaggregationDimensions,
                 injectClusterAsHost,
-                aggregatorTimeout);
+                aggregatorTimeout,
+                periodicMetrics);
     }
 
     /**
@@ -77,6 +81,7 @@ public class AggregationRouter extends AbstractActor {
      * @param reaggregationDimensions The dimensions to reaggregate over.
      * @param injectClusterAsHost Whether to inject a host dimension based on cluster.
      * @param aggregatorTimeout The time to wait from the start of the period for all data.
+     * @param periodicMetrics The {@link PeriodicMetrics} instance.
      */
     @Inject
     public AggregationRouter(
@@ -85,7 +90,8 @@ public class AggregationRouter extends AbstractActor {
             @Named("cluster-host-suffix") final String clusterHostSuffix,
             @Named("reaggregation-dimensions") final ImmutableSet<String> reaggregationDimensions,
             @Named("reaggregation-cluster-as-host") final boolean injectClusterAsHost,
-            @Named("reaggregation-timeout") final Duration aggregatorTimeout) {
+            @Named("reaggregation-timeout") final Duration aggregatorTimeout,
+            final PeriodicMetrics periodicMetrics) {
         _streamingChild = context().actorOf(
                 StreamingAggregator.props(
                         periodicStatistics,
@@ -93,7 +99,8 @@ public class AggregationRouter extends AbstractActor {
                         clusterHostSuffix,
                         reaggregationDimensions,
                         injectClusterAsHost,
-                        aggregatorTimeout),
+                        aggregatorTimeout,
+                        periodicMetrics),
                 "streaming");
         context().setReceiveTimeout(FiniteDuration.apply(30, TimeUnit.MINUTES));
     }
