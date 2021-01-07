@@ -20,6 +20,7 @@ import akka.actor.ActorSystem;
 import akka.actor.PoisonPill;
 import akka.http.javadsl.model.HttpMethods;
 import akka.http.javadsl.model.MediaTypes;
+import akka.http.javadsl.model.StatusCodes;
 import com.arpnetworking.logback.annotations.LogValue;
 import com.arpnetworking.metrics.MetricsFactory;
 import com.arpnetworking.steno.LogValueMapFactory;
@@ -28,6 +29,7 @@ import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.arpnetworking.tsdcore.model.RequestEntry;
 import com.fasterxml.jackson.annotation.JacksonInject;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import net.sf.oval.constraint.CheckWith;
 import net.sf.oval.constraint.CheckWithCheck;
@@ -167,6 +169,24 @@ public abstract class HttpPostSink extends BaseSink {
     }
 
     /**
+     * Accessor for the status codes accepted as successful.
+     *
+     * @return the status codes accepted as success
+     */
+    ImmutableSet<Integer> getAcceptedStatusCodes() {
+        return _acceptedStatusCodes;
+    }
+
+    /**
+     * Accessor for the status codes that can be retried.
+     *
+     * @return the status codes that can be retried
+     */
+    ImmutableSet<Integer> getRetryableStatusCodes() {
+        return _retryableStatusCodes;
+    }
+
+    /**
      * Serialize the {@link PeriodicData} instance for posting.
      *
      * @param periodicData The {@link PeriodicData} to be serialized.
@@ -196,6 +216,8 @@ public abstract class HttpPostSink extends BaseSink {
         _maximumAttempts = builder._maximumAttempts;
         _baseBackoff = builder._baseBackoff;
         _maximumDelay = builder._maximumDelay;
+        _acceptedStatusCodes = builder._acceptedStatusCodes;
+        _retryableStatusCodes = builder._retryableStatusCodes;
     }
 
     private final URI _uri;
@@ -204,6 +226,8 @@ public abstract class HttpPostSink extends BaseSink {
     private final int _maximumAttempts;
     private final Duration _baseBackoff;
     private final Duration _maximumDelay;
+    private final ImmutableSet<Integer> _acceptedStatusCodes;
+    private final ImmutableSet<Integer> _retryableStatusCodes;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpPostSink.class);
     private static final AsyncHttpClient CLIENT;
@@ -331,6 +355,30 @@ public abstract class HttpPostSink extends BaseSink {
         }
 
         /**
+         * Sets the http status codes accepted as success. Optional. Cannot be null.
+         * Default is: [200, 201, 202, 204]
+         *
+         * @param value the status codes accepted as success
+         * @return this builder
+         */
+        public B setAcceptedStatusCodes(final ImmutableSet<Integer> value) {
+            _acceptedStatusCodes = value;
+            return self();
+        }
+
+        /**
+         * Sets the http status codes that can be retried. Optional. Cannot be null.
+         * Default is: [408, 429, 502, 503]
+         *
+         * @param value the status codes that can be retried
+         * @return this builder
+         */
+        public B setRetryableStatusCodes(final ImmutableSet<Integer> value) {
+            _retryableStatusCodes = value;
+            return self();
+        }
+
+        /**
          * Protected constructor for subclasses.
          *
          * @param targetConstructor The constructor for the concrete type to be created by this builder.
@@ -363,7 +411,31 @@ public abstract class HttpPostSink extends BaseSink {
         @NotNull
         @CheckWith(CheckPeriod.class)
         private Duration _maximumDelay = Duration.ofSeconds(60);
+        @NotNull
+        private ImmutableSet<Integer> _acceptedStatusCodes = DEFAULT_ACCEPTED_STATUS_CODES;
+        @NotNull
+        private ImmutableSet<Integer> _retryableStatusCodes = DEFAULT_RETRYABLE_STATUS_CODES;
 
+        private static final ImmutableSet<Integer> DEFAULT_ACCEPTED_STATUS_CODES;
+        private static final ImmutableSet<Integer> DEFAULT_RETRYABLE_STATUS_CODES;
+
+        static {
+            DEFAULT_ACCEPTED_STATUS_CODES = ImmutableSet.<Integer>builder()
+                    .add(StatusCodes.OK.intValue())
+                    .add(StatusCodes.CREATED.intValue())
+                    .add(StatusCodes.ACCEPTED.intValue())
+                    .add(StatusCodes.NO_CONTENT.intValue())
+                    .build();
+        }
+
+        static {
+            DEFAULT_RETRYABLE_STATUS_CODES = ImmutableSet.<Integer>builder()
+                    .add(StatusCodes.REQUEST_TIMEOUT.intValue())
+                    .add(StatusCodes.TOO_MANY_REQUESTS.intValue())
+                    .add(StatusCodes.BAD_GATEWAY.intValue())
+                    .add(StatusCodes.SERVICE_UNAVAILABLE.intValue())
+                    .build();
+        }
 
         private static final class CheckPeriod implements CheckWithCheck.SimpleCheck {
 
