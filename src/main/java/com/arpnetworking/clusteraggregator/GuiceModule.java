@@ -245,7 +245,12 @@ public class GuiceModule extends AbstractModule {
             @Named("periodic-statistics") final ActorRef periodicStats,
             final MetricsFactory metricsFactory) {
         final Cluster cluster = Cluster.get(system);
-        final ActorRef clusterStatusCache = system.actorOf(ClusterStatusCache.props(cluster, metricsFactory), "cluster-status");
+        final ActorRef clusterStatusCache = system.actorOf(
+                ClusterStatusCache.props(
+                        system,
+                        _configuration.getClusterStatusInterval(),
+                        metricsFactory),
+                "cluster-status");
         return system.actorOf(Status.props(cluster, clusterStatusCache, periodicStats), "status");
     }
 

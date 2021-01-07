@@ -18,21 +18,29 @@ package com.arpnetworking.clusteraggregator;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Address;
 import akka.actor.Cancellable;
 import akka.actor.Props;
 import akka.actor.Scheduler;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
+import akka.cluster.sharding.ClusterSharding;
+import akka.cluster.sharding.ShardRegion;
 import com.arpnetworking.clusteraggregator.models.ShardAllocation;
 import com.arpnetworking.metrics.Metrics;
 import com.arpnetworking.metrics.MetricsFactory;
+import com.arpnetworking.steno.Logger;
+import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.utility.ParallelLeastShardAllocationStrategy;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import scala.compat.java8.OptionConverters;
 import scala.concurrent.duration.Duration;
+import scala.concurrent.duration.FiniteDuration;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -55,22 +63,33 @@ public class ClusterStatusCache extends AbstractActor {
     /**
      * Creates a {@link akka.actor.Props} for use in Akka.
      *
-     * @param cluster The cluster to reference.
+     *
+     * @param system The Akka {@link ActorSystem}.
+     * @param interval The {@link java.time.Duration} for polling state.
      * @param metricsFactory A {@link MetricsFactory} to use for metrics creation.
      * @return A new {@link akka.actor.Props}
      */
-    public static Props props(final Cluster cluster, final MetricsFactory metricsFactory) {
-        return Props.create(ClusterStatusCache.class, cluster, metricsFactory);
+    public static Props props(
+            final ActorSystem system,
+            final java.time.Duration interval,
+            final MetricsFactory metricsFactory) {
+        return Props.create(ClusterStatusCache.class, system, interval, metricsFactory);
     }
 
     /**
      * Public constructor.
      *
-     * @param cluster {@link akka.cluster.Cluster} whose state is cached
+     * @param system The Akka {@link ActorSystem}.
+     * @param interval The {@link java.time.Duration} for polling state.
      * @param metricsFactory A {@link MetricsFactory} to use for metrics creation.
      */
-    public ClusterStatusCache(final Cluster cluster, final MetricsFactory metricsFactory) {
-        _cluster = cluster;
+    public ClusterStatusCache(
+            final ActorSystem system,
+            final java.time.Duration interval,
+            final MetricsFactory metricsFactory) {
+        _cluster = Cluster.get(system);
+        _sharding = ClusterSharding.get(system);
+        _interval = interval;
         _metricsFactory = metricsFactory;
     }
 
@@ -81,7 +100,7 @@ public class ClusterStatusCache extends AbstractActor {
                 .scheduler();
         _pollTimer = scheduler.schedule(
                 Duration.apply(0, TimeUnit.SECONDS),
-                Duration.apply(10, TimeUnit.SECONDS),
+                Duration.apply(_interval.toMillis(), TimeUnit.MILLISECONDS),
                 getSelf(),
                 POLL,
                 getContext().system().dispatcher(),
@@ -109,6 +128,35 @@ public class ClusterStatusCache extends AbstractActor {
                         }
                     }
                 })
+                .match(ShardRegion.ClusterShardingStats.class, shardingStats -> {
+                    LOGGER.debug()
+                            .setMessage("Received shard statistics")
+                            .addData("regionCount", shardingStats.getRegions().size())
+                            .log();
+                    final Map<String, Long> shardsPerAddress = Maps.newHashMap();
+                    final Map<String, Long> actorsPerAddress = Maps.newHashMap();
+                    for (final Map.Entry<Address, ShardRegion.ShardRegionStats> entry : shardingStats.getRegions().entrySet()) {
+                        final String address = entry.getKey().hostPort();
+                        for (final Map.Entry<String, Object> stats : entry.getValue().getStats().entrySet()) {
+                            final long currentShardCount = shardsPerAddress.getOrDefault(address, 0L);
+                            shardsPerAddress.put(address, currentShardCount + 1);
+                            if (stats.getValue() instanceof Number) {
+                                final long currentActorCount = actorsPerAddress.getOrDefault(address, 0L);
+                                actorsPerAddress.put(
+                                        address,
+                                        ((Number) stats.getValue()).longValue() + currentActorCount);
+                            }
+                        }
+                    }
+                    for (final Map.Entry<String, Long> entry : shardsPerAddress.entrySet()) {
+                        try (Metrics metrics = _metricsFactory.create()) {
+                            final Long actorCount = actorsPerAddress.get(entry.getKey());
+                            metrics.addAnnotation("address", entry.getKey());
+                            metrics.setGauge("akka/shards", entry.getValue());
+                            metrics.setGauge("akka/actors", actorCount);
+                        }
+                    }
+                })
                 .match(GetRequest.class, message -> sendResponse(getSender()))
                 .match(ParallelLeastShardAllocationStrategy.RebalanceNotification.class, rebalanceNotification -> {
                     _rebalanceState = Optional.of(rebalanceNotification);
@@ -116,6 +164,15 @@ public class ClusterStatusCache extends AbstractActor {
                 .matchEquals(POLL, message -> {
                     if (self().equals(sender())) {
                         _cluster.sendCurrentClusterState(getSelf());
+                        for (final String shardTypeName : _sharding.getShardTypeNames()) {
+                            LOGGER.debug()
+                                    .setMessage("Requesting shard statistics")
+                                    .addData("shardType", shardTypeName)
+                                    .log();
+                            _sharding.shardRegion(shardTypeName).tell(
+                                    new ShardRegion.GetClusterShardingStats(FiniteDuration.fromNanos(_interval.toNanos())),
+                                    self());
+                        }
                     } else {
                         unhandled(message);
                     }
@@ -131,7 +188,6 @@ public class ClusterStatusCache extends AbstractActor {
     }
 
     private static String hostFromActorRef(final ActorRef shardRegion) {
-
         return OptionConverters.toJava(
                 shardRegion.path()
                         .address()
@@ -140,6 +196,8 @@ public class ClusterStatusCache extends AbstractActor {
     }
 
     private final Cluster _cluster;
+    private final ClusterSharding _sharding;
+    private final java.time.Duration _interval;
     private final MetricsFactory _metricsFactory;
     private Optional<ClusterEvent.CurrentClusterState> _clusterState = Optional.empty();
     @Nullable
@@ -147,6 +205,7 @@ public class ClusterStatusCache extends AbstractActor {
     private Optional<ParallelLeastShardAllocationStrategy.RebalanceNotification> _rebalanceState = Optional.empty();
 
     private static final String POLL = "poll";
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClusterStatusCache.class);
 
     /**
      * Request to get a cluster status.
