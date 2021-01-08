@@ -162,6 +162,10 @@ public final class ClusterAggregatorConfiguration {
         return _calculateClusterAggregations;
     }
 
+    public Duration getClusterStatusInterval() {
+        return _clusterStatusInterval;
+    }
+
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
@@ -223,6 +227,7 @@ public final class ClusterAggregatorConfiguration {
         _clusterHostSuffix = builder._clusterHostSuffix;
         _calculateClusterAggregations = builder._calculateClusterAggregations;
         _databaseConfigurations = Maps.newHashMap(builder._databaseConfigurations);
+        _clusterStatusInterval = builder._clusterStatusInterval;
     }
 
     private final String _monitoringCluster;
@@ -252,6 +257,7 @@ public final class ClusterAggregatorConfiguration {
     private final String _clusterHostSuffix;
     private final boolean _calculateClusterAggregations;
     private final Map<String, DatabaseConfiguration> _databaseConfigurations;
+    private final Duration _clusterStatusInterval;
 
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.getInstance();
 
@@ -614,6 +620,17 @@ public final class ClusterAggregatorConfiguration {
             return aggregatorLivelinessTimeout.compareTo(_reaggregationTimeout) > 0;
         }
 
+        /**
+         * Interval for polling cluster status. Optional. Defaults to 10 seconds.
+         *
+         * @param value interval for polling cluster status.
+         * @return This instance of {@link Builder}.
+         */
+        public Builder setClusterStatusInterval(final Duration value) {
+            _clusterStatusInterval = value;
+            return this;
+        }
+
         @NotNull
         @NotEmpty
         private String _monitoringCluster;
@@ -679,5 +696,7 @@ public final class ClusterAggregatorConfiguration {
         private Boolean _calculateClusterAggregations = true;
         @NotNull
         private Map<String, DatabaseConfiguration> _databaseConfigurations = Maps.newHashMap();
+        @NotNull
+        private Duration _clusterStatusInterval = Duration.ofSeconds(10);
     }
 }

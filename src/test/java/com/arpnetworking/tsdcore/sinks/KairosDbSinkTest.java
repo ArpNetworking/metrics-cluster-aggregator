@@ -133,7 +133,7 @@ public class KairosDbSinkTest extends BaseActorTest {
         _kairosDbSinkBuilder.setMaximumAttempts(2).setBaseBackoff(Duration.ofMillis(1)).build()
                 .recordAggregateData(createPeriodicData(10L));
 
-        Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(
+        Awaitility.await().atMost(2, TimeUnit.SECONDS).untilAsserted(
                 () -> _wireMock.verifyThat(2, WireMock.postRequestedFor(WireMock.urlEqualTo(PATH)))
         );
 
