@@ -65,31 +65,31 @@ public class ClusterStatusCache extends AbstractActor {
      *
      *
      * @param system The Akka {@link ActorSystem}.
-     * @param interval The {@link java.time.Duration} for polling state.
+     * @param pollInterval The {@link java.time.Duration} for polling state.
      * @param metricsFactory A {@link MetricsFactory} to use for metrics creation.
      * @return A new {@link akka.actor.Props}
      */
     public static Props props(
             final ActorSystem system,
-            final java.time.Duration interval,
+            final java.time.Duration pollInterval,
             final MetricsFactory metricsFactory) {
-        return Props.create(ClusterStatusCache.class, system, interval, metricsFactory);
+        return Props.create(ClusterStatusCache.class, system, pollInterval, metricsFactory);
     }
 
     /**
      * Public constructor.
      *
      * @param system The Akka {@link ActorSystem}.
-     * @param interval The {@link java.time.Duration} for polling state.
+     * @param pollInterval The {@link java.time.Duration} for polling state.
      * @param metricsFactory A {@link MetricsFactory} to use for metrics creation.
      */
     public ClusterStatusCache(
             final ActorSystem system,
-            final java.time.Duration interval,
+            final java.time.Duration pollInterval,
             final MetricsFactory metricsFactory) {
         _cluster = Cluster.get(system);
         _sharding = ClusterSharding.get(system);
-        _interval = interval;
+        _pollInterval = pollInterval;
         _metricsFactory = metricsFactory;
     }
 
@@ -100,7 +100,7 @@ public class ClusterStatusCache extends AbstractActor {
                 .scheduler();
         _pollTimer = scheduler.schedule(
                 Duration.apply(0, TimeUnit.SECONDS),
-                Duration.apply(_interval.toMillis(), TimeUnit.MILLISECONDS),
+                Duration.apply(_pollInterval.toMillis(), TimeUnit.MILLISECONDS),
                 getSelf(),
                 POLL,
                 getContext().system().dispatcher(),
@@ -133,27 +133,26 @@ public class ClusterStatusCache extends AbstractActor {
                             .setMessage("Received shard statistics")
                             .addData("regionCount", shardingStats.getRegions().size())
                             .log();
-                    final Map<String, Long> shardsPerAddress = Maps.newHashMap();
+                    final Map<String, Integer> shardsPerAddress = Maps.newHashMap();
                     final Map<String, Long> actorsPerAddress = Maps.newHashMap();
                     for (final Map.Entry<Address, ShardRegion.ShardRegionStats> entry : shardingStats.getRegions().entrySet()) {
                         final String address = entry.getKey().hostPort();
-                        for (final Map.Entry<String, Object> stats : entry.getValue().getStats().entrySet()) {
-                            final long currentShardCount = shardsPerAddress.getOrDefault(address, 0L);
-                            shardsPerAddress.put(address, currentShardCount + 1);
-                            if (stats.getValue() instanceof Number) {
+                        shardsPerAddress.put(address, entry.getValue().getStats().size());
+                        for (final Object stat : entry.getValue().getStats().values()) {
+                            if (stat instanceof Number) {
                                 final long currentActorCount = actorsPerAddress.getOrDefault(address, 0L);
                                 actorsPerAddress.put(
                                         address,
-                                        ((Number) stats.getValue()).longValue() + currentActorCount);
+                                        ((Number) stat).longValue() + currentActorCount);
                             }
                         }
                     }
-                    for (final Map.Entry<String, Long> entry : shardsPerAddress.entrySet()) {
+                    for (final Map.Entry<String, Integer> entry : shardsPerAddress.entrySet()) {
                         try (Metrics metrics = _metricsFactory.create()) {
                             final Long actorCount = actorsPerAddress.get(entry.getKey());
                             metrics.addAnnotation("address", entry.getKey());
-                            metrics.setGauge("akka/shards", entry.getValue());
-                            metrics.setGauge("akka/actors", actorCount);
+                            metrics.setGauge("akka/cluster/shards", entry.getValue());
+                            metrics.setGauge("akka/cluster/actors", actorCount);
                         }
                     }
                 })
@@ -170,7 +169,7 @@ public class ClusterStatusCache extends AbstractActor {
                                     .addData("shardType", shardTypeName)
                                     .log();
                             _sharding.shardRegion(shardTypeName).tell(
-                                    new ShardRegion.GetClusterShardingStats(FiniteDuration.fromNanos(_interval.toNanos())),
+                                    new ShardRegion.GetClusterShardingStats(FiniteDuration.fromNanos(_pollInterval.toNanos())),
                                     self());
                         }
                     } else {
@@ -197,7 +196,7 @@ public class ClusterStatusCache extends AbstractActor {
 
     private final Cluster _cluster;
     private final ClusterSharding _sharding;
-    private final java.time.Duration _interval;
+    private final java.time.Duration _pollInterval;
     private final MetricsFactory _metricsFactory;
     private Optional<ClusterEvent.CurrentClusterState> _clusterState = Optional.empty();
     @Nullable
