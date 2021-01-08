@@ -54,6 +54,8 @@ import com.arpnetworking.metrics.MetricsFactory;
 import com.arpnetworking.metrics.Sink;
 import com.arpnetworking.metrics.impl.ApacheHttpSink;
 import com.arpnetworking.metrics.impl.TsdMetricsFactory;
+import com.arpnetworking.metrics.incubator.PeriodicMetrics;
+import com.arpnetworking.metrics.incubator.impl.TsdPeriodicMetrics;
 import com.arpnetworking.utility.ActorConfigurator;
 import com.arpnetworking.utility.ConfiguredLaunchableFactory;
 import com.arpnetworking.utility.Database;
@@ -86,7 +88,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
 /**
@@ -100,14 +106,17 @@ public class GuiceModule extends AbstractModule {
      * Public constructor.
      *
      * @param configuration The configuration.
+     * @param shutdown The shutdown hook.
      */
-    public GuiceModule(final ClusterAggregatorConfiguration configuration) {
+    public GuiceModule(final ClusterAggregatorConfiguration configuration, final LifecycleRegistration shutdown) {
         _configuration = configuration;
+        _shutdown = shutdown;
     }
 
     @Override
     protected void configure() {
         bind(ClusterAggregatorConfiguration.class).toInstance(_configuration);
+        bind(LifecycleRegistration.class).toInstance(_shutdown);
 
         for (final Map.Entry<String, DatabaseConfiguration> entry : _configuration.getDatabaseConfigurations().entrySet()) {
             bind(Database.class)
@@ -317,6 +326,24 @@ public class GuiceModule extends AbstractModule {
     @Provides
     @Singleton
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
+    private PeriodicMetrics providePeriodicMetrics(final MetricsFactory metricsFactory, final LifecycleRegistration lifecycle) {
+        final TsdPeriodicMetrics periodicMetrics = new TsdPeriodicMetrics.Builder()
+                .setMetricsFactory(metricsFactory)
+                .build();
+        final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(
+                r -> new Thread(r, "PeriodicMetricsCloser"));
+        final long offsetMillis = 1250 - (System.currentTimeMillis() % 1000);
+        executor.scheduleAtFixedRate(periodicMetrics, offsetMillis, 1000, TimeUnit.MILLISECONDS);
+        lifecycle.registerShutdown(() -> {
+            executor.shutdown();
+            return CompletableFuture.completedFuture(null);
+        });
+        return periodicMetrics;
+    }
+
+    @Provides
+    @Singleton
+    @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
     private AggMessageExtractor provideExtractor() {
         return new AggMessageExtractor();
     }
@@ -414,6 +441,7 @@ public class GuiceModule extends AbstractModule {
     }
 
     private final ClusterAggregatorConfiguration _configuration;
+    private final LifecycleRegistration _shutdown;
 
     private static final String HOCON_FILE_EXTENSION = ".conf";
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.getInstance();

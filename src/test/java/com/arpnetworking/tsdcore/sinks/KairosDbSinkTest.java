@@ -94,7 +94,7 @@ public class KairosDbSinkTest extends BaseActorTest {
         // Post data to KairosDb
         _kairosDbSinkBuilder.build().recordAggregateData(createPeriodicData(10L));
         // Allow the request/response to complete
-        Thread.sleep(1000);
+        Thread.sleep(3000);
 
         // Request matcher
         final RequestPatternBuilder requestPattern = WireMock.postRequestedFor(WireMock.urlEqualTo(PATH))

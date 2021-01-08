@@ -149,10 +149,12 @@ public final class Main implements Launchable {
     public synchronized void shutdown() {
         shutdownAkka();
         shutdownDatabases();
+        shutdownGuice();
     }
 
     private Injector launchGuice() {
-        return Guice.createInjector(new GuiceModule(_configuration));
+        _guiceAppShutdown = new AppShutdown();
+        return Guice.createInjector(new GuiceModule(_configuration, _guiceAppShutdown));
     }
 
     private void launchDatabases(final Injector injector) {
@@ -211,6 +213,13 @@ public final class Main implements Launchable {
         _system = injector.getInstance(ActorSystem.class);
     }
 
+    private void shutdownGuice() {
+        LOGGER.info().setMessage("Stopping guice").log();
+        if (_guiceAppShutdown != null) {
+            _guiceAppShutdown.shutdown();
+        }
+    }
+
     private void shutdownDatabases() {
         for (final Database database : _databases) {
             LOGGER.info()
@@ -259,6 +268,7 @@ public final class Main implements Launchable {
 
     private volatile ActorSystem _system;
     private volatile ActorRef _shutdownActor;
+    private volatile AppShutdown _guiceAppShutdown;
     private volatile List<Database> _databases;
 
     private static final Logger LOGGER = com.arpnetworking.steno.LoggerFactory.getLogger(Main.class);
