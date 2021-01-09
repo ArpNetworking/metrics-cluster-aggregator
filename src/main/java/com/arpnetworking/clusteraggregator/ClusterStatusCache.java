@@ -149,10 +149,12 @@ public class ClusterStatusCache extends AbstractActor {
                     }
                     for (final Map.Entry<String, Integer> entry : shardsPerAddress.entrySet()) {
                         try (Metrics metrics = _metricsFactory.create()) {
-                            final Long actorCount = actorsPerAddress.get(entry.getKey());
                             metrics.addAnnotation("address", entry.getKey());
                             metrics.setGauge("akka/cluster/shards", entry.getValue());
-                            metrics.setGauge("akka/cluster/actors", actorCount);
+                            @Nullable final Long actorCount = actorsPerAddress.get(entry.getKey());
+                            if (actorCount != null) {
+                                metrics.setGauge("akka/cluster/actors", actorCount);
+                            }
                         }
                     }
                 })
