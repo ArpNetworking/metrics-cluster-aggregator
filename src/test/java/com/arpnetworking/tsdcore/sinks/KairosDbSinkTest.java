@@ -107,49 +107,20 @@ public class KairosDbSinkTest extends BaseActorTest {
         final JsonNode actual = OBJECT_MAPPER.readTree(_wireMock.find(requestPattern).get(0).getBody());
         final JsonNode expected = OBJECT_MAPPER.readTree(getClass().getResource(getClass().getSimpleName() + ".testPost.expected.json"));
         Assert.assertEquals(expected, actual);
-
-        // Verify that metrics has been recorded.
-        Mockito.verify(_mockMetricsFactory, Mockito.times(3)).create();
-        Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/success", 1);
-        Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/status/2xx", 1);
-        Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/samples_sent", 10);
-        Mockito.verify(_mockMetrics, Mockito.times(1)).setTimer(
-                Mockito.matches("sinks/http_post/kairosdb_sink_test/queue_time"),
-                Mockito.anyLong(),
-                Mockito.any(TimeUnit.class));
-        Mockito.verify(_mockMetrics, Mockito.times(1)).setTimer(
-                Mockito.matches("sinks/http_post/kairosdb_sink_test/request_latency"),
-                Mockito.anyLong(),
-                Mockito.any(TimeUnit.class));
-        Mockito.verify(_mockMetrics, Mockito.times(3)).close();
     }
 
     @Test
     public void testPostFailure() throws InterruptedException, IOException {
-         // Fake a successful post to KairosDb
+         // Fake a failing post to KairosDb
         _wireMock.register(WireMock.post(WireMock.urlEqualTo(PATH))
                 .willReturn(WireMock.aResponse()
                         .withStatus(502)));
         _kairosDbSinkBuilder.setMaximumAttempts(2).setBaseBackoff(Duration.ofMillis(1)).build()
                 .recordAggregateData(createPeriodicData(10L));
 
-        Awaitility.await().atMost(2, TimeUnit.SECONDS).untilAsserted(
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(
                 () -> _wireMock.verifyThat(2, WireMock.postRequestedFor(WireMock.urlEqualTo(PATH)))
         );
-
-        Mockito.verify(_mockMetricsFactory, Mockito.times(4)).create();
-        Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/status/5xx", 1);
-        Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/samples_dropped", 10L);
-        Mockito.verify(_mockMetrics, Mockito.times(1)).setTimer(
-                Mockito.matches("sinks/http_post/kairosdb_sink_test/queue_time"),
-                Mockito.anyLong(),
-                Mockito.any(TimeUnit.class));
-        Mockito.verify(_mockMetrics, Mockito.times(2)).setTimer(
-                Mockito.matches("sinks/http_post/kairosdb_sink_test/request_latency"),
-                Mockito.anyLong(),
-                Mockito.any(TimeUnit.class));
-        Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/success", 0);
-        Mockito.verify(_mockMetrics, Mockito.times(4)).close();
      }
 
 
