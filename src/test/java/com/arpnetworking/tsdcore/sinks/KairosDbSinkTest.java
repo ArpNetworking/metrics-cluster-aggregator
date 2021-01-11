@@ -108,6 +108,9 @@ public class KairosDbSinkTest extends BaseActorTest {
         final JsonNode expected = OBJECT_MAPPER.readTree(getClass().getResource(getClass().getSimpleName() + ".testPost.expected.json"));
         Assert.assertEquals(expected, actual);
 
+        // Wait for sink to record metrics
+        Thread.sleep(250);
+
         // Verify that metrics has been recorded.
         Mockito.verify(_mockMetricsFactory, Mockito.times(3)).create();
         Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/success", 1);
