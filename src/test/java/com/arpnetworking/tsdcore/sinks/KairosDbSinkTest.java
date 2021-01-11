@@ -107,24 +107,6 @@ public class KairosDbSinkTest extends BaseActorTest {
         final JsonNode actual = OBJECT_MAPPER.readTree(_wireMock.find(requestPattern).get(0).getBody());
         final JsonNode expected = OBJECT_MAPPER.readTree(getClass().getResource(getClass().getSimpleName() + ".testPost.expected.json"));
         Assert.assertEquals(expected, actual);
-
-        // Wait for sink to record metrics
-        Thread.sleep(1000);
-
-        // Verify that metrics has been recorded.
-        Mockito.verify(_mockMetricsFactory, Mockito.times(3)).create();
-        Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/success", 1);
-        Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/status/2xx", 1);
-        Mockito.verify(_mockMetrics, Mockito.times(1)).incrementCounter("sinks/http_post/kairosdb_sink_test/samples_sent", 10);
-        Mockito.verify(_mockMetrics, Mockito.times(1)).setTimer(
-                Mockito.matches("sinks/http_post/kairosdb_sink_test/queue_time"),
-                Mockito.anyLong(),
-                Mockito.any(TimeUnit.class));
-        Mockito.verify(_mockMetrics, Mockito.times(1)).setTimer(
-                Mockito.matches("sinks/http_post/kairosdb_sink_test/request_latency"),
-                Mockito.anyLong(),
-                Mockito.any(TimeUnit.class));
-        Mockito.verify(_mockMetrics, Mockito.times(3)).close();
     }
 
     @Test
