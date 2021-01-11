@@ -109,7 +109,7 @@ public class KairosDbSinkTest extends BaseActorTest {
         Assert.assertEquals(expected, actual);
 
         // Wait for sink to record metrics
-        Thread.sleep(250);
+        Thread.sleep(1000);
 
         // Verify that metrics has been recorded.
         Mockito.verify(_mockMetricsFactory, Mockito.times(3)).create();
