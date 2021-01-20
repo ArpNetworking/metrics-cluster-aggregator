@@ -27,12 +27,10 @@ import com.arpnetworking.steno.LoggerFactory;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import scala.concurrent.duration.FiniteDuration;
 
 import java.io.Serializable;
 import java.time.Duration;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Actual actor responsible for aggregating.
@@ -92,6 +90,7 @@ public class AggregationRouter extends AbstractActor {
             @Named("reaggregation-cluster-as-host") final boolean injectClusterAsHost,
             @Named("reaggregation-timeout") final Duration aggregatorTimeout,
             final PeriodicMetrics periodicMetrics) {
+        _periodicMetrics = periodicMetrics;
         _streamingChild = context().actorOf(
                 StreamingAggregator.props(
                         periodicStatistics,
@@ -102,7 +101,6 @@ public class AggregationRouter extends AbstractActor {
                         aggregatorTimeout,
                         periodicMetrics),
                 "streaming");
-        context().setReceiveTimeout(FiniteDuration.apply(30, TimeUnit.MINUTES));
     }
 
     @Override
@@ -123,7 +121,18 @@ public class AggregationRouter extends AbstractActor {
     }
 
     @Override
+    public void preStart() {
+        _periodicMetrics.recordCounter("actors/aggregation_router/started", 1);
+    }
+
+    @Override
+    public void postStop() {
+        _periodicMetrics.recordCounter("actors/aggregation_router/stopped", 1);
+    }
+
+    @Override
     public void preRestart(final Throwable reason, final Optional<Object> message) throws Exception {
+        _periodicMetrics.recordCounter("actors/aggregation_router/restarted", 1);
         LOGGER.error()
                 .setMessage("Aggregator crashing")
                 .setThrowable(reason)
@@ -134,9 +143,14 @@ public class AggregationRouter extends AbstractActor {
     }
 
     private final ActorRef _streamingChild;
+    private final PeriodicMetrics _periodicMetrics;
     private static final Logger LOGGER = LoggerFactory.getLogger(AggregationRouter.class);
 
-    private static final class ShutdownAggregator implements Serializable {
+    /**
+     * Message to request shutdown of aggregation router and subordinate
+     * streaming aggregator actor pair.
+     */
+    public static final class ShutdownAggregator implements Serializable {
         private static final long serialVersionUID = 1L;
     }
 }

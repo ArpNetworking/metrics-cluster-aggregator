@@ -253,7 +253,6 @@ public final class HistogramStatistic extends BaseStatistic {
      */
     public static final class Histogram {
 
-
         /**
          * Records a value into the histogram.
          *

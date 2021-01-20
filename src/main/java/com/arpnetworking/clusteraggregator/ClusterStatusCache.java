@@ -128,36 +128,7 @@ public class ClusterStatusCache extends AbstractActor {
                         }
                     }
                 })
-                .match(ShardRegion.ClusterShardingStats.class, shardingStats -> {
-                    LOGGER.debug()
-                            .setMessage("Received shard statistics")
-                            .addData("regionCount", shardingStats.getRegions().size())
-                            .log();
-                    final Map<String, Integer> shardsPerAddress = Maps.newHashMap();
-                    final Map<String, Long> actorsPerAddress = Maps.newHashMap();
-                    for (final Map.Entry<Address, ShardRegion.ShardRegionStats> entry : shardingStats.getRegions().entrySet()) {
-                        final String address = entry.getKey().hostPort();
-                        shardsPerAddress.put(address, entry.getValue().getStats().size());
-                        for (final Object stat : entry.getValue().getStats().values()) {
-                            if (stat instanceof Number) {
-                                final long currentActorCount = actorsPerAddress.getOrDefault(address, 0L);
-                                actorsPerAddress.put(
-                                        address,
-                                        ((Number) stat).longValue() + currentActorCount);
-                            }
-                        }
-                    }
-                    for (final Map.Entry<String, Integer> entry : shardsPerAddress.entrySet()) {
-                        try (Metrics metrics = _metricsFactory.create()) {
-                            metrics.addAnnotation("address", entry.getKey());
-                            metrics.setGauge("akka/cluster/shards", entry.getValue());
-                            @Nullable final Long actorCount = actorsPerAddress.get(entry.getKey());
-                            if (actorCount != null) {
-                                metrics.setGauge("akka/cluster/actors", actorCount);
-                            }
-                        }
-                    }
-                })
+                .match(ShardRegion.ClusterShardingStats.class, this::processShardingStats)
                 .match(GetRequest.class, message -> sendResponse(getSender()))
                 .match(ParallelLeastShardAllocationStrategy.RebalanceNotification.class, rebalanceNotification -> {
                     _rebalanceState = Optional.of(rebalanceNotification);
@@ -174,11 +145,52 @@ public class ClusterStatusCache extends AbstractActor {
                                     new ShardRegion.GetClusterShardingStats(FiniteDuration.fromNanos(_pollInterval.toNanos())),
                                     self());
                         }
+                        int rebalanceInflight = 0;
+                        int rebalancePending = 0;
+                        if (_rebalanceState.isPresent()) {
+                            rebalanceInflight = _rebalanceState.get().getInflightRebalances().size();
+                            rebalancePending = _rebalanceState.get().getPendingRebalances().size();
+                        }
+                        try (Metrics metrics = _metricsFactory.create()) {
+                            metrics.setGauge("akka/cluster/rebalance/inflight", rebalanceInflight);
+                            metrics.setGauge("akka/cluster/rebalance/pending", rebalancePending);
+                        }
                     } else {
                         unhandled(message);
                     }
                 })
                 .build();
+    }
+
+    private void processShardingStats(final ShardRegion.ClusterShardingStats shardingStats) {
+        LOGGER.debug()
+                .setMessage("Processing shard statistics")
+                .addData("regionCount", shardingStats.getRegions().size())
+                .log();
+        final Map<String, Integer> shardsPerAddress = Maps.newHashMap();
+        final Map<String, Long> actorsPerAddress = Maps.newHashMap();
+        for (final Map.Entry<Address, ShardRegion.ShardRegionStats> entry : shardingStats.getRegions().entrySet()) {
+            final String address = entry.getKey().hostPort();
+            shardsPerAddress.put(address, entry.getValue().getStats().size());
+            for (final Object stat : entry.getValue().getStats().values()) {
+                if (stat instanceof Number) {
+                    final long currentActorCount = actorsPerAddress.getOrDefault(address, 0L);
+                    actorsPerAddress.put(
+                            address,
+                            ((Number) stat).longValue() + currentActorCount);
+                }
+            }
+        }
+        for (final Map.Entry<String, Integer> entry : shardsPerAddress.entrySet()) {
+            try (Metrics metrics = _metricsFactory.create()) {
+                metrics.addAnnotation("address", entry.getKey());
+                metrics.setGauge("akka/cluster/shards", entry.getValue());
+                @Nullable final Long actorCount = actorsPerAddress.get(entry.getKey());
+                if (actorCount != null) {
+                    metrics.setGauge("akka/cluster/actors", actorCount);
+                }
+            }
+        }
     }
 
     private void sendResponse(final ActorRef sender) {
