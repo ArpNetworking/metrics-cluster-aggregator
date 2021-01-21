@@ -17,7 +17,6 @@ package com.arpnetworking.clusteraggregator;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.PoisonPill;
 import akka.actor.Props;
 import akka.cluster.Cluster;
 import akka.cluster.sharding.ClusterSharding;
@@ -298,15 +297,11 @@ public class GuiceModule extends AbstractModule {
     private ActorRef provideAggregatorShardRegion(
             final ActorSystem system,
             final Injector injector,
-            final AggMessageExtractor extractor,
-            @Named("aggregator-liveliness-timeout") final Duration livelinessTimeout) {
+            final AggMessageExtractor extractor) {
         final ClusterSharding clusterSharding = ClusterSharding.get(system);
         final RebalanceConfiguration rebalanceConfiguration = _configuration.getRebalanceConfiguration();
 
-        final ClusterShardingSettings settings =
-                ClusterShardingSettings
-                        .create(system)
-                        .withPassivateIdleAfter(livelinessTimeout);
+        final ClusterShardingSettings settings = ClusterShardingSettings.create(system);
 
         return clusterSharding.start(
                 "Aggregator",
@@ -317,7 +312,7 @@ public class GuiceModule extends AbstractModule {
                         rebalanceConfiguration.getMaxParallel(),
                         rebalanceConfiguration.getThreshold(),
                         Optional.of(system.actorSelection("/user/cluster-status"))),
-                PoisonPill.getInstance());
+                new AggregationRouter.ShutdownAggregator());
     }
 
     @Provides
@@ -394,13 +389,6 @@ public class GuiceModule extends AbstractModule {
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
     private Duration provideReaggregationTimeout(final ClusterAggregatorConfiguration config) {
         return config.getReaggregationTimeout();
-    }
-
-    @Provides
-    @Named("aggregator-liveliness-timeout")
-    @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
-    private Duration provideLivelinessTimeout(final ClusterAggregatorConfiguration config) {
-        return config.getAggregatorLivelinessTimeout();
     }
 
     @Named("circonus-partition-set")

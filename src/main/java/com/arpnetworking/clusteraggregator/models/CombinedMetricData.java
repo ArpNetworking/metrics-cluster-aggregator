@@ -17,6 +17,7 @@ package com.arpnetworking.clusteraggregator.models;
 
 import akka.util.ByteString;
 import com.arpnetworking.commons.builder.OvalBuilder;
+import com.arpnetworking.logback.annotations.Loggable;
 import com.arpnetworking.metrics.aggregation.protocol.Messages;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
@@ -45,6 +46,7 @@ import javax.annotation.Nullable;
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
+@Loggable
 public final class CombinedMetricData {
     /**
      * Private constructor.
