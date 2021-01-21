@@ -38,14 +38,6 @@
     <queueSize>500</queueSize>
   </appender>
 
-  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-    <!-- encoders are assigned the type
-         ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
-    <encoder>
-      <pattern>%d [%level] [%t %X{sourceThread}] %X{akkaSource}: %message %ex%n</pattern>
-    </encoder>
-  </appender>
-
   <logger name="org.apache.http" level="INFO" />
   <logger name="org.reflections.Reflections" level="ERROR" />
 

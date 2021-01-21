@@ -16,16 +16,20 @@
   -->
 
 <configuration>
-    <!-- IMPORTANT: This logger is only used during testing -->
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-          <pattern>%relative [%level] [%t %X{sourceThread}] %X{akkaSource}: %message %ex%n</pattern>
-        </encoder>
-    </appender>
+  <!-- IMPORTANT: This logger is only used during testing -->
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%relative [%level] [%t %X{sourceThread}] %X{akkaSource}: %message %ex%n</pattern>
+    </encoder>
+  </appender>
 
-    <logger name="org.reflections.Reflections" level="ERROR" />
+  <logger name="org.reflections.Reflections" level="ERROR"/>
+  <logger name="io.inscopemetrics" level="DEBUG"/>
+  <logger name="com.arpnetworking" level="DEBUG"/>
+  <logger name="com.arpnetworking.metrics.apachehttpsinkextra.shaded" level="INFO"/>
 
-    <root level="DEBUG">
-        <appender-ref ref="STDOUT"/>
-    </root>
+
+  <root level="INFO">
+    <appender-ref ref="STDOUT"/>
+  </root>
 </configuration>
