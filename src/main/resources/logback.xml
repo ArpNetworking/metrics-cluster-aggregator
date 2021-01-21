@@ -37,9 +37,11 @@
     <discardingThreshold>0</discardingThreshold>
     <queueSize>500</queueSize>
   </appender>
-
-  <logger name="org.apache.http" level="INFO" />
+  
   <logger name="org.reflections.Reflections" level="ERROR" />
+  <logger name="io.inscopemetrics" level="DEBUG" />
+  <logger name="com.arpnetworking" level="DEBUG" />
+  <logger name="com.arpnetworking.metrics.apachehttpsinkextra.shaded" level="INFO" />
 
   <root level="INFO">
     <appender-ref ref="clusteragg-async"/>
