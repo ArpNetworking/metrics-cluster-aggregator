@@ -18,8 +18,6 @@ package com.arpnetworking.clusteraggregator.aggregation;
 import akka.actor.AbstractActorWithTimers;
 import akka.actor.ActorRef;
 import akka.actor.Props;
-import akka.actor.ReceiveTimeout;
-import akka.cluster.sharding.ShardRegion;
 import com.arpnetworking.clusteraggregator.models.CombinedMetricData;
 import com.arpnetworking.metrics.aggregation.protocol.Messages;
 import com.arpnetworking.metrics.incubator.PeriodicMetrics;
@@ -190,9 +188,6 @@ public class StreamingAggregator extends AbstractActorWithTimers {
                     }
                 })
                 .match(ShutdownAggregator.class, message -> context().stop(self()))
-                .match(ReceiveTimeout.class, message -> {
-                    getContext().parent().tell(new ShardRegion.Passivate(ShutdownAggregator.getInstance()), getSelf());
-                })
                 .build();
     }
 
@@ -291,12 +286,13 @@ public class StreamingAggregator extends AbstractActorWithTimers {
     }
 
     private void initialize(final Messages.StatisticSetRecord data, final CombinedMetricData metricData) {
+        final ImmutableMap<String, String> dataDimensions = dimensionsToMap(data);
         if (!_initialized) {
             _period = metricData.getPeriod();
             _cluster = metricData.getCluster();
             _metric = metricData.getMetricName();
             _service = metricData.getService();
-            _dimensions = dimensionsToMap(data);
+            _dimensions = dataDimensions;
             _resultBuilder = new AggregatedData.Builder()
                     .setHost(createHost())
                     .setPeriod(_period)
@@ -313,10 +309,11 @@ public class StreamingAggregator extends AbstractActorWithTimers {
                 && _cluster.equals(metricData.getCluster())
                 && _service.equals(metricData.getService())
                 && _metric.equals(metricData.getMetricName())
-                && _dimensions.equals(dimensionsToMap(data)))) {
+                && _dimensions.equals(dataDimensions))) {
             LOGGER.error()
                     .setMessage("Received a work item for another aggregator")
                     .addData("data", metricData)
+                    .addData("data", dataDimensions)
                     .addData("actorPeriod", _period)
                     .addData("actorCluster", _cluster)
                     .addData("actorService", _service)
