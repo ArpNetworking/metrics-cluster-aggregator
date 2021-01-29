@@ -46,6 +46,7 @@ import com.arpnetworking.clusteraggregator.http.Routes;
 import com.arpnetworking.clusteraggregator.models.AggregationMode;
 import com.arpnetworking.clusteraggregator.models.CombinedMetricData;
 import com.arpnetworking.metrics.aggregation.protocol.Messages;
+import com.arpnetworking.metrics.incubator.PeriodicMetrics;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
@@ -54,6 +55,7 @@ import com.arpnetworking.tsdcore.model.AggregationRequest;
 import com.arpnetworking.tsdcore.model.FQDSN;
 import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.arpnetworking.tsdcore.statistics.Statistic;
+import com.arpnetworking.tsdcore.statistics.StatisticFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -80,13 +82,17 @@ public class HttpSourceActor extends AbstractActor {
      * @param shardRegion The aggregator shard region actor.
      * @param emitter actor that emits the host data
      * @param configuration The cluster aggregator configuration.
+     * @param periodicMetrics The periodic metrics instance.
      * @return A new {@link Props}
      */
     /* package private */ static Props props(
             final ActorRef shardRegion,
             final ActorRef emitter,
-            final ClusterAggregatorConfiguration configuration) {
-        return Props.create(HttpSourceActor.class, () -> new HttpSourceActor(shardRegion, emitter, configuration));
+            final ClusterAggregatorConfiguration configuration,
+            final PeriodicMetrics periodicMetrics) {
+        return Props.create(
+                HttpSourceActor.class,
+                () -> new HttpSourceActor(shardRegion, emitter, configuration, periodicMetrics));
     }
 
     /**
@@ -95,12 +101,14 @@ public class HttpSourceActor extends AbstractActor {
      * @param shardRegion The aggregator shard region actor.
      * @param emitter actor that emits the host data
      * @param configuration The cluster aggregator configuration.
+     * @param periodicMetrics The periodic metrics instance.
      */
     @Inject
     public HttpSourceActor(
             @Named("aggregator-shard-region") final ActorRef shardRegion,
             @Named("host-emitter") final ActorRef emitter,
-            final ClusterAggregatorConfiguration configuration) {
+            final ClusterAggregatorConfiguration configuration,
+            final PeriodicMetrics periodicMetrics) {
 
         _calculateAggregates = configuration.getCalculateClusterAggregations();
 
@@ -112,6 +120,15 @@ public class HttpSourceActor extends AbstractActor {
                 if (generatedMessageV3 instanceof Messages.StatisticSetRecord) {
                     final Messages.StatisticSetRecord statisticSetRecord =
                             (Messages.StatisticSetRecord) aggregationMessage.getMessage();
+
+                    periodicMetrics.recordGauge(
+                            "source/http/samples",
+                            statisticSetRecord.getStatisticsList().stream()
+                            .filter(s -> s.getStatistic().equals(STATISTIC_FACTORY.getStatistic("count").getName()))
+                            .map(s -> s.getValue())
+                            .reduce(Double::sum)
+                            .orElse(0.0d));
+
 
                     if (aggregationMode.shouldReaggregate()) {
                         shardRegion.tell(statisticSetRecord, self);
@@ -325,6 +342,7 @@ public class HttpSourceActor extends AbstractActor {
     private final Sink<AggregationRequest, CompletionStage<Done>> _sink;
     private final Graph<FlowShape<HttpRequest, AggregationRequest>, NotUsed> _processGraph;
 
+    private static final StatisticFactory STATISTIC_FACTORY = new StatisticFactory();
     private static final Logger BAD_REQUEST_LOGGER =
             LoggerFactory.getRateLimitLogger(HttpSourceActor.class, Duration.ofSeconds(30));
 
