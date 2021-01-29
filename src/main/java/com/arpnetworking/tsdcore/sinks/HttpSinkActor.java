@@ -19,8 +19,7 @@ import akka.actor.AbstractActor;
 import akka.actor.Props;
 import akka.pattern.Patterns;
 import com.arpnetworking.logback.annotations.LogValue;
-import com.arpnetworking.metrics.Metrics;
-import com.arpnetworking.metrics.MetricsFactory;
+import com.arpnetworking.metrics.incubator.PeriodicMetrics;
 import com.arpnetworking.steno.LogValueMapFactory;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
@@ -59,7 +58,7 @@ public class HttpSinkActor extends AbstractActor {
      * @param maximumConcurrency Maximum number of concurrent requests.
      * @param maximumQueueSize Maximum number of pending requests.
      * @param spreadPeriod Maximum time to delay sending new aggregates to spread load.
-     * @param metricsFactory metrics factory to record metrics.
+     * @param periodicMetrics Periodic Metrics to record metrics.
      * @return A new Props
      */
     public static Props props(
@@ -68,7 +67,7 @@ public class HttpSinkActor extends AbstractActor {
             final int maximumConcurrency,
             final int maximumQueueSize,
             final Duration spreadPeriod,
-            final MetricsFactory metricsFactory) {
+            final PeriodicMetrics periodicMetrics) {
         return Props.create(
                 HttpSinkActor.class,
                 client,
@@ -76,7 +75,7 @@ public class HttpSinkActor extends AbstractActor {
                 maximumConcurrency,
                 maximumQueueSize,
                 spreadPeriod,
-                metricsFactory);
+                periodicMetrics);
     }
 
     /**
@@ -87,7 +86,7 @@ public class HttpSinkActor extends AbstractActor {
      * @param maximumConcurrency Maximum number of concurrent requests.
      * @param maximumQueueSize Maximum number of pending requests.
      * @param spreadPeriod Maximum time to delay sending new aggregates to spread load.
-     * @param metricsFactory metrics factory to record metrics.
+     * @param periodicMetrics Periodic Metrics to record metrics.
      */
     public HttpSinkActor(
             final AsyncHttpClient client,
@@ -95,20 +94,19 @@ public class HttpSinkActor extends AbstractActor {
             final int maximumConcurrency,
             final int maximumQueueSize,
             final Duration spreadPeriod,
-            final MetricsFactory metricsFactory) {
+            final PeriodicMetrics periodicMetrics) {
         _client = client;
         _sink = sink;
         _acceptedStatusCodes = sink.getAcceptedStatusCodes();
         _retryableStatusCodes = sink.getRetryableStatusCodes();
         _maximumConcurrency = maximumConcurrency;
         _pendingRequests = EvictingQueue.create(maximumQueueSize);
-        _metricsFactory = metricsFactory;
+        _periodicMetrics = periodicMetrics;
         if (Duration.ZERO.equals(spreadPeriod)) {
             _spreadingDelayMillis = 0;
         } else {
             _spreadingDelayMillis = new Random().nextInt((int) spreadPeriod.toMillis());
         }
-
         _evictedRequestsName = "sinks/http_post/" + _sink.getMetricSafeName() + "/evicted_requests";
         _requestLatencyName = "sinks/http_post/" + _sink.getMetricSafeName() + "/request_latency";
         _inQueueLatencyName = "sinks/http_post/" + _sink.getMetricSafeName() + "/queue_time";
@@ -117,6 +115,39 @@ public class HttpSinkActor extends AbstractActor {
         _httpSinkAttemptsName = "sinks/http_post/" + _sink.getMetricSafeName() + "/attempts";
         _samplesSentName = "sinks/http_post/" + sink.getMetricSafeName() + "/samples_sent";
         _samplesDroppedName = "sinks/http_post/" + _sink.getMetricSafeName() + "/samples_dropped";
+    }
+
+    @Override
+    public void preStart() throws Exception {
+        super.preStart();
+
+        LOGGER.info()
+                .setMessage("Starting http post sink actor")
+                .addData("actor", this)
+                .addData("actorRef", self())
+                .log();
+
+        _periodicMetrics.recordCounter("actors/http_post_sink/started", 1);
+    }
+
+    @Override
+    public void postStop() throws Exception {
+        super.postStop();
+
+        LOGGER.info()
+                .setMessage("Shutdown sink actor")
+                .addData("actorRef", self())
+                .addData("recordsWritten", _postRequests)
+                .log();
+
+        _periodicMetrics.recordCounter("actors/http_post_sink/stopped", 1);
+    }
+
+    @Override
+    public void preRestart(final Throwable reason, final Optional<Object> message) throws Exception {
+        super.preRestart(reason, message);
+
+        _periodicMetrics.recordCounter("actors/http_post_sink/restarted", 1);
     }
 
     /**
@@ -135,7 +166,7 @@ public class HttpSinkActor extends AbstractActor {
                 .put("waiting", _waiting)
                 .put("inflightRequestsCount", _inflightRequestsCount)
                 .put("pendingRequestsCount", _pendingRequests.size())
-                .put("metricsFactory", _metricsFactory)
+                .put("periodicMetrics", _periodicMetrics)
                 .build();
     }
 
@@ -202,13 +233,11 @@ public class HttpSinkActor extends AbstractActor {
     private void processFailedRequest(final PostFailure failure) {
         _inflightRequestsCount--;
 
-        try (Metrics metrics = _metricsFactory.create()) {
-            metrics.incrementCounter(_requestSuccessName, 0);
-            failure.getRequestEntry().getPopulationSize().ifPresent(
-                    populationSize -> metrics.incrementCounter(_samplesDroppedName, populationSize));
-        }
+        _periodicMetrics.recordCounter(_requestSuccessName, 0);
+        failure.getRequestEntry().getPopulationSize().ifPresent(
+                populationSize -> _periodicMetrics.recordCounter(_samplesDroppedName, populationSize));
 
-        LOGGER.error()
+        POST_ERROR_LOGGER.error()
                 .setMessage("Post error")
                 .addData("sink", _sink)
                 .addContext("actor", self())
@@ -223,16 +252,14 @@ public class HttpSinkActor extends AbstractActor {
         final Optional<String> responseBody = Optional.ofNullable(response.getResponseBody());
         final int responseStatusCode = response.getStatusCode();
 
-        try (Metrics metrics = _metricsFactory.create()) {
-            metrics.incrementCounter(_requestSuccessName, 0);
-            rejected.getRequestEntry().getPopulationSize().ifPresent(
-                    populationSize -> metrics.incrementCounter(_samplesDroppedName, populationSize));
-            final int responseStatusClass = responseStatusCode / 100;
-            for (final int i : STATUS_CLASSES) {
-                metrics.incrementCounter(
-                        String.format("%s/%dxx", _responseStatusName, i),
-                        responseStatusClass == i ? 1 : 0);
-            }
+        _periodicMetrics.recordCounter(_requestSuccessName, 0);
+        rejected.getRequestEntry().getPopulationSize().ifPresent(
+                populationSize -> _periodicMetrics.recordCounter(_samplesDroppedName, populationSize));
+        final int responseStatusClass = responseStatusCode / 100;
+        for (final int i : STATUS_CLASSES) {
+            _periodicMetrics.recordCounter(
+                    String.format("%s/%dxx", _responseStatusName, i),
+                    responseStatusClass == i ? 1 : 0);
         }
 
         LOGGER.warn()
@@ -253,17 +280,15 @@ public class HttpSinkActor extends AbstractActor {
         final Response response = success.getResponse();
         final int responseStatusCode = response.getStatusCode();
 
-        try (Metrics metrics = _metricsFactory.create()) {
-            metrics.incrementCounter(_httpSinkAttemptsName, success.getAttempt());
-            metrics.incrementCounter(_requestSuccessName, 1);
-            success.getRequestEntry().getPopulationSize().ifPresent(
-                    populationSize -> metrics.incrementCounter(_samplesSentName, populationSize));
-            final int responseStatusClass = responseStatusCode / 100;
-            for (final int i : STATUS_CLASSES) {
-                metrics.incrementCounter(
-                        String.format("%s/%dxx", _responseStatusName, i),
-                        responseStatusClass == i ? 1 : 0);
-            }
+        _periodicMetrics.recordCounter(_httpSinkAttemptsName, success.getAttempt());
+        _periodicMetrics.recordCounter(_requestSuccessName, 1);
+        success.getRequestEntry().getPopulationSize().ifPresent(
+                populationSize -> _periodicMetrics.recordCounter(_samplesSentName, populationSize));
+        final int responseStatusClass = responseStatusCode / 100;
+        for (final int i : STATUS_CLASSES) {
+            _periodicMetrics.recordCounter(
+                    String.format("%s/%dxx", _responseStatusName, i),
+                    responseStatusClass == i ? 1 : 0);
         }
 
         LOGGER.debug()
@@ -297,10 +322,7 @@ public class HttpSinkActor extends AbstractActor {
             }
 
             if (evicted > 0) {
-                // TODO(qinyanl): Convert to periodic metric in the future.
-                try (Metrics metrics = _metricsFactory.create()) {
-                    metrics.incrementCounter(_evictedRequestsName, evicted);
-                }
+                _periodicMetrics.recordCounter(_evictedRequestsName, evicted);
                 EVICTED_LOGGER.warn()
                         .setMessage("Evicted data from HTTP sink queue")
                         .addData("sink", _sink)
@@ -309,22 +331,28 @@ public class HttpSinkActor extends AbstractActor {
                         .log();
             }
 
-            // If we don't currently have anything in-flight, we'll need to wait the spreading duration.
-            // If we're already waiting, these requests will be sent after the waiting is over, no need to do anything else.
-            if (pendingWasEmpty && !_waiting && _spreadingDelayMillis > 0) {
-                _waiting = true;
-                LOGGER.debug()
-                        .setMessage("Scheduling http requests for later transmission")
-                        .addData("delayMs", _spreadingDelayMillis)
-                        .addContext("actor", self())
-                        .log();
-                context().system().scheduler().scheduleOnce(
-                        FiniteDuration.apply(_spreadingDelayMillis, TimeUnit.MILLISECONDS),
-                        self(),
-                        new WaitTimeExpired(),
-                        context().dispatcher(),
-                        self());
+            if (_spreadingDelayMillis > 0) {
+                // If we don't currently have anything in-flight, we'll need to wait the spreading duration.
+                if (!_waiting && pendingWasEmpty) {
+                    _waiting = true;
+                    LOGGER.debug()
+                            .setMessage("Scheduling http requests for later transmission")
+                            .addData("delayMs", _spreadingDelayMillis)
+                            .addContext("actor", self())
+                            .log();
+                    context().system().scheduler().scheduleOnce(
+                            FiniteDuration.apply(_spreadingDelayMillis, TimeUnit.MILLISECONDS),
+                            self(),
+                            new WaitTimeExpired(),
+                            context().dispatcher(),
+                            self());
+                } else if (!_waiting) {
+                    // If we have something in-flight continue to send without waiting
+                    dispatchPending();
+                }
+                // Otherwise we're already waiting, these requests will be sent after the waiting is over, no need to do anything else.
             } else {
+                // Spreading is disabled, just keep dispatching the work
                 dispatchPending();
             }
         }
@@ -345,10 +373,8 @@ public class HttpSinkActor extends AbstractActor {
 
     private void fireNextRequest() {
         final RequestEntry requestEntry = _pendingRequests.poll();
-        try (Metrics metrics = _metricsFactory.create()) {
-            final long latencyInMillis = Duration.between(requestEntry.getEnterTime(), Instant.now()).toMillis();
-            metrics.setTimer(_inQueueLatencyName, latencyInMillis, TimeUnit.MILLISECONDS);
-        }
+        final long latencyInMillis = Duration.between(requestEntry.getEnterTime(), Instant.now()).toMillis();
+        _periodicMetrics.recordTimer(_inQueueLatencyName, latencyInMillis, Optional.of(TimeUnit.MILLISECONDS));
 
         _inflightRequestsCount++;
         fireRequest(requestEntry, 1);
@@ -361,9 +387,10 @@ public class HttpSinkActor extends AbstractActor {
         _client.executeRequest(request.getRequest(), new ResponseAsyncCompletionHandler(promise));
         final CompletionStage<Object> responsePromise = promise
                 .handle((result, err) -> {
-                    try (Metrics metrics = _metricsFactory.create()) {
-                        metrics.setTimer(_requestLatencyName, System.currentTimeMillis() - requestStartTime, TimeUnit.MILLISECONDS);
-                    }
+                    _periodicMetrics.recordTimer(
+                            _requestLatencyName,
+                            System.currentTimeMillis() - requestStartTime,
+                            Optional.of(TimeUnit.MILLISECONDS));
                     if (err == null) {
                         if (_acceptedStatusCodes.contains(result.getStatusCode())) {
                              return new PostSuccess(attempt, request, result);
@@ -400,16 +427,6 @@ public class HttpSinkActor extends AbstractActor {
                                 self());
     }
 
-    @Override
-    public void postStop() throws Exception {
-        super.postStop();
-        LOGGER.info()
-                .setMessage("Shutdown sink actor")
-                .addData("sink", _sink)
-                .addData("recordsWritten", _postRequests)
-                .log();
-    }
-
     private int _inflightRequestsCount = 0;
     private long _postRequests = 0;
     private boolean _waiting = false;
@@ -418,7 +435,7 @@ public class HttpSinkActor extends AbstractActor {
     private final AsyncHttpClient _client;
     private final HttpPostSink _sink;
     private final int _spreadingDelayMillis;
-    private final MetricsFactory _metricsFactory;
+    private final PeriodicMetrics _periodicMetrics;
     private final ImmutableSet<Integer> _acceptedStatusCodes;
     private final ImmutableSet<Integer> _retryableStatusCodes;
 
@@ -431,8 +448,9 @@ public class HttpSinkActor extends AbstractActor {
     private final String _samplesSentName;
     private final String _samplesDroppedName;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(HttpPostSink.class);
-    private static final Logger EVICTED_LOGGER = LoggerFactory.getRateLimitLogger(HttpPostSink.class, Duration.ofSeconds(30));
+    private static final Logger LOGGER = LoggerFactory.getLogger(HttpSinkActor.class);
+    private static final Logger POST_ERROR_LOGGER = LoggerFactory.getRateLimitLogger(HttpSinkActor.class, Duration.ofSeconds(30));
+    private static final Logger EVICTED_LOGGER = LoggerFactory.getRateLimitLogger(HttpSinkActor.class, Duration.ofSeconds(30));
     private static final ImmutableList<Integer> STATUS_CLASSES = com.google.common.collect.ImmutableList.of(2, 3, 4, 5);
 
     /**

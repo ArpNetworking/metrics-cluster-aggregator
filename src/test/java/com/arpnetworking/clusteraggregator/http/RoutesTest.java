@@ -16,8 +16,7 @@
 package com.arpnetworking.clusteraggregator.http;
 
 import akka.http.javadsl.model.HttpRequest;
-import com.arpnetworking.metrics.Metrics;
-import com.arpnetworking.metrics.MetricsFactory;
+import com.arpnetworking.metrics.incubator.PeriodicMetrics;
 import com.arpnetworking.utility.BaseActorTest;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,8 +34,7 @@ public class RoutesTest extends BaseActorTest {
     @Override
     public void setUp() {
         super.setUp();
-        _routes = new Routes(getSystem(), _mockMetricsFactory, HEALTH_CHECK_PATH, STATUS_PATH, VERSION_PATH);
-        Mockito.doReturn(_mockMetrics).when(_mockMetricsFactory).create();
+        _routes = new Routes(getSystem(), _mockPeriodicMetrics, HEALTH_CHECK_PATH, STATUS_PATH, VERSION_PATH);
     }
 
     @Test
@@ -47,11 +45,16 @@ public class RoutesTest extends BaseActorTest {
         // wait for the request to complete. The actor time out is 5 seconds so here wait for 6 seconds.
         Thread.sleep(6000);
 
-        Mockito.verify(_mockMetricsFactory).create();
-        Mockito.verify(_mockMetrics).setTimer(Mockito.eq("rest_service/GET/test_health_check/request"), Mockito.anyLong(), Mockito.any());
-        Mockito.verify(_mockMetrics).setGauge(Mockito.eq("rest_service/GET/test_health_check/body_size"), Mockito.anyLong());
-        Mockito.verify(_mockMetrics).incrementCounter("rest_service/GET/test_health_check/status/5xx", 1);
-        Mockito.verify(_mockMetrics).close();
+        Mockito.verify(_mockPeriodicMetrics).recordTimer(
+                Mockito.eq("rest_service/GET/test_health_check/request"),
+                Mockito.anyLong(),
+                Mockito.any());
+        Mockito.verify(_mockPeriodicMetrics).recordGauge(
+                Mockito.eq("rest_service/GET/test_health_check/body_size"),
+                Mockito.anyLong());
+        Mockito.verify(_mockPeriodicMetrics).recordCounter(
+                "rest_service/GET/test_health_check/status/5xx",
+                1);
 
         final HttpRequest unknownRequest = HttpRequest.create("kb23k1dnlkns02");
         _routes.apply(unknownRequest);
@@ -59,11 +62,16 @@ public class RoutesTest extends BaseActorTest {
         // wait for the request to complete. Since unknown_route will not call actor, don't have to wait for 6 seconds. 
         Thread.sleep(1000);
 
-        Mockito.verify(_mockMetricsFactory, Mockito.times(2)).create();
-        Mockito.verify(_mockMetrics).setTimer(Mockito.eq("rest_service/GET/unknown_route/request"), Mockito.anyLong(), Mockito.any());
-        Mockito.verify(_mockMetrics).setGauge(Mockito.eq("rest_service/GET/unknown_route/body_size"), Mockito.anyLong());
-        Mockito.verify(_mockMetrics).incrementCounter("rest_service/GET/unknown_route/status/4xx", 1);
-        Mockito.verify(_mockMetrics, Mockito.times(2)).close();
+        Mockito.verify(_mockPeriodicMetrics).recordTimer(
+                Mockito.eq("rest_service/GET/unknown_route/request"),
+                Mockito.anyLong(),
+                Mockito.any());
+        Mockito.verify(_mockPeriodicMetrics).recordGauge(
+                Mockito.eq("rest_service/GET/unknown_route/body_size"),
+                Mockito.anyLong());
+        Mockito.verify(_mockPeriodicMetrics).recordCounter(
+                "rest_service/GET/unknown_route/status/4xx",
+                1);
     }
 
     private Routes _routes;
@@ -73,7 +81,5 @@ public class RoutesTest extends BaseActorTest {
     private static final String VERSION_PATH = "test_version";
 
     @Mock
-    private Metrics _mockMetrics;
-    @Mock
-    private MetricsFactory _mockMetricsFactory;
+    private PeriodicMetrics _mockPeriodicMetrics;
 }

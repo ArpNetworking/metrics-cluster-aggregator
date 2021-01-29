@@ -16,8 +16,7 @@
 package com.arpnetworking.tsdcore.sinks;
 
 import akka.actor.ActorSystem;
-import com.arpnetworking.metrics.MetricsFactory;
-import com.arpnetworking.metrics.impl.TsdMetricsFactory;
+import com.arpnetworking.metrics.incubator.PeriodicMetrics;
 import com.arpnetworking.test.TestBeanFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.PeriodicData;
@@ -28,6 +27,7 @@ import com.google.common.collect.Iterables;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -47,9 +47,7 @@ public final class InfluxDbSinkTest {
     private InfluxDbSink.Builder _influxBuilder;
     private static final ActorSystem ACTOR_SYSTEM = ActorSystem.apply();
     private static final StatisticFactory STATISTIC_FACTORY = new StatisticFactory();
-    private static final MetricsFactory METRICS_FACTORY = TsdMetricsFactory.newInstance(
-                "mock_metrics_factory",
-                "mock_metrics_factory");
+    private static final PeriodicMetrics PERIODIC_METRICS = Mockito.mock(PeriodicMetrics.class);
 
     @AfterClass
     public static void afterClass() {
@@ -63,7 +61,7 @@ public final class InfluxDbSinkTest {
                 .setName("monitord_sink_test")
                 .setActorSystem(ACTOR_SYSTEM)
                 .setUri(URI.create("http://localhost:8888"))
-                .setMetricsFactory(METRICS_FACTORY);
+                .setPeriodicMetrics(PERIODIC_METRICS);
 
 
         final String service = "service-testSerializeMerge";
@@ -123,7 +121,7 @@ public final class InfluxDbSinkTest {
                 .setName("monitord_sink_test")
                 .setActorSystem(ACTOR_SYSTEM)
                 .setUri(URI.create("http://localhost:8888"))
-                .setMetricsFactory(METRICS_FACTORY);
+                .setPeriodicMetrics(PERIODIC_METRICS);
 
 
         final String service = "service-testSerializeMerge";
@@ -185,7 +183,7 @@ public final class InfluxDbSinkTest {
                 .setName("monitord_sink_test")
                 .setActorSystem(ACTOR_SYSTEM)
                 .setUri(URI.create("http://localhost:8888"))
-                .setMetricsFactory(METRICS_FACTORY);
+                .setPeriodicMetrics(PERIODIC_METRICS);
 
 
         final String service = "service test,Serialize=Merge";

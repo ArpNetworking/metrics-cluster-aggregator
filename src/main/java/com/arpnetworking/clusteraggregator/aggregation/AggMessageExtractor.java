@@ -18,9 +18,8 @@ package com.arpnetworking.clusteraggregator.aggregation;
 import akka.cluster.sharding.ShardRegion;
 import com.arpnetworking.clusteraggregator.models.CombinedMetricData;
 import com.arpnetworking.metrics.aggregation.protocol.Messages;
-import com.arpnetworking.steno.Logger;
-import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
 import java.util.Comparator;
@@ -33,6 +32,20 @@ import java.util.TreeMap;
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public class AggMessageExtractor implements ShardRegion.MessageExtractor {
+
+    private static final int SHARD_COUNT = 10000;
+
+    private final ImmutableSet<String> _reaggregationDimensions;
+
+    /**
+     * Public constructor.
+     *
+     * @param reaggregationDimensions The dimensions to reaggregate over.
+     */
+    public AggMessageExtractor(final ImmutableSet<String> reaggregationDimensions) {
+        _reaggregationDimensions = reaggregationDimensions;
+    }
+
     /**
      * {@inheritDoc}
      *
@@ -65,8 +78,8 @@ public class AggMessageExtractor implements ShardRegion.MessageExtractor {
             for (final Map.Entry<String, String> dimensionEntry : sortedDimensionsMap.entrySet()) {
                 final String k = dimensionEntry.getKey();
                 if (!(k.equals(CombinedMetricData.CLUSTER_KEY)
-                        || k.equals(CombinedMetricData.HOST_KEY)
-                        || k.equals(CombinedMetricData.SERVICE_KEY))) {
+                        || k.equals(CombinedMetricData.SERVICE_KEY)
+                        || _reaggregationDimensions.contains(k))) {
                     builder
                             .append("||")
                             .append(dimensionEntry.getKey())
@@ -113,7 +126,4 @@ public class AggMessageExtractor implements ShardRegion.MessageExtractor {
     public String shardId(final Object message) {
         return String.format("shard_%d", Math.abs(entityId(message).hashCode() % SHARD_COUNT));
     }
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(AggMessageExtractor.class);
-    private static final int SHARD_COUNT = 10000;
 }

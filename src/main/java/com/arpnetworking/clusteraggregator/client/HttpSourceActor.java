@@ -59,6 +59,7 @@ import com.arpnetworking.tsdcore.statistics.StatisticFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.util.concurrent.AtomicDouble;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.GeneratedMessageV3;
@@ -111,78 +112,100 @@ public class HttpSourceActor extends AbstractActor {
             final PeriodicMetrics periodicMetrics) {
 
         _calculateAggregates = configuration.getCalculateClusterAggregations();
+        _periodicMetrics = periodicMetrics;
 
         final ActorRef self = self();
-        _sink = Sink.foreach(aggregationRequest -> {
-            final AggregationMode aggregationMode = aggregationRequest.getAggregationMode();
-            for (final AggregationMessage aggregationMessage : aggregationRequest.getAggregationMessages()) {
-                final GeneratedMessageV3 generatedMessageV3 = aggregationMessage.getMessage();
-                if (generatedMessageV3 instanceof Messages.StatisticSetRecord) {
-                    final Messages.StatisticSetRecord statisticSetRecord =
-                            (Messages.StatisticSetRecord) aggregationMessage.getMessage();
-
-                    periodicMetrics.recordGauge(
-                            "source/http/samples",
-                            statisticSetRecord.getStatisticsList().stream()
-                            .filter(s -> s.getStatistic().equals(STATISTIC_FACTORY.getStatistic("count").getName()))
-                            .map(s -> s.getValue())
-                            .reduce(Double::sum)
-                            .orElse(0.0d));
-
-
-                    if (aggregationMode.shouldReaggregate()) {
-                        shardRegion.tell(statisticSetRecord, self);
-                    }
-
-                    if (aggregationMode.shouldPersist()) {
-                        final Optional<PeriodicData> periodicData = buildPeriodicData(statisticSetRecord);
-                        if (periodicData.isPresent()) {
-                            emitter.tell(periodicData.get(), self);
-                        }
-                    }
-                }
-            }
-        });
+        _sink = Sink.foreach(aggregationRequest -> handleAggregation(shardRegion, emitter, self, aggregationRequest));
 
         _materializer = ActorMaterializer.create(
                 ActorMaterializerSettings.create(context().system())
                         .withSupervisionStrategy(Supervision.stoppingDecider()),
                 context());
 
-        _processGraph = GraphDSL.create(builder -> {
+        _processGraph = GraphDSL.create(this::processGraph);
 
-            // Flows
-            final Flow<HttpRequest, ByteString, NotUsed> getBodyFlow = Flow.<HttpRequest>create()
-                    .map(HttpRequest::entity)
-                    .flatMapConcat(RequestEntity::getDataBytes)
-                    .reduce(ByteString::concat)
-                    .named("getBody");
-
-            final Flow<Pair<ByteString, HttpRequest>, AggregationRequest, NotUsed> createAndParseFlow =
-                    Flow.<Pair<ByteString, HttpRequest>>create()
-                            .map(HttpSourceActor::mapModel)
-                            .map(this::parseRecords) // Parse the json string into a record builder
-                            // NOTE: this should be _parser::parse, but aspectj NPEs with that currently
-                            .named("createAndParseRequest");
-
-            // Shapes
-            final UniformFanOutShape<HttpRequest, HttpRequest> split = builder.add(Broadcast.create(2));
-
-            final FlowShape<HttpRequest, ByteString> getBody = builder.add(getBodyFlow);
-            final FanInShape2<
-                    ByteString,
-                    HttpRequest,
-                    Pair<ByteString, HttpRequest>> join = builder.add(Zip.create());
-            final FlowShape<Pair<ByteString, HttpRequest>, AggregationRequest> createRequest =
-                    builder.add(createAndParseFlow);
-
-            // Wire the shapes
-            builder.from(split.out(0)).via(getBody).toInlet(join.in0()); // Split to get the body bytes
-            builder.from(split.out(1)).toInlet(join.in1()); // Pass the Akka HTTP request through
-            builder.from(join.out()).toInlet(createRequest.in()); // Join to create the Request and parse it
-
-            return FlowShape.of(split.in(), createRequest.out());
+        _periodicMetrics.registerPolledMetric(m -> {
+            // TODO(vkoskela): There needs to be a way to deregister these callbacks
+            // This is not an immediate issue since new Aggregator instances are
+            // only created when pipelines are reloaded. To avoid recording values
+            // for dead pipelines this explicitly avoids recording zeroes.
+            double samples = _receivedSamples.getAndSet(0);
+            if (samples > 0) {
+                m.recordGauge("sources/http/source_actor/metric_samples", samples);
+            }
+            samples = _parsedSamples.getAndSet(0);
+            if (samples > 0) {
+                m.recordGauge("sources/http/source_actor/parsed_samples", samples);
+            }
         });
+    }
+
+    private void handleAggregation(
+            final ActorRef shardRegion,
+            final ActorRef emitter,
+            final ActorRef self,
+            final AggregationRequest aggregationRequest) {
+
+        final AggregationMode aggregationMode = aggregationRequest.getAggregationMode();
+        for (final AggregationMessage aggregationMessage : aggregationRequest.getAggregationMessages()) {
+            final GeneratedMessageV3 generatedMessageV3 = aggregationMessage.getMessage();
+            if (generatedMessageV3 instanceof Messages.StatisticSetRecord) {
+                final Messages.StatisticSetRecord statisticSetRecord =
+                        (Messages.StatisticSetRecord) aggregationMessage.getMessage();
+
+                _receivedSamples.addAndGet(
+                        statisticSetRecord.getStatisticsList().stream()
+                        .filter(s -> s.getStatistic().equals(STATISTIC_FACTORY.getStatistic("count").getName()))
+                        .map(s -> s.getValue())
+                        .reduce(Double::sum)
+                        .orElse(0.0d));
+
+                if (aggregationMode.shouldReaggregate()) {
+                    shardRegion.tell(statisticSetRecord, self);
+                }
+
+                if (aggregationMode.shouldPersist()) {
+                    final Optional<PeriodicData> periodicData = buildPeriodicData(statisticSetRecord);
+                    if (periodicData.isPresent()) {
+                        emitter.tell(periodicData.get(), self);
+                    }
+                }
+            }
+        }
+    }
+
+    private FlowShape<HttpRequest, AggregationRequest> processGraph(final GraphDSL.Builder<NotUsed> builder) {
+        // Flows
+        final Flow<HttpRequest, ByteString, NotUsed> getBodyFlow = Flow.<HttpRequest>create()
+                .map(HttpRequest::entity)
+                .flatMapConcat(RequestEntity::getDataBytes)
+                .reduce(ByteString::concat)
+                .named("getBody");
+
+        final Flow<Pair<ByteString, HttpRequest>, AggregationRequest, NotUsed> createAndParseFlow =
+                Flow.<Pair<ByteString, HttpRequest>>create()
+                        .map(HttpSourceActor::mapModel)
+                        .map(this::parseRecords) // Parse the json string into a record builder
+                        // NOTE: this should be _parser::parse, but aspectj NPEs with that currently
+                        .named("createAndParseRequest");
+
+        // Shapes
+        final UniformFanOutShape<HttpRequest, HttpRequest> split = builder.add(Broadcast.create(2));
+
+        final FlowShape<HttpRequest, ByteString> getBody = builder.add(getBodyFlow);
+        final FanInShape2<
+                ByteString,
+                HttpRequest,
+                Pair<ByteString, HttpRequest>> join = builder.add(Zip.create());
+        final FlowShape<Pair<ByteString, HttpRequest>, AggregationRequest> createRequest =
+                builder.add(createAndParseFlow);
+
+        // Wire the shapes
+        builder.from(split.out(0)).via(getBody).toInlet(join.in0()); // Split to get the body bytes
+        builder.from(split.out(1)).toInlet(join.in1()); // Pass the Akka HTTP request through
+        builder.from(join.out()).toInlet(createRequest.in()); // Join to create the Request and parse it
+
+        return FlowShape.of(split.in(), createRequest.out());
     }
 
     @Override
@@ -264,9 +287,20 @@ public class HttpSourceActor extends AbstractActor {
         if (records.isEmpty()) {
             throw new NoRecordsException();
         }
+
+        _parsedSamples.addAndGet(
+                records.asList().stream()
+                        .map(AggregationMessage::getMessage)
+                        .filter(m -> m instanceof Messages.StatisticSetRecord)
+                        .flatMap(m -> ((Messages.StatisticSetRecord) m).getStatisticsList().stream())
+                        .filter(s -> s.getStatistic().equals(STATISTIC_FACTORY.getStatistic("count").getName()))
+                        .map(Messages.StatisticRecord::getValue)
+                        .reduce(Double::sum)
+                        .orElse(0.0d));
+
         return new AggregationRequest.Builder()
                 .setAggregationMode(aggregationMode)
-                .setAggregationMessages(recordsBuilder.build())
+                .setAggregationMessages(records)
                 .build();
     }
 
@@ -336,6 +370,13 @@ public class HttpSourceActor extends AbstractActor {
                 .setMinRequestTime(combinedMetricData.getMinRequestTime().orElse(null))
                 .build());
     }
+
+    // WARNING: Consider carefully the volume of samples recorded.
+    // PeriodicMetrics reduces the number of scopes creates, but each sample is
+    // still stored in-memory until it is flushed.
+    private final PeriodicMetrics _periodicMetrics;
+    private final AtomicDouble _receivedSamples = new AtomicDouble(0);
+    private final AtomicDouble _parsedSamples = new AtomicDouble(0);
 
     private final boolean _calculateAggregates;
     private final Materializer _materializer;
