@@ -526,6 +526,21 @@
           <skip>${skipDockerBuild}</skip>
         </configuration>
       </plugin>
+      <!-- TODO: Remove me once we deprecate GHA -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>versions-maven-plugin</artifactId>
+        <version>${maven.versions.plugin.version}</version>
+        <executions>
+          <execution>
+            <id>default-display-dependency-updates</id>
+            <goals>
+              <goal>display-dependency-updates</goal>
+            </goals>
+            <phase>ignored</phase>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
