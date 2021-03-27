@@ -16,8 +16,7 @@
 package com.arpnetworking.tsdcore.sinks;
 
 import akka.actor.ActorSystem;
-import com.arpnetworking.metrics.MetricsFactory;
-import com.arpnetworking.metrics.impl.TsdMetricsFactory;
+import com.arpnetworking.metrics.incubator.PeriodicMetrics;
 import com.arpnetworking.test.TestBeanFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.PeriodicData;
@@ -26,6 +25,7 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import java.net.URI;
 import java.time.Duration;
@@ -49,7 +49,7 @@ public class MonitordSinkTest {
                 .setName("monitord_sink_test")
                 .setActorSystem(ACTOR_SYSTEM)
                 .setUri(URI.create("http://localhost:8888"))
-                .setMetricsFactory(METRICS_FACTORY);
+                .setPeriodicMetrics(Mockito.mock(PeriodicMetrics.class));
     }
 
     @Test
@@ -171,7 +171,4 @@ public class MonitordSinkTest {
 
     private MonitordSink.Builder _monitordSinkBuilder;
     private static final ActorSystem ACTOR_SYSTEM = ActorSystem.apply();
-    private static final MetricsFactory METRICS_FACTORY = TsdMetricsFactory.newInstance(
-                "mock_metrics_factory",
-                "mock_metrics_factory");
 }

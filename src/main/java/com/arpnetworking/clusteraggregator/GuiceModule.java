@@ -268,7 +268,6 @@ public class GuiceModule extends AbstractModule {
     private java.util.concurrent.CompletionStage<akka.http.javadsl.ServerBinding> provideHttpServer(
             final ActorSystem system,
             final Routes routes) {
-
         // Create and bind Http server
         final Materializer materializer = ActorMaterializer.create(system);
         final Http http = Http.get(system);
@@ -344,8 +343,9 @@ public class GuiceModule extends AbstractModule {
     @Provides
     @Singleton
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
-    private AggMessageExtractor provideExtractor() {
-        return new AggMessageExtractor();
+    private AggMessageExtractor provideExtractor(
+            @Named("reaggregation-dimensions") final ImmutableSet<String> reaggregationDimensions) {
+        return new AggMessageExtractor(reaggregationDimensions);
     }
 
     @Provides

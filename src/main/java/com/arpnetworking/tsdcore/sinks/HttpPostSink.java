@@ -22,7 +22,7 @@ import akka.http.javadsl.model.HttpMethods;
 import akka.http.javadsl.model.MediaTypes;
 import akka.http.javadsl.model.StatusCodes;
 import com.arpnetworking.logback.annotations.LogValue;
-import com.arpnetworking.metrics.MetricsFactory;
+import com.arpnetworking.metrics.incubator.PeriodicMetrics;
 import com.arpnetworking.steno.LogValueMapFactory;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
@@ -211,7 +211,7 @@ public abstract class HttpPostSink extends BaseSink {
                         builder._maximumConcurrency,
                         builder._maximumQueueSize,
                         builder._spreadPeriod,
-                        builder._metricsFactory));
+                        builder._periodicMetrics));
         
         _maximumAttempts = builder._maximumAttempts;
         _baseBackoff = builder._baseBackoff;
@@ -271,14 +271,14 @@ public abstract class HttpPostSink extends BaseSink {
         }
 
         /**
-         * Instance of {@link MetricsFactory}. Cannot be null. This field
+         * Instance of {@link PeriodicMetrics}. Cannot be null. This field
          * may be injected automatically by Jackson/Guice if setup to do so.
          *
-         * @param value Instance of {@link MetricsFactory}.
+         * @param value Instance of {@link PeriodicMetrics}.
          * @return this builder
          */
-        public B setMetricsFactory(final MetricsFactory value) {
-            _metricsFactory = value;
+        public B setPeriodicMetrics(final PeriodicMetrics value) {
+            _periodicMetrics = value;
             return self();
         }
 
@@ -402,7 +402,7 @@ public abstract class HttpPostSink extends BaseSink {
         private Duration _spreadPeriod = Duration.ZERO;
         @JacksonInject
         @NotNull
-        private MetricsFactory _metricsFactory;
+        private PeriodicMetrics _periodicMetrics;
         @NotNull
         @Min(1)
         private Integer _maximumAttempts = 1;

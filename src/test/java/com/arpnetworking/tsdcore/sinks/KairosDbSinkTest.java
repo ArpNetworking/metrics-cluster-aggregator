@@ -17,8 +17,7 @@ package com.arpnetworking.tsdcore.sinks;
 
 import akka.http.javadsl.model.MediaTypes;
 import com.arpnetworking.commons.jackson.databind.ObjectMapperFactory;
-import com.arpnetworking.metrics.Metrics;
-import com.arpnetworking.metrics.MetricsFactory;
+import com.arpnetworking.metrics.incubator.PeriodicMetrics;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.Condition;
 import com.arpnetworking.tsdcore.model.FQDSN;
@@ -39,7 +38,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import java.io.IOException;
@@ -68,8 +66,7 @@ public class KairosDbSinkTest extends BaseActorTest {
                 .setName("kairosdb_sink_test")
                 .setActorSystem(getSystem())
                 .setUri(URI.create("http://localhost:" + _wireMockServer.port() + PATH))
-                .setMetricsFactory(_mockMetricsFactory);
-        Mockito.doReturn(_mockMetrics).when(_mockMetricsFactory).create();
+                .setPeriodicMetrics(Mockito.mock(PeriodicMetrics.class));
     }
 
     @After
@@ -110,7 +107,7 @@ public class KairosDbSinkTest extends BaseActorTest {
     }
 
     @Test
-    public void testPostFailure() throws InterruptedException, IOException {
+    public void testPostFailure() {
          // Fake a failing post to KairosDb
         _wireMock.register(WireMock.post(WireMock.urlEqualTo(PATH))
                 .willReturn(WireMock.aResponse()
@@ -171,9 +168,4 @@ public class KairosDbSinkTest extends BaseActorTest {
                 .setStart(start)
                 .build();
     }
-
-    @Mock
-    private Metrics _mockMetrics;
-    @Mock
-    private MetricsFactory _mockMetricsFactory;
 }

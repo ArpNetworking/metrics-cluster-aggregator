@@ -34,8 +34,7 @@ import com.arpnetworking.clusteraggregator.models.StatusResponse;
 import com.arpnetworking.clusteraggregator.models.VersionInfo;
 import com.arpnetworking.commons.jackson.databind.ObjectMapperFactory;
 import com.arpnetworking.configuration.jackson.akka.AkkaModule;
-import com.arpnetworking.metrics.Metrics;
-import com.arpnetworking.metrics.MetricsFactory;
+import com.arpnetworking.metrics.incubator.PeriodicMetrics;
 import com.arpnetworking.steno.LogBuilder;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
@@ -52,6 +51,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -71,7 +71,7 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
      * Public constructor.
      *
      * @param actorSystem Instance of {@link ActorSystem}.
-     * @param metricsFactory Instance of {@link MetricsFactory}.
+     * @param periodicMetrics Instance of {@link PeriodicMetrics}.
      * @param healthCheckPath The path for the health check.
      * @param statusPath The path for the status.
      * @param versionPath The path for the version.
@@ -79,7 +79,7 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
     @Inject
     public Routes(
             final ActorSystem actorSystem,
-            final MetricsFactory metricsFactory,
+            final PeriodicMetrics periodicMetrics,
             @Named("health-check-path")
             final String healthCheckPath,
             @Named("status-path")
@@ -87,7 +87,7 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
             @Named("version-path")
             final String versionPath) {
         _actorSystem = actorSystem;
-        _metricsFactory = metricsFactory;
+        _periodicMetrics = periodicMetrics;
         _healthCheckPath = healthCheckPath;
         _statusPath = statusPath;
         _versionPath = versionPath;
@@ -124,21 +124,19 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
                         responseStatus = 599;
                     }
 
-                    final Metrics metrics = _metricsFactory.create();
-                    metrics.setTimer(
+                    _periodicMetrics.recordTimer(
                             createMetricName(request, responseStatus, REQUEST_METRIC),
                             System.currentTimeMillis() - requestStartTime,
-                            TimeUnit.MILLISECONDS);
-                    metrics.setGauge(
+                            Optional.of(TimeUnit.MILLISECONDS));
+                    _periodicMetrics.recordGauge(
                             createMetricName(request, responseStatus, BODY_SIZE_METRIC),
                             request.entity().getContentLengthOption().orElse(0L));
                     final int responseStatusClass = responseStatus / 100;
                     for (final int i : STATUS_CLASSES) {
-                        metrics.incrementCounter(
+                        _periodicMetrics.recordCounter(
                                 createMetricName(request, responseStatus, String.format("%s/%dxx", STATUS_METRIC, i)),
                                 responseStatusClass == i ? 1 : 0);
                     }
-                    metrics.close();
 
                     final LogBuilder log;
                     if (failure != null || responseStatusClass == 5) {
@@ -260,7 +258,7 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
     @SuppressFBWarnings("SE_BAD_FIELD")
     private final ActorSystem _actorSystem;
     @SuppressFBWarnings("SE_BAD_FIELD")
-    private final MetricsFactory _metricsFactory;
+    private final PeriodicMetrics _periodicMetrics;
     private final String _healthCheckPath;
     private final String _statusPath;
     private final String _versionPath;
