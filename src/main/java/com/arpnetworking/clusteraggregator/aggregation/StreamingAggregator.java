@@ -278,7 +278,6 @@ public class StreamingAggregator extends AbstractActorWithTimers {
                     LOGGER.debug()
                             .setMessage("Creating new aggregation bucket for period")
                             .addData("start", periodStart)
-                            .addData("lastStart", _aggBuckets.getLast().getPeriodStart())
                             .addData("metric", data.getMetric())
                             .addData("dimensions", data.getDimensionsMap())
                             .addContext("actor", self())
