@@ -17,7 +17,7 @@ pipeline {
       when { not { buildingTag() } }
       steps {
         script {
-          target = "install"
+          target = "verify"
         }
       }
     }
@@ -25,7 +25,7 @@ pipeline {
       when { buildingTag(); not { changeRequest() }  }
       steps {
         script {
-          target = "install deploy -P release  --settings settings.xml"
+          target = "verify deploy -P release  --settings settings.xml"
         }
       }
     }
