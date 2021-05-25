@@ -237,10 +237,11 @@ public class StreamingAggregator extends AbstractActorWithTimers {
         final ZonedDateTime periodStart = ZonedDateTime.parse(data.getPeriodStart());
         if (periodStart.plus(_period).plus(_aggregatorTimeout).isBefore(ZonedDateTime.now())) {
             // We got a bit of data that is too old for us to aggregate.
+            @Nullable final StreamingAggregationBucket firstBucket = _aggBuckets.getFirst();
             WORK_TOO_OLD_LOGGER.warn()
                     .setMessage("Received a work item that is too old to aggregate")
                     .addData("start", periodStart)
-                    .addData("firstStart", _aggBuckets.getFirst().getPeriodStart())
+                    .addData("firstStart", firstBucket == null ? null : firstBucket.getPeriodStart())
                     .addData("metric", data.getMetric())
                     .addData("dimensions", data.getDimensionsMap())
                     .addContext("actor", self())
