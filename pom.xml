@@ -124,7 +124,7 @@
     <javassist.maven.core.version>0.2.1</javassist.maven.core.version>
     <javax.persistence.version>1.0.2</javax.persistence.version>
     <jsr305.version>3.0.2</jsr305.version>
-    <junit.version>4.12</junit.version>
+    <junit.version>4.13.1</junit.version>
     <junitparams.version>1.0.5</junitparams.version>
     <leveldb.version>0.7</leveldb.version>
     <leveldb.jni.version>1.8</leveldb.jni.version>
