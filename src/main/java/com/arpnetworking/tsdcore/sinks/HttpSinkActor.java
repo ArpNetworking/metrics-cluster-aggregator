@@ -187,7 +187,7 @@ public class HttpSinkActor extends AbstractActor {
                     final int attempt = rejected.getAttempt();
                     final Response response = rejected.getResponse();
                     if (_retryableStatusCodes.contains(response.getStatusCode()) && attempt < _sink.getMaximumAttempts()) {
-                        LOGGER.warn()
+                        POST_RETRY_LOGGER.warn()
                             .setMessage("Attempt rejected")
                             .addData("sink", _sink)
                             .addData("status", response.getStatusCode())
@@ -206,7 +206,7 @@ public class HttpSinkActor extends AbstractActor {
                 .match(PostFailure.class, failure -> {
                     final int attempt = failure.getAttempt();
                     if (attempt < _sink.getMaximumAttempts()) {
-                        LOGGER.warn()
+                        POST_RETRY_LOGGER.warn()
                                 .setMessage("Attempt failed")
                                 .addData("sink", _sink)
                                 .addData("error", failure.getCause())
@@ -262,7 +262,7 @@ public class HttpSinkActor extends AbstractActor {
                     responseStatusClass == i ? 1 : 0);
         }
 
-        LOGGER.warn()
+        POST_ERROR_LOGGER.warn()
                 .setMessage("Post rejected")
                 .addData("sink", _sink)
                 .addData("status", responseStatusCode)
@@ -449,6 +449,7 @@ public class HttpSinkActor extends AbstractActor {
     private final String _samplesDroppedName;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpSinkActor.class);
+    private static final Logger POST_RETRY_LOGGER = LoggerFactory.getRateLimitLogger(HttpSinkActor.class, Duration.ofSeconds(30));
     private static final Logger POST_ERROR_LOGGER = LoggerFactory.getRateLimitLogger(HttpSinkActor.class, Duration.ofSeconds(30));
     private static final Logger EVICTED_LOGGER = LoggerFactory.getRateLimitLogger(HttpSinkActor.class, Duration.ofSeconds(30));
     private static final ImmutableList<Integer> STATUS_CLASSES = com.google.common.collect.ImmutableList.of(2, 3, 4, 5);
