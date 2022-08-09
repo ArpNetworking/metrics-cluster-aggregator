@@ -31,7 +31,8 @@ ENV CAGG_CONFIG="/opt/cluster-aggregator/config/config.conf"
 ENV JAVA_OPTS=""
 
 # Build
-RUN mkdir -p /opt/cluster-aggregator/lib/ext && \
+RUN apt update && apt install -y gosu && rm -rf /var/lib/apt/lists/* && \
+    mkdir -p /opt/cluster-aggregator/lib/ext && \
     mkdir -p /opt/cluster-aggregator/logs && \
     mkdir -p /opt/cluster-aggregator/config
 ADD deps /opt/cluster-aggregator/lib/
