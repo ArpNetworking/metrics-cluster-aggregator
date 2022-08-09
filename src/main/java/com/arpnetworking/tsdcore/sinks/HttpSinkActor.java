@@ -110,7 +110,8 @@ public class HttpSinkActor extends AbstractActor {
         _evictedRequestsName = "sinks/http_post/" + _sink.getMetricSafeName() + "/evicted_requests";
         _requestLatencyName = "sinks/http_post/" + _sink.getMetricSafeName() + "/request_latency";
         _inQueueLatencyName = "sinks/http_post/" + _sink.getMetricSafeName() + "/queue_time";
-        _pendingRequestsQueueSize = "sinks/http_post/" + _sink.getMetricSafeName() + "/queue_size";
+        _pendingRequestsQueueSizeName = "sinks/http_post/" + _sink.getMetricSafeName() + "/queue_size";
+        _inflightRequestsCountName = "sinks/http_post/" + _sink.getMetricSafeName() + "/";
         _requestSuccessName = "sinks/http_post/" + _sink.getMetricSafeName() + "/success";
         _responseStatusName = "sinks/http_post/" + _sink.getMetricSafeName() + "/status";
         _httpSinkAttemptsName = "sinks/http_post/" + _sink.getMetricSafeName() + "/attempts";
@@ -310,6 +311,7 @@ public class HttpSinkActor extends AbstractActor {
                 .addData("conditionsSize", periodicData.getConditions().size())
                 .addContext("actor", self())
                 .log();
+        _periodicMetrics.recordGauge(_inflightRequestsCountName, _inflightRequestsCount);
 
         if (!periodicData.getData().isEmpty() || !periodicData.getConditions().isEmpty()) {
             final Collection<RequestEntry.Builder> requestEntryBuilders = _sink.createRequests(_client, periodicData);
@@ -332,7 +334,7 @@ public class HttpSinkActor extends AbstractActor {
                         .log();
             }
 
-            _periodicMetrics.recordGauge(_pendingRequestsQueueSize, _pendingRequests.size());
+            _periodicMetrics.recordGauge(_pendingRequestsQueueSizeName, _pendingRequests.size());
 
             if (_spreadingDelayMillis > 0) {
                 // If we don't currently have anything in-flight, we'll need to wait the spreading duration.
@@ -445,7 +447,8 @@ public class HttpSinkActor extends AbstractActor {
     private final String _evictedRequestsName;
     private final String _requestLatencyName;
     private final String _inQueueLatencyName;
-    private final String _pendingRequestsQueueSize;
+    private final String _pendingRequestsQueueSizeName;
+    private final String _inflightRequestsCountName;
     private final String _requestSuccessName;
     private final String _responseStatusName;
     private final String _httpSinkAttemptsName;
