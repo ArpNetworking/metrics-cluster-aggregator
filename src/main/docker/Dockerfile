@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM openjdk:8u212-jre-alpine
+FROM openjdk:8u212-jre-slim-buster
 
 MAINTAINER arpnetworking
 
@@ -31,7 +31,7 @@ ENV CAGG_CONFIG="/opt/cluster-aggregator/config/config.conf"
 ENV JAVA_OPTS=""
 
 # Build
-RUN apk add --no-cache libstdc++ su-exec && \
+RUN apt update && apt install -y gosu && rm -rf /var/lib/apt/lists/* && \
     mkdir -p /opt/cluster-aggregator/lib/ext && \
     mkdir -p /opt/cluster-aggregator/logs && \
     mkdir -p /opt/cluster-aggregator/config
