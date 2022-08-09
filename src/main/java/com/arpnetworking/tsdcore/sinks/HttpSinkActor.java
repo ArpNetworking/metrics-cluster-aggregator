@@ -111,7 +111,7 @@ public class HttpSinkActor extends AbstractActor {
         _requestLatencyName = "sinks/http_post/" + _sink.getMetricSafeName() + "/request_latency";
         _inQueueLatencyName = "sinks/http_post/" + _sink.getMetricSafeName() + "/queue_time";
         _pendingRequestsQueueSizeName = "sinks/http_post/" + _sink.getMetricSafeName() + "/queue_size";
-        _inflightRequestsCountName = "sinks/http_post/" + _sink.getMetricSafeName() + "/";
+        _inflightRequestsCountName = "sinks/http_post/" + _sink.getMetricSafeName() + "/inflight_count";
         _requestSuccessName = "sinks/http_post/" + _sink.getMetricSafeName() + "/success";
         _responseStatusName = "sinks/http_post/" + _sink.getMetricSafeName() + "/status";
         _httpSinkAttemptsName = "sinks/http_post/" + _sink.getMetricSafeName() + "/attempts";
