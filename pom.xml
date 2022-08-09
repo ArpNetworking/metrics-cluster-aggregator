@@ -28,7 +28,7 @@
   <packaging>jar</packaging>
   <name>Metrics Cluster Aggregator</name>
   <description>(Re)Aggregates host level statistics across clusters and writes both host and cluster statistics to various destinations.</description>
-  <version>1.11.7-SNAPSHOT</version>
+  <version>1.11.8-SNAPSHOT</version>
 
   <licenses>
     <license>
