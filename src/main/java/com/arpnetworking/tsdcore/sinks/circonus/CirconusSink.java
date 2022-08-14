@@ -62,7 +62,9 @@ public final class CirconusSink extends BaseSink {
     }
 
     private boolean isHistogramOrSpecified(final AggregatedData data) {
+        // CHECKSTYLE.OFF: UnnecessaryParentheses - This makes the statement's intent clearer.
         return data.isSpecified() || (_enableHistograms && data.getFQDSN().getStatistic() instanceof HistogramStatistic);
+        // CHECKSTYLE.ON: UnnecessaryParentheses
     }
 
     @Override

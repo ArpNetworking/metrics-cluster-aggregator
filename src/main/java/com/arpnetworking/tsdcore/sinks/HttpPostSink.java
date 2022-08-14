@@ -31,10 +31,12 @@ import com.arpnetworking.tsdcore.model.RequestEntry;
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import net.sf.oval.Validator;
 import net.sf.oval.constraint.CheckWith;
 import net.sf.oval.constraint.CheckWithCheck;
 import net.sf.oval.constraint.Min;
 import net.sf.oval.constraint.NotNull;
+import net.sf.oval.context.OValContext;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.AsyncHttpClientConfig;
 import org.asynchttpclient.DefaultAsyncHttpClient;
@@ -442,7 +444,11 @@ public abstract class HttpPostSink extends BaseSink {
             private static final long serialVersionUID = -6924010227680984149L;
 
             @Override
-            public boolean isSatisfied(final Object validatedObject, final Object value) {
+            public boolean isSatisfied(
+                    final Object validatedObject,
+                    final Object value,
+                    final OValContext context,
+                    final Validator validator) {
                 if (!(validatedObject instanceof HttpPostSink.Builder)) {
                     return false;
                 }

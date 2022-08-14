@@ -31,7 +31,9 @@ import org.asynchttpclient.RequestBuilder;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import javax.annotation.Nonnull;
 
 /**
  * Publishes aggregations to Signal FX. This class is thread safe.
@@ -132,11 +134,15 @@ public final class SignalFxSink extends HttpPostSink {
     private List<SignalFxProtocolBuffers.Dimension> createDimensions(final PeriodicData periodicData, final AggregatedData datum) {
         final List<SignalFxProtocolBuffers.Dimension> sfxDimensions = Lists.newArrayList();
         // TODO(vkoskela): The publication of cluster vs host metrics needs to be formalized. [AINT-678]
-        if (periodicData.getDimensions().get("host").matches("^.*-cluster\\.[^\\.]+$")) {
+        final String host = periodicData.getDimensions().get("host");
+        if (host == null) {
+            sfxDimensions.add(createSfxDimension("scope", "host"));
+            sfxDimensions.add(createSfxDimension("host", "unknown"));
+        } else if (host.matches("^.*-cluster\\.[^.]+$")) {
             sfxDimensions.add(createSfxDimension("scope", "cluster"));
         } else {
             sfxDimensions.add(createSfxDimension("scope", "host"));
-            sfxDimensions.add(createSfxDimension("host", periodicData.getDimensions().get("host")));
+            sfxDimensions.add(createSfxDimension("host", host));
         }
         sfxDimensions.add(createSfxDimension("service", datum.getFQDSN().getService()));
         sfxDimensions.add(createSfxDimension("cluster", datum.getFQDSN().getCluster()));

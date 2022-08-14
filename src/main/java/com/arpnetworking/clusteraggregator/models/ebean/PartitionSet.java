@@ -16,8 +16,8 @@
 package com.arpnetworking.clusteraggregator.models.ebean;
 
 import com.arpnetworking.utility.Database;
-import com.avaje.ebean.annotation.CreatedTimestamp;
-import com.avaje.ebean.annotation.UpdatedTimestamp;
+import io.ebean.annotation.WhenCreated;
+import io.ebean.annotation.WhenModified;
 
 import java.sql.Timestamp;
 import javax.persistence.Column;
@@ -54,7 +54,7 @@ public final class PartitionSet {
             final Database database,
             final int maximumEntriesPerPartition,
             final int maximumPartitions) {
-        PartitionSet partitionSet = database.getEbeanServer().find(PartitionSet.class).where().eq("name", name).findUnique();
+        PartitionSet partitionSet = database.getEbeanServer().find(PartitionSet.class).where().eq("name", name).findOne();
         if (partitionSet != null) {
             return partitionSet;
         } else {
@@ -68,7 +68,7 @@ public final class PartitionSet {
                 database.getEbeanServer().save(newSet);
                 return newSet;
             } catch (final PersistenceException ex) {
-                partitionSet = database.getEbeanServer().find(PartitionSet.class).where().eq("name", name).findUnique();
+                partitionSet = database.getEbeanServer().find(PartitionSet.class).where().eq("name", name).findOne();
                 // This is safe because we will never delete.  In essence, we're looking for a unique constraint
                 // violation by looking for the record we expect is there.
                 if (partitionSet == null) {
@@ -153,7 +153,7 @@ public final class PartitionSet {
         if (database.getEbeanServer().currentTransaction() == null) {
             throw new IllegalStateException("Must be in a transaction before locking");
         }
-        database.getEbeanServer().find(PartitionSet.class).setForUpdate(true).where().eq("id", id).findUnique();
+        database.getEbeanServer().find(PartitionSet.class).forUpdate().where().eq("id", id).findOne();
     }
 
     private void setMaximumPartitions(final Integer value) {
@@ -176,11 +176,11 @@ public final class PartitionSet {
     @Column(name = "version")
     private Long version;
 
-    @CreatedTimestamp
+    @WhenCreated
     @Column(name = "created_at")
     private Timestamp createdAt;
 
-    @UpdatedTimestamp
+    @WhenModified
     @Column(name = "updated_at")
     private Timestamp updatedAt;
 

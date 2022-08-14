@@ -42,7 +42,7 @@ public class RrdSinkTest {
 
     @Before
     public void before() throws IOException {
-        _path = Files.createTempDir();
+        _path = java.nio.file.Files.createTempDirectory("rrd-sink-test").toFile();
         final File rrdToolFile = getRrdToolFile();
         final File outFile = getOutFile();
         Files.asCharSink(rrdToolFile, Charsets.UTF_8).write("#!/bin/bash\necho \"$@\" >> " + outFile.getAbsolutePath());

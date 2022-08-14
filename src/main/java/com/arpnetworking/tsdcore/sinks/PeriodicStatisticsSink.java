@@ -30,10 +30,12 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import net.sf.oval.Validator;
 import net.sf.oval.constraint.CheckWith;
 import net.sf.oval.constraint.CheckWithCheck;
 import net.sf.oval.constraint.Min;
 import net.sf.oval.constraint.NotNull;
+import net.sf.oval.context.OValContext;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -550,7 +552,11 @@ public final class PeriodicStatisticsSink extends BaseSink {
             private static final long serialVersionUID = -1484528750004342337L;
 
             @Override
-            public boolean isSatisfied(final Object validatedObject, final Object value) {
+            public boolean isSatisfied(
+                    final Object validatedObject,
+                    final Object value,
+                    final OValContext context,
+                    final Validator validator) {
                 // TODO(ville): Find a way to throw validation exceptions instead of logging.
 
                 if (!(validatedObject instanceof PeriodicStatisticsSink.Builder)) {
@@ -623,7 +629,11 @@ public final class PeriodicStatisticsSink extends BaseSink {
             private static final long serialVersionUID = 5011108547193627318L;
 
             @Override
-            public boolean isSatisfied(final Object validatedObject, final Object value) {
+            public boolean isSatisfied(
+                    final Object validatedObject,
+                    final Object value,
+                    final OValContext context,
+                    final Validator validator) {
                 // TODO(ville): Find a way to throw validation exceptions instead of logging.
 
                 if (!(validatedObject instanceof PeriodicStatisticsSink.Builder)) {

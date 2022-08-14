@@ -17,13 +17,13 @@ package com.arpnetworking.utility;
 
 import com.arpnetworking.clusteraggregator.configuration.DatabaseConfiguration;
 import com.arpnetworking.logback.annotations.Loggable;
-import com.avaje.ebean.EbeanServer;
-import com.avaje.ebean.EbeanServerFactory;
-import com.avaje.ebean.config.ServerConfig;
 import com.google.common.base.MoreObjects;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import io.ebean.DatabaseFactory;
+import io.ebean.config.DatabaseConfig;
 import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.configuration.ClassicConfiguration;
 
 import java.util.Optional;
 import java.util.Set;
@@ -81,7 +81,7 @@ public class Database implements Launchable {
         return _dataSource;
     }
 
-    public EbeanServer getEbeanServer() {
+    public io.ebean.Database getEbeanServer() {
         return _ebeanServer;
     }
 
@@ -117,21 +117,23 @@ public class Database implements Launchable {
     private Optional<Flyway> createFlyway() {
         Flyway flyway = null;
         if (!_configuration.getMigrationLocations().isEmpty()) {
-            flyway = new Flyway();
-            flyway.setLocations(_configuration.getMigrationLocations().toArray(new String[_configuration.getMigrationLocations().size()]));
-            flyway.setSchemas(_configuration.getMigrationSchemas().toArray(new String[_configuration.getMigrationSchemas().size()]));
-            flyway.setDataSource(_dataSource);
+            final ClassicConfiguration flywayConfiguration = new ClassicConfiguration();
+            flywayConfiguration.setLocationsAsStrings(_configuration.getMigrationLocations().toArray(new String[0]));
+            flywayConfiguration.setSchemas(_configuration.getMigrationSchemas().toArray(new String[0]));
+            flywayConfiguration.setDataSource(_dataSource);
+            flyway = new Flyway(flywayConfiguration);
         }
         return Optional.ofNullable(flyway);
     }
 
-    private EbeanServer createEbeanServer() {
-        final ServerConfig ebeanConfiguration = new ServerConfig();
+    private io.ebean.Database createEbeanServer() {
+        final DatabaseConfig ebeanConfiguration = new DatabaseConfig();
         ebeanConfiguration.setDefaultServer("default".equalsIgnoreCase(_name));
         ebeanConfiguration.setDdlGenerate(false);
         ebeanConfiguration.setDdlRun(false);
         ebeanConfiguration.setName(_name);
         ebeanConfiguration.setDataSource(_dataSource);
+//        ebeanConfiguration.setAllQuotedIdentifiers(true);
         final Set<Class<?>> entityClasses = ReflectionsDatabase.newInstance().findClassesWithAnnotation(Entity.class);
         for (final String modelPackage : _configuration.getModelPackages()) {
             final String safePackage = modelPackage.endsWith(".*") ? modelPackage.substring(0, modelPackage.length() - 2) : modelPackage;
@@ -139,12 +141,12 @@ public class Database implements Launchable {
             entityClasses.stream().filter(c -> c.getPackage().getName().startsWith(safePackage)).forEach(ebeanConfiguration::addClass);
         }
 
-        return EbeanServerFactory.create(ebeanConfiguration);
+        return DatabaseFactory.create(ebeanConfiguration);
     }
 
     private final String _name;
     private final DatabaseConfiguration _configuration;
     private HikariDataSource _dataSource;
-    private EbeanServer _ebeanServer;
+    private io.ebean.Database _ebeanServer;
     private Optional<Flyway> _flyway;
 }

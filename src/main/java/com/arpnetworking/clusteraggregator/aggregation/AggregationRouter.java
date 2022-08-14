@@ -27,6 +27,7 @@ import com.arpnetworking.steno.LoggerFactory;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.io.Serializable;
 import java.time.Duration;
@@ -82,6 +83,7 @@ public class AggregationRouter extends AbstractActor {
      * @param periodicMetrics The {@link PeriodicMetrics} instance.
      */
     @Inject
+    @SuppressFBWarnings(value = "MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR", justification = "context is safe to be used in constructors")
     public AggregationRouter(
             @Named("periodic-statistics") final ActorRef periodicStatistics,
             @Named("cluster-emitter") final ActorRef emitter,

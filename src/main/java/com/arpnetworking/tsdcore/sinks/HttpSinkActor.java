@@ -29,6 +29,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.EvictingQueue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.asynchttpclient.AsyncCompletionHandler;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.Response;
@@ -88,6 +89,7 @@ public class HttpSinkActor extends AbstractActor {
      * @param spreadPeriod Maximum time to delay sending new aggregates to spread load.
      * @param periodicMetrics Periodic Metrics to record metrics.
      */
+    @SuppressFBWarnings(value = "DMI_RANDOM_USED_ONLY_ONCE", justification = "Random is used to spread load, only used once is ok")
     public HttpSinkActor(
             final AsyncHttpClient client,
             final HttpPostSink sink,
@@ -378,11 +380,13 @@ public class HttpSinkActor extends AbstractActor {
 
     private void fireNextRequest() {
         final RequestEntry requestEntry = _pendingRequests.poll();
-        final long latencyInMillis = Duration.between(requestEntry.getEnterTime(), Instant.now()).toMillis();
-        _periodicMetrics.recordTimer(_inQueueLatencyName, latencyInMillis, Optional.of(TimeUnit.MILLISECONDS));
+        if (requestEntry != null) {
+            final long latencyInMillis = Duration.between(requestEntry.getEnterTime(), Instant.now()).toMillis();
+            _periodicMetrics.recordTimer(_inQueueLatencyName, latencyInMillis, Optional.of(TimeUnit.MILLISECONDS));
 
-        _inflightRequestsCount++;
-        fireRequest(requestEntry, 1);
+            _inflightRequestsCount++;
+            fireRequest(requestEntry, 1);
+        }
     }
 
 

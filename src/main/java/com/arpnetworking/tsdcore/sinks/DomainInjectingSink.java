@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableSet;
 import net.sf.oval.constraint.NotNull;
 
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 /**
  * Sink extracts and adds dimension for "domain" based on hostname.
@@ -51,7 +52,7 @@ public final class DomainInjectingSink extends BaseSink {
         // Nothing to do
     }
 
-    private Optional<String> getDomain(final String host) {
+    private Optional<String> getDomain(@Nullable final String host) {
         if (host == null) {
             return Optional.empty();
         }

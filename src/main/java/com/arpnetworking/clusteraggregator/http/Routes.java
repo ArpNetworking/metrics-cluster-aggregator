@@ -58,6 +58,7 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import javax.annotation.Nullable;
 
 /**
  * Http server routes.
@@ -220,7 +221,7 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
     }
 
     @SuppressWarnings("unchecked")
-    private <T> CompletionStage<T> ask(final String actorPath, final Object request, final T defaultValue) {
+    private <T> CompletionStage<T> ask(final String actorPath, final Object request, @Nullable final T defaultValue) {
         return
                 Patterns.ask(
                         _actorSystem.actorSelection(actorPath),

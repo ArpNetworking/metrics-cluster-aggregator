@@ -27,6 +27,7 @@ import com.arpnetworking.steno.LogValueMapFactory;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.model.PeriodicData;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.net.InetSocketAddress;
@@ -69,6 +70,7 @@ public class TcpSinkActor extends AbstractActor {
      * @param maximumQueueSize Maximum number of pending requests.
      * @param exponentialBackoffBase Milliseconds as the base as the connection exponential backoff.
      */
+    @SuppressFBWarnings(value = "MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR", justification = "Context is safe to use in constructor.")
     public TcpSinkActor(
             final TcpSink sink,
             final String serverAddress,

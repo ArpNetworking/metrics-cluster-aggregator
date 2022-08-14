@@ -40,10 +40,10 @@ create table clusteragg.partition (
 
 create table clusteragg.partition_entry (
   id SERIAL PRIMARY KEY,
-  key VARCHAR(255) NOT NULL,
+  "key" VARCHAR(255) NOT NULL,
   version INTEGER NOT NULL DEFAULT 1,
   created_at TIMESTAMP NOT NULL DEFAULT now(),
   updated_at TIMESTAMP NOT NULL DEFAULT now(),
   partition_id INTEGER NOT NULL REFERENCES clusteragg.partition (id),
-  UNIQUE (partition_id, key)
+  UNIQUE (partition_id, "key")
 );

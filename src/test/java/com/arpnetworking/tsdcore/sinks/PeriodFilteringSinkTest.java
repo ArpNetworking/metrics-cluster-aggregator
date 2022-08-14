@@ -19,6 +19,7 @@ import com.arpnetworking.test.TestBeanFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.google.common.collect.ImmutableList;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -37,7 +38,12 @@ public class PeriodFilteringSinkTest {
 
     @Before
     public void setUp() {
-        MockitoAnnotations.initMocks(this);
+        _openMocks = MockitoAnnotations.openMocks(this);
+    }
+
+    @After
+    public void after() throws Exception {
+        _openMocks.close();
     }
 
     @Test
@@ -75,7 +81,7 @@ public class PeriodFilteringSinkTest {
                 .setData(ImmutableList.of(excludedDatum))
                 .build();
         periodFilteringSink.recordAggregateData(periodicDataIn);
-        Mockito.verifyZeroInteractions(_sink);
+        Mockito.verifyNoInteractions(_sink);
     }
 
     @Test
@@ -95,7 +101,7 @@ public class PeriodFilteringSinkTest {
                 .setData(ImmutableList.of(excludedDatum))
                 .build();
         periodFilteringSink.recordAggregateData(periodicDataExcluded);
-        Mockito.verifyZeroInteractions(_sink);
+        Mockito.verifyNoInteractions(_sink);
     }
 
     @Test
@@ -135,7 +141,7 @@ public class PeriodFilteringSinkTest {
                 .setData(ImmutableList.of(excludedDatum))
                 .build();
         periodFilteringSink.recordAggregateData(periodicDataExcluded);
-        Mockito.verifyZeroInteractions(_sink);
+        Mockito.verifyNoInteractions(_sink);
     }
 
     @Test
@@ -225,4 +231,6 @@ public class PeriodFilteringSinkTest {
 
     @Mock
     private Sink _sink;
+
+    private AutoCloseable _openMocks;
 }
