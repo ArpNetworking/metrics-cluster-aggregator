@@ -55,6 +55,8 @@
          <Bug pattern="SE_NO_SERIALVERSIONID" />
          <Bug pattern="SE_TRANSIENT_FIELD_NOT_RESTORED" />
          <Bug pattern="CI_CONFUSED_INHERITANCE" />
+         <Bug pattern="MS_SHOULD_BE_FINAL" />
+         <Bug pattern="NP_NONNULL_PARAM_VIOLATION" />
        </Or>
        <Or>
          <Class name="~com\.arpnetworking\.clusteraggregator\.models\.ebean.*" />
