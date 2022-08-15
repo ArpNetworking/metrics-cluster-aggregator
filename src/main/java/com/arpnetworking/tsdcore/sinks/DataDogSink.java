@@ -37,9 +37,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import javax.annotation.Nonnull;
 
 /**
  * Publishes aggregations to Data Dog. This class is thread safe.

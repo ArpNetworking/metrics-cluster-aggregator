@@ -439,7 +439,9 @@ public final class CirconusSinkActor extends AbstractActor {
         if (request != null) {
             _inflightRequestsCount++;
 
-            final CompletionStage<Object> responsePromise = _client.sendToHttpTrap(request.getData(), request.getBinding().getSubmissionUrl())
+            final CompletionStage<Object> responsePromise = _client.sendToHttpTrap(
+                            request.getData(),
+                            request.getBinding().getSubmissionUrl())
                     .<Object>thenApply(PostComplete::new)
                     .exceptionally(PostFailure::new);
             PatternsCS.pipe(responsePromise, context().dispatcher()).to(self());

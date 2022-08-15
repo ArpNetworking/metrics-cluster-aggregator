@@ -31,9 +31,7 @@ import org.asynchttpclient.RequestBuilder;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import javax.annotation.Nonnull;
 
 /**
  * Publishes aggregations to Signal FX. This class is thread safe.
