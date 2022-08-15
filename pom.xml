@@ -104,7 +104,7 @@
     <akka.version>2.5.32</akka.version>
     <akka.http.version>10.1.13</akka.http.version>
     <akka.persistence.cassandra.version>0.105</akka.persistence.cassandra.version>
-    <apache.httpclient.version>4.5.2</apache.httpclient.version>
+    <apache.httpclient.version>4.5.13</apache.httpclient.version>
     <apache.httpcore.version>4.4.5</apache.httpcore.version>
     <arpnetworking.commons.version>2.0.3</arpnetworking.commons.version>
     <aspectjrt.version>1.9.9.1</aspectjrt.version>
