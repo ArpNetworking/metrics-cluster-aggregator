@@ -16,8 +16,8 @@
 package com.arpnetworking.clusteraggregator.models.ebean;
 
 import com.arpnetworking.utility.Database;
-import com.avaje.ebean.annotation.CreatedTimestamp;
-import com.avaje.ebean.annotation.UpdatedTimestamp;
+import io.ebean.annotation.WhenCreated;
+import io.ebean.annotation.WhenModified;
 
 import java.sql.Timestamp;
 import javax.annotation.Nullable;
@@ -55,7 +55,7 @@ public class PartitionEntry {
                 .where()
                 .eq("key", key)
                 .eq("partition.partitionSet", partitionSet)
-                .findUnique();
+                .findOne();
     }
 
     public Long getId() {
@@ -115,15 +115,15 @@ public class PartitionEntry {
     @Column(name = "version")
     private Long version;
 
-    @CreatedTimestamp
+    @WhenCreated
     @Column(name = "created_at")
     private Timestamp createdAt;
 
-    @UpdatedTimestamp
+    @WhenModified
     @Column(name = "updated_at")
     private Timestamp updatedAt;
 
-    @Column(name = "key")
+    @Column(name = "`key`")
     private String key;
 
     @ManyToOne

@@ -127,7 +127,7 @@ public class StatisticFactory {
                     && !TPStatistic.class.equals(statisticClass)) {
                 try {
                     final Constructor<? extends Statistic> constructor = statisticClass.getDeclaredConstructor();
-                    if (!constructor.isAccessible()) {
+                    if (!constructor.canAccess(null)) {
                         constructor.setAccessible(true);
                     }
                     checkedPut(statisticByNameAndAlias, constructor.newInstance());

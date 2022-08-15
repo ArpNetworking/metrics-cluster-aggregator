@@ -34,6 +34,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import it.unimi.dsi.fastutil.doubles.Double2LongMap;
 import play.libs.ws.StandaloneWSResponse;
 import scala.concurrent.ExecutionContextExecutor;
@@ -118,6 +119,7 @@ public final class CirconusSinkActor extends AbstractActor {
      * @param enableHistograms true to turn on histogram publication
      * @param partitionSet the partition set to partition the check bundles with
      */
+    @SuppressFBWarnings(value = "DMI_RANDOM_USED_ONLY_ONCE", justification = "Random is used to spread load, only used once is ok")
     public CirconusSinkActor(
             final CirconusClient client,
             final String broker,
@@ -434,12 +436,16 @@ public final class CirconusSinkActor extends AbstractActor {
 
     private void fireNextRequest() {
         final RequestQueueEntry request = _pendingRequests.poll();
-        _inflightRequestsCount++;
+        if (request != null) {
+            _inflightRequestsCount++;
 
-        final CompletionStage<Object> responsePromise = _client.sendToHttpTrap(request.getData(), request.getBinding().getSubmissionUrl())
-                .<Object>thenApply(PostComplete::new)
-                .exceptionally(PostFailure::new);
-        PatternsCS.pipe(responsePromise, context().dispatcher()).to(self());
+            final CompletionStage<Object> responsePromise = _client.sendToHttpTrap(
+                            request.getData(),
+                            request.getBinding().getSubmissionUrl())
+                    .<Object>thenApply(PostComplete::new)
+                    .exceptionally(PostFailure::new);
+            PatternsCS.pipe(responsePromise, context().dispatcher()).to(self());
+        }
     }
 
     private CompletionStage<CheckBundleLookupResponse> createCheckBundle(

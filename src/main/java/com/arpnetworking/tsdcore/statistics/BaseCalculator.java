@@ -36,7 +36,9 @@ public abstract class BaseCalculator<T> implements Calculator<T> {
 
     @Override
     public boolean equals(final Object o) {
+        // CHECKSTYLE.OFF: UnnecessaryParentheses - This makes the statement's intent clearer.
         return this == o || (o != null && getClass().equals(o.getClass()));
+        // CHECKSTYLE.ON: UnnecessaryParentheses
     }
 
     /**

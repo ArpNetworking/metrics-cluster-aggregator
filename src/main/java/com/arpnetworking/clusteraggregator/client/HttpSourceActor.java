@@ -63,6 +63,7 @@ import com.google.common.util.concurrent.AtomicDouble;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.GeneratedMessageV3;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -105,6 +106,7 @@ public class HttpSourceActor extends AbstractActor {
      * @param periodicMetrics The periodic metrics instance.
      */
     @Inject
+    @SuppressFBWarnings(value = "MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR", justification = "context is safe to be used in constructors")
     public HttpSourceActor(
             @Named("aggregator-shard-region") final ActorRef shardRegion,
             @Named("host-emitter") final ActorRef emitter,
@@ -289,7 +291,7 @@ public class HttpSourceActor extends AbstractActor {
         }
 
         _parsedSamples.addAndGet(
-                records.asList().stream()
+                records.stream()
                         .map(AggregationMessage::getMessage)
                         .filter(m -> m instanceof Messages.StatisticSetRecord)
                         .flatMap(m -> ((Messages.StatisticSetRecord) m).getStatisticsList().stream())

@@ -32,8 +32,13 @@ public abstract class BaseActorTest {
      */
     @Before
     public void setUp() {
-        MockitoAnnotations.initMocks(this);
+        _openMocks = MockitoAnnotations.openMocks(this);
         _system = ActorSystem.create(this.getClass().getSimpleName());
+    }
+
+    @After
+    public void after() throws Exception {
+        _openMocks.close();
     }
 
     /**
@@ -49,4 +54,6 @@ public abstract class BaseActorTest {
     }
 
     private ActorSystem _system;
+
+    private AutoCloseable _openMocks;
 }

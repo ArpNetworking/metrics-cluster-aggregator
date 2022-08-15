@@ -103,11 +103,15 @@ public final class DataDogSink extends HttpPostSink {
     private static List<String> createTags(final PeriodicData periodicData, final AggregatedData datum) {
         final List<String> tags = Lists.newArrayList();
         // TODO(vkoskela): The publication of cluster vs host metrics needs to be formalized. [AINT-678]
-        if (periodicData.getDimensions().get("host").matches("^.*-cluster\\.[^\\.]+$")) {
+        final String host = periodicData.getDimensions().get("host");
+        if (host == null) {
+            tags.add("scope:" + "host");
+            tags.add("host:unknown");
+        } else if (host.matches("^.*-cluster\\.[^.]+$")) {
             tags.add("scope:" + "cluster");
         } else {
             tags.add("scope:" + "host");
-            tags.add("host:" + periodicData.getDimensions().get("host"));
+            tags.add("host:" + host);
         }
         tags.add("service:" + datum.getFQDSN().getService());
         tags.add("cluster:" + datum.getFQDSN().getCluster());

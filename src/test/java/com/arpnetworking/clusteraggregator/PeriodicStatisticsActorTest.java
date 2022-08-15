@@ -73,7 +73,7 @@ public class PeriodicStatisticsActorTest extends BaseActorTest {
                 .build();
 
         ref.tell(metricReport, ActorRef.noSender());
-        Mockito.verifyZeroInteractions(_mfMock, _metrics);
+        Mockito.verifyNoInteractions(_mfMock, _metrics);
     }
 
     @Test

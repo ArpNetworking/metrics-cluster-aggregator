@@ -23,11 +23,13 @@ import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.arpnetworking.tsdcore.statistics.StatisticFactory;
 import com.google.common.collect.ImmutableList;
 import org.hamcrest.Matchers;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
@@ -43,11 +45,15 @@ public class RandomMetricNameFilterSinkTest {
 
     @Before
     public void before() {
-        MockitoAnnotations.initMocks(this);
-        _mockSink = Mockito.mock(Sink.class);
+        _openMocks = MockitoAnnotations.openMocks(this);
         _sinkBuilder = new RandomMetricNameFilterSink.Builder()
                 .setName("random_filtering_sink_test")
                 .setSink(_mockSink);
+    }
+
+    @After
+    public void after() throws Exception {
+        _openMocks.close();
     }
 
     @Test
@@ -98,7 +104,10 @@ public class RandomMetricNameFilterSinkTest {
     @Captor
     private ArgumentCaptor<PeriodicData> _actualPeriodicData;
     private RandomMetricNameFilterSink.Builder _sinkBuilder;
+    @Mock
     private Sink _mockSink;
+
+    private AutoCloseable _openMocks;
 
     private static final StatisticFactory STATISTIC_FACTORY = new StatisticFactory();
     private static final Statistic MEAN_STATISTIC = STATISTIC_FACTORY.getStatistic("mean");

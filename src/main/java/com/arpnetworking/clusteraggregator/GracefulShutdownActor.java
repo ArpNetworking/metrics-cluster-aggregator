@@ -25,6 +25,7 @@ import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Shuts down the Akka cluster gracefully.
@@ -38,6 +39,7 @@ public class GracefulShutdownActor extends AbstractActor {
      * @param shardRegion aggregator shard region
      */
     @Inject
+    @SuppressFBWarnings(value = "MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR", justification = "Context is safe to use in constructor.")
     public GracefulShutdownActor(@Named("aggregator-shard-region") final ActorRef shardRegion) {
         _shardRegion = shardRegion;
         _cluster = Cluster.get(context().system());

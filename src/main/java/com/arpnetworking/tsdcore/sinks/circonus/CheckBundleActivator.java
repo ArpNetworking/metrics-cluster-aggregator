@@ -26,6 +26,7 @@ import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.arpnetworking.tsdcore.statistics.StatisticFactory;
 import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import scala.concurrent.ExecutionContextExecutor;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -62,6 +63,7 @@ public class CheckBundleActivator extends AbstractActor {
      *
      * @param client The Circonus client used to access the API.
      */
+    @SuppressFBWarnings(value = "MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR", justification = "Context is safe to use in constructor.")
     public CheckBundleActivator(final CirconusClient client) {
         _client = client;
         _dispatcher = context().dispatcher();

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM openjdk:8u212-jre-slim-buster
+FROM openjdk:17-slim-bullseye
 
 MAINTAINER arpnetworking
 
@@ -58,16 +58,19 @@ CMD [ \
     "${LOGBACK_CONFIG}", \
     "-XX:+HeapDumpOnOutOfMemoryError", \
     "-XX:HeapDumpPath=/opt/cluster-aggregator/logs/cluster-aggregator.oom.hprof", \
-    "-XX:+PrintGCDetails", \
-    "-XX:+PrintGCDateStamps", \
-    "-Xloggc:/opt/cluster-aggregator/logs/cluster-aggregator.gc.log", \
-    "-XX:NumberOfGCLogFiles=2", \
-    "-XX:GCLogFileSize=50M", \
-    "-XX:+UseGCLogFileRotation", \
+    "-Xlog:gc*:file=/opt/cluster-aggregator/logs/cluster-aggregator.gc.log:time,level,tags:filecount=2,filesize=50M", \
     "-Xms${JVM_XMS}", \
     "-Xmx${JVM_XMX}", \
     "-XX:+UseStringDeduplication", \
     "-XX:+UseG1GC", \
     "-Duser.timezone=UTC", \
+    "--add-exports=java.naming/com.sun.jndi.ldap=ALL-UNNAMED", \
+    "--add-opens=java.base/java.lang=ALL-UNNAMED", \
+    "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", \
+    "--add-opens=java.base/java.io=ALL-UNNAMED", \
+    "--add-opens=java.base/java.security=ALL-UNNAMED", \
+    "--add-opens=java.base/java.util=ALL-UNNAMED", \
+    "--add-opens=java.management/javax.management=ALL-UNNAMED", \
+    "--add-opens=java.naming/javax.naming=ALL-UNNAMED", \
     "--", \
     "${CAGG_CONFIG}" ]

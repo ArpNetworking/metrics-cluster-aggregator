@@ -46,7 +46,9 @@ public abstract class BaseStatistic implements Statistic {
 
     @Override
     public boolean equals(final Object o) {
+        // CHECKSTYLE.OFF: UnnecessaryParentheses - This makes the statement's intent clearer.
         return this == o || (o != null && getClass().equals(o.getClass()));
+        // CHECKSTYLE.ON: UnnecessaryParentheses
     }
 
     @Override

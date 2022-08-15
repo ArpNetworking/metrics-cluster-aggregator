@@ -29,6 +29,7 @@ import com.arpnetworking.clusteraggregator.models.StatusResponse;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.utility.CastMapper;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.time.Duration;
 import java.util.Map;
@@ -56,6 +57,7 @@ public class Status extends AbstractActor {
      * @param clusterStatusCache The actor holding the cached cluster status.
      * @param localMetrics The actor holding the local node metrics.
      */
+    @SuppressFBWarnings(value = "MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR", justification = "context is safe to be used in constructors")
     public Status(
             final Cluster cluster,
             final ActorRef clusterStatusCache,

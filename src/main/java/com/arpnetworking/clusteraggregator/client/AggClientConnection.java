@@ -36,6 +36,7 @@ import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.GeneratedMessageV3;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.net.InetSocketAddress;
@@ -77,6 +78,7 @@ public class AggClientConnection extends AbstractActor {
      * @param maxConnectionAge The maximum duration to keep a connection open before cycling it.
      * @param calculateAggregates True to compute cluster aggregations, false to only publish host aggregations
      */
+    @SuppressFBWarnings(value = "MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR", justification = "context is safe to be used in constructors")
     public AggClientConnection(
             final ActorRef connection,
             final InetSocketAddress remote,
@@ -86,7 +88,7 @@ public class AggClientConnection extends AbstractActor {
         _remoteAddress = remote;
         _calculateAggregates = calculateAggregates;
 
-        getContext().watch(connection);
+        context().watch(connection);
 
         context().system().scheduler().scheduleOnce(
                 maxConnectionAge,

@@ -22,6 +22,7 @@ import com.arpnetworking.tsdcore.model.Unit;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import org.hamcrest.Matchers;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,7 +42,12 @@ public class MeanStatisticTest {
 
     @Before
     public void setUp() {
-        MockitoAnnotations.initMocks(this);
+        _openMocks = MockitoAnnotations.openMocks(this);
+    }
+
+    @After
+    public void after() throws Exception {
+        _openMocks.close();
     }
 
     @Test
@@ -109,6 +115,8 @@ public class MeanStatisticTest {
     private Calculator<Void> _sumCalculator;
     @Mock
     private Calculator<Void> _countCalculator;
+
+    private AutoCloseable _openMocks;
 
     private static final StatisticFactory STATISTIC_FACTORY = new StatisticFactory();
     private static final MeanStatistic MEAN_STATISTIC = (MeanStatistic) STATISTIC_FACTORY.getStatistic("mean");

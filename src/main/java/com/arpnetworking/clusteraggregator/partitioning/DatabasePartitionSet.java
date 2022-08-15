@@ -19,10 +19,8 @@ import com.arpnetworking.clusteraggregator.models.ebean.Partition;
 import com.arpnetworking.clusteraggregator.models.ebean.PartitionEntry;
 import com.arpnetworking.utility.Database;
 import com.arpnetworking.utility.partitioning.PartitionSet;
-import com.avaje.ebean.EbeanServer;
-import com.avaje.ebean.Transaction;
+import io.ebean.Transaction;
 
-import java.io.IOException;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 
@@ -99,8 +97,6 @@ public class DatabasePartitionSet implements PartitionSet {
             createEntry(key, partition);
             transaction.commit();
             return Optional.of(partition.getPartitionNumber());
-        } catch (final IOException e) {
-            return Optional.empty();
         }
     }
 
@@ -115,5 +111,5 @@ public class DatabasePartitionSet implements PartitionSet {
     private final int _maxPartitions;
     private final Database _database;
     private final com.arpnetworking.clusteraggregator.models.ebean.PartitionSet _partitionSetBean;
-    private final EbeanServer _ebean;
+    private final io.ebean.Database _ebean;
 }

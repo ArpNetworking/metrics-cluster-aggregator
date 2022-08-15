@@ -16,8 +16,8 @@
 package com.arpnetworking.clusteraggregator.models.ebean;
 
 import com.arpnetworking.utility.Database;
-import com.avaje.ebean.annotation.CreatedTimestamp;
-import com.avaje.ebean.annotation.UpdatedTimestamp;
+import io.ebean.annotation.WhenCreated;
+import io.ebean.annotation.WhenModified;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -57,7 +57,7 @@ public class Partition {
                 .where()
                 .eq("partitionNumber", partitionNumber)
                 .eq("partitionSet", partitionSet)
-                .findUnique();
+                .findOne();
     }
 
     public Long getId() {
@@ -133,7 +133,7 @@ public class Partition {
         if (database.getEbeanServer().currentTransaction() == null) {
             throw new IllegalStateException("Must be in a transaction before locking");
         }
-        database.getEbeanServer().find(Partition.class).setForUpdate(true).where().eq("id", id).findUnique();
+        database.getEbeanServer().find(Partition.class).forUpdate().where().eq("id", id).findOne();
     }
 
     @Id
@@ -145,11 +145,11 @@ public class Partition {
     @Column(name = "version")
     private Long version;
 
-    @CreatedTimestamp
+    @WhenCreated
     @Column(name = "created_at")
     private Timestamp createdAt;
 
-    @UpdatedTimestamp
+    @WhenModified
     @Column(name = "updated_at")
     private Timestamp updatedAt;
 

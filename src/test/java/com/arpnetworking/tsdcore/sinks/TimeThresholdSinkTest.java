@@ -19,6 +19,7 @@ import com.arpnetworking.test.TestBeanFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.google.common.collect.ImmutableList;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -37,7 +38,12 @@ import java.util.Collections;
 public class TimeThresholdSinkTest {
     @Before
     public void setUp() {
-        MockitoAnnotations.initMocks(this);
+        _openMocks = MockitoAnnotations.openMocks(this);
+    }
+
+    @After
+    public void after() throws Exception {
+        _openMocks.close();
     }
 
     @Test
@@ -136,4 +142,6 @@ public class TimeThresholdSinkTest {
 
     @Mock
     private Sink _sink;
+
+    private AutoCloseable _openMocks;
 }
