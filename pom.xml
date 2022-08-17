@@ -18,7 +18,7 @@
   <parent>
     <groupId>com.arpnetworking.build</groupId>
     <artifactId>arpnetworking-parent-pom</artifactId>
-    <version>3.0.8</version>
+    <version>3.0.9</version>
     <relativePath />
   </parent>
 
@@ -106,7 +106,7 @@
     <akka.persistence.cassandra.version>0.105</akka.persistence.cassandra.version>
     <apache.httpclient.version>4.5.2</apache.httpclient.version>
     <apache.httpcore.version>4.4.5</apache.httpcore.version>
-    <arpnetworking.commons.version>2.0.3</arpnetworking.commons.version>
+    <arpnetworking.commons.version>2.0.4</arpnetworking.commons.version>
     <aspectjrt.version>1.9.9.1</aspectjrt.version>
     <asynchttpclient.version>2.0.38</asynchttpclient.version>
     <cglib.version>3.3.0</cglib.version>
@@ -122,7 +122,7 @@
     <h2.version>2.1.214</h2.version>
     <jackson.version>2.9.8</jackson.version>
     <javassist.version>3.22.0-GA</javassist.version>
-    <javassist.maven.core.version>0.2.1</javassist.maven.core.version>
+    <javassist.maven.core.version>0.2.5</javassist.maven.core.version>
     <javax.persistence.version>1.0.2</javax.persistence.version>
     <javax.xml.version>2.3.1</javax.xml.version>
     <jsr305.version>3.0.2</jsr305.version>
@@ -527,21 +527,6 @@
           </images>
           <skip>${skipDockerBuild}</skip>
         </configuration>
-      </plugin>
-      <!-- TODO: Remove me once we deprecate GHA -->
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>versions-maven-plugin</artifactId>
-        <version>${maven.versions.plugin.version}</version>
-        <executions>
-          <execution>
-            <id>default-display-dependency-updates</id>
-            <goals>
-              <goal>display-dependency-updates</goal>
-            </goals>
-            <phase>ignored</phase>
-          </execution>
-        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
