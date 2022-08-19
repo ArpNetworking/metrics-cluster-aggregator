@@ -18,7 +18,7 @@ package com.arpnetworking.tsdcore.sinks.circonus;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.PoisonPill;
-import akka.stream.ActorMaterializer;
+import akka.stream.Materializer;
 import com.arpnetworking.logback.annotations.LogValue;
 import com.arpnetworking.steno.LogValueMapFactory;
 import com.arpnetworking.steno.Logger;
@@ -93,7 +93,7 @@ public final class CirconusSink extends BaseSink {
                 .setUri(builder._uri)
                 .setAppName(builder._appName)
                 .setAuthToken(builder._authToken)
-                .setMaterializer(ActorMaterializer.create(builder._actorSystem))
+                .setMaterializer(Materializer.createMaterializer(builder._actorSystem))
                 .setSafeHttps(builder._safeHttps)
                 .build();
         _enableHistograms = builder._enableHistograms;

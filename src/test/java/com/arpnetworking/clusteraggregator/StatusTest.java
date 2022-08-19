@@ -28,6 +28,7 @@ import akka.cluster.MemberStatus;
 import akka.cluster.UniqueAddress;
 import akka.testkit.TestActorRef;
 import akka.testkit.TestProbe;
+import akka.util.Version;
 import com.arpnetworking.utility.BaseActorTest;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,6 +38,7 @@ import scala.Option;
 import scala.collection.immutable.HashMap;
 import scala.collection.immutable.HashSet;
 import scala.collection.immutable.Set;
+import scala.collection.immutable.Set$;
 import scala.collection.immutable.TreeSet;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -57,17 +59,22 @@ public class StatusTest extends BaseActorTest {
         final Member selfMember = new Member(UniqueAddress.apply(localAddress, 1821L),
                                              1,
                                              MemberStatus.up(),
-                                             new Set.Set1<>("test"));
+                                             new Set.Set1<>("test"),
+                                             Version.Zero());
         Mockito.when(_clusterMock.selfAddress()).thenReturn(localAddress);
         final ClusterReadView readView = Mockito.mock(ClusterReadView.class);
         Mockito.when(readView.self()).thenReturn(selfMember);
         Mockito.when(_clusterMock.readView()).thenReturn(readView);
+        final TreeSet<Member> memberTreeSet = new TreeSet<>(Member.ordering());
+        memberTreeSet.$plus(selfMember);
         final ClusterEvent.CurrentClusterState state = new ClusterEvent.CurrentClusterState(
-                new TreeSet<>(Member.ordering()).$plus(selfMember),
+                memberTreeSet,
                 Member.none(),
                 new HashSet<>(),
                 Option.empty(),
-                new HashMap<>());
+                new HashMap<>(),
+                Set$.MODULE$.empty(),
+                Set$.MODULE$.empty());
         Mockito.doAnswer(
                 invocation -> {
                     final ActorRef ref = (ActorRef) invocation.getArguments()[0];

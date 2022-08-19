@@ -314,7 +314,9 @@ public final class CirconusClient {
                 config.maxNumberOfRedirects(),
                 config.maxRequestRetry(),
                 config.disableUrlEncoding(),
-                config.keepAlive());
+                config.keepAlive(),
+                config.useLaxCookieEncoder(),
+                config.useCookieStore());
 
         _client = StandaloneAhcWSClient.create(config, _materializer);
     }

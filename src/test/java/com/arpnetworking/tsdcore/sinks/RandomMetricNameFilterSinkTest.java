@@ -24,7 +24,6 @@ import com.arpnetworking.tsdcore.statistics.StatisticFactory;
 import com.google.common.collect.ImmutableList;
 import org.hamcrest.Matchers;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -35,6 +34,9 @@ import org.mockito.MockitoAnnotations;
 
 import java.time.Duration;
 import java.util.List;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+
 
 /**
  * Tests for the {@link RandomMetricNameFilterSink} class.
@@ -90,8 +92,8 @@ public class RandomMetricNameFilterSinkTest {
                         .build());
         Mockito.verify(_mockSink).recordAggregateData(_actualPeriodicData.capture());
         final List<AggregatedData> captured = _actualPeriodicData.getValue().getData();
-        Assert.assertThat(captured.size(), Matchers.lessThanOrEqualTo((int) (upperThreshold * count)));
-        Assert.assertThat(captured.size(), Matchers.greaterThanOrEqualTo((int) (lowerThreshold * count)));
+        assertThat(captured.size(), Matchers.lessThanOrEqualTo((int) (upperThreshold * count)));
+        assertThat(captured.size(), Matchers.greaterThanOrEqualTo((int) (lowerThreshold * count)));
     }
 
     @Test

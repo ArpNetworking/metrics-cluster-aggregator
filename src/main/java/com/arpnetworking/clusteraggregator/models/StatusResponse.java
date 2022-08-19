@@ -27,7 +27,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.Iterables;
 import net.sf.oval.constraint.NotNull;
-import scala.collection.JavaConversions;
+import scala.jdk.javaapi.CollectionConverters;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -164,7 +164,7 @@ public final class StatusResponse {
                 throws IOException {
             gen.writeStartObject();
             gen.writeStringField("address", value.address().toString());
-            gen.writeObjectField("roles", JavaConversions.setAsJavaSet(value.roles()));
+            gen.writeObjectField("roles", CollectionConverters.asJava(value.roles()));
             gen.writeNumberField("upNumber", value.upNumber());
             gen.writeStringField("status", value.status().toString());
             gen.writeNumberField("uniqueAddress", value.uniqueAddress().longUid());

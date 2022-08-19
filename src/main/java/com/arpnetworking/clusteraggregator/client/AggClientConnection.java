@@ -290,7 +290,7 @@ public class AggClientConnection extends AbstractActor {
 
     private Optional<String> _hostName = Optional.empty();
     private Optional<String> _clusterName = Optional.empty();
-    private ByteString _buffer = ByteString.empty();
+    private ByteString _buffer = ByteString.emptyByteString();
     private final ActorRef _connection;
     private final InetSocketAddress _remoteAddress;
     private final boolean _calculateAggregates;

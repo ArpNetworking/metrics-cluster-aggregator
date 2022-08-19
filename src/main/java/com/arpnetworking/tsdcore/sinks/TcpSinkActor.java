@@ -229,7 +229,7 @@ public class TcpSinkActor extends AbstractActor {
         if (!_waitingForAck && !_pendingRequests.isEmpty() && _client != null) {
             // Push up to 10 messages
             int buffered = 0;
-            ByteString data = ByteString.empty();
+            ByteString data = ByteString.emptyByteString();
             while (buffered < 10 && !_pendingRequests.isEmpty()) {
                 data = data.concat(_pendingRequests.poll());
                 buffered++;

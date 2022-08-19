@@ -33,6 +33,9 @@ import org.mockito.MockitoAnnotations;
 import java.util.Collections;
 import java.util.List;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+
+
 /**
  * Tests for the MeanStatistic class.
  *
@@ -53,7 +56,7 @@ public class MeanStatisticTest {
     @Test
     public void testGetName() {
         final Statistic stat = MEAN_STATISTIC;
-        Assert.assertThat(stat.getName(), Matchers.equalTo("mean"));
+        assertThat(stat.getName(), Matchers.equalTo("mean"));
     }
 
     @Test
@@ -62,7 +65,7 @@ public class MeanStatisticTest {
         final List<Double> doubleVals = Lists.newArrayList(12d, 20d, 7d);
         final List<Quantity> vals = TestBeanFactory.createSamples(doubleVals);
         final Quantity calculated = stat.calculate(vals);
-        Assert.assertThat(
+        assertThat(
                 calculated,
                 Matchers.equalTo(
                         new Quantity.Builder()
@@ -76,7 +79,7 @@ public class MeanStatisticTest {
         final Statistic stat = MEAN_STATISTIC;
         final List<Quantity> vals = Collections.emptyList();
         final Quantity calculated = stat.calculate(vals);
-        Assert.assertThat(calculated, Matchers.equalTo(new Quantity.Builder().setValue(0.0).build()));
+        assertThat(calculated, Matchers.equalTo(new Quantity.Builder().setValue(0.0).build()));
     }
 
     @Test

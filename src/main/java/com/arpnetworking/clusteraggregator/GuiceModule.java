@@ -21,14 +21,13 @@ import akka.actor.Props;
 import akka.cluster.Cluster;
 import akka.cluster.sharding.ClusterSharding;
 import akka.cluster.sharding.ClusterShardingSettings;
-import akka.http.javadsl.ConnectHttp;
 import akka.http.javadsl.Http;
 import akka.http.javadsl.IncomingConnection;
 import akka.http.javadsl.ServerBinding;
 import akka.routing.DefaultResizer;
 import akka.routing.RoundRobinPool;
-import akka.stream.ActorMaterializer;
 import akka.stream.Materializer;
+import akka.stream.javadsl.Source;
 import com.arpnetworking.clusteraggregator.aggregation.AggMessageExtractor;
 import com.arpnetworking.clusteraggregator.aggregation.AggregationRouter;
 import com.arpnetworking.clusteraggregator.client.AggClientServer;
@@ -186,6 +185,7 @@ public class GuiceModule extends AbstractModule {
     @Singleton
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
     private ActorSystem provideActorSystem(@Named("akka-config") final Config akkaConfig) {
+        System.out.println(akkaConfig);
         return ActorSystem.create("Metrics", akkaConfig);
     }
 
@@ -269,12 +269,12 @@ public class GuiceModule extends AbstractModule {
             final ActorSystem system,
             final Routes routes) {
         // Create and bind Http server
-        final Materializer materializer = ActorMaterializer.create(system);
+        final Materializer materializer = Materializer.createMaterializer(system);
         final Http http = Http.get(system);
-        final akka.stream.javadsl.Source<IncomingConnection, CompletionStage<ServerBinding>> binding = http.bind(
-                ConnectHttp.toHost(
+        final Source<IncomingConnection, CompletionStage<ServerBinding>> binding = http.newServerAt(
                         _configuration.getHttpHost(),
-                        _configuration.getHttpPort()));
+                        _configuration.getHttpPort())
+                .connectionSource();
         return binding.to(
                 akka.stream.javadsl.Sink.foreach(
                         connection -> connection.handleWithAsyncHandler(routes, materializer)))

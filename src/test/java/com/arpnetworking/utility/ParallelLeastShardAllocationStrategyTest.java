@@ -27,9 +27,9 @@ import com.google.common.collect.Sets;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
-import scala.collection.JavaConversions;
 import scala.collection.immutable.IndexedSeq;
 import scala.concurrent.duration.FiniteDuration;
+import scala.jdk.javaapi.CollectionConverters;
 
 import java.util.HashSet;
 import java.util.List;
@@ -37,6 +37,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+
 
 /**
  * Tests for the ParallelLeastShardAllocationStrategy class.
@@ -98,8 +101,8 @@ public class ParallelLeastShardAllocationStrategyTest extends BaseActorTest {
         Assert.assertEquals(1, rebalance.size());
         rebalance.forEach(
                 e -> {
-                    Assert.assertThat(
-                            JavaConversions.setAsJavaSet(currentAllocations.get(rebalancedActor).toSet()),
+                    assertThat(
+                            CollectionConverters.asJava(currentAllocations.get(rebalancedActor).toSet()),
                             Matchers.hasItem(e));
                 });
     }
@@ -123,8 +126,8 @@ public class ParallelLeastShardAllocationStrategyTest extends BaseActorTest {
         Assert.assertEquals(1, rebalance.size());
         rebalance.forEach(
                 e -> {
-                    Assert.assertThat(
-                            JavaConversions.setAsJavaSet(currentAllocations.get(rebalancedActor).toSet()),
+                    assertThat(
+                            CollectionConverters.asJava(currentAllocations.get(rebalancedActor).toSet()),
                             Matchers.hasItem(e));
                 });
         final ParallelLeastShardAllocationStrategy.RebalanceNotification notification = probe.expectMsgClass(
@@ -137,9 +140,9 @@ public class ParallelLeastShardAllocationStrategyTest extends BaseActorTest {
                     final Set<String> actualAllocations = notification.getCurrentAllocations().get(k);
                     Assert.assertNotNull(actualAllocations);
                     Assert.assertEquals(v.size(), actualAllocations.size());
-                    final List<String> shardsList = JavaConversions.seqAsJavaList(v);
+                    final List<String> shardsList = CollectionConverters.asJava(v);
                     final String[] shards = shardsList.toArray(new String[shardsList.size()]);
-                    Assert.assertThat(actualAllocations, Matchers.containsInAnyOrder(shards));
+                    assertThat(actualAllocations, Matchers.containsInAnyOrder(shards));
                 });
         Assert.assertEquals(1, notification.getPendingRebalances().size());
         rebalance.forEach(shard -> Assert.assertTrue(notification.getPendingRebalances().containsKey(shard)));
@@ -162,8 +165,8 @@ public class ParallelLeastShardAllocationStrategyTest extends BaseActorTest {
         Assert.assertEquals(5, rebalance.size());
         rebalance.forEach(
                 e -> {
-                    Assert.assertThat(
-                            JavaConversions.setAsJavaSet(currentAllocations.get(rebalancedActor).toSet()),
+                    assertThat(
+                            CollectionConverters.asJava(currentAllocations.get(rebalancedActor).toSet()),
                             Matchers.hasItem(e));
                 });
     }
@@ -191,8 +194,8 @@ public class ParallelLeastShardAllocationStrategyTest extends BaseActorTest {
         Assert.assertEquals(2, rebalance.size());
         rebalance.forEach(
                 e -> {
-                    Assert.assertThat(
-                            JavaConversions.setAsJavaSet(currentAllocations.get(rebalancedActor).toSet()),
+                    assertThat(
+                            CollectionConverters.asJava(currentAllocations.get(rebalancedActor).toSet()),
                             Matchers.hasItem(e));
                 });
     }
@@ -215,8 +218,8 @@ public class ParallelLeastShardAllocationStrategyTest extends BaseActorTest {
         Assert.assertEquals(10, rebalance.size());
         rebalance.forEach(
                 e -> {
-                    Assert.assertThat(
-                            JavaConversions.setAsJavaSet(currentAllocations.get(rebalancedActor).toSet()),
+                    assertThat(
+                            CollectionConverters.asJava(currentAllocations.get(rebalancedActor).toSet()),
                             Matchers.hasItem(e));
                 });
     }
@@ -245,13 +248,13 @@ public class ParallelLeastShardAllocationStrategyTest extends BaseActorTest {
         Assert.assertEquals(11, rebalance.size());
         rebalance.forEach(
                 e -> {
-                    Assert.assertThat(
-                            JavaConversions.setAsJavaSet(currentAllocations.get(rebalancedActor).toSet()),
+                    assertThat(
+                            CollectionConverters.asJava(currentAllocations.get(rebalancedActor).toSet()),
                             Matchers.hasItem(e));
                 });
 
         final String remappedShard = rebalance.stream().findFirst().get();
-        Assert.assertThat(remapping, Matchers.not(Matchers.hasItem(remappedShard)));
+        assertThat(remapping, Matchers.not(Matchers.hasItem(remappedShard)));
     }
 
     @Test
@@ -288,9 +291,9 @@ public class ParallelLeastShardAllocationStrategyTest extends BaseActorTest {
                     .get();
             allocations.compute(allocatedTo, (k, v) -> v == null ? 1 : v + 1);
             final IndexedSeq<String> previousAllocations = currentAllocations.get(allocatedTo);
-            final List<String> newAllocations = Lists.newArrayList(JavaConversions.seqAsJavaList(previousAllocations));
+            final List<String> newAllocations = Lists.newArrayList(CollectionConverters.asJava(previousAllocations));
             newAllocations.add(shardName);
-            currentAllocations.put(allocatedTo, JavaConversions.asScalaBuffer(newAllocations).toIndexedSeq());
+            currentAllocations.put(allocatedTo, CollectionConverters.asScala(newAllocations).toIndexedSeq());
         }
         Assert.assertEquals(3, (long) allocations.get(first));
         Assert.assertEquals(1, (long) allocations.get(second));
@@ -306,7 +309,7 @@ public class ParallelLeastShardAllocationStrategyTest extends BaseActorTest {
             _shardId++;
         }
 
-        allocations.put(region, JavaConversions.collectionAsScalaIterable(shardNames).toIndexedSeq());
+        allocations.put(region, CollectionConverters.asScala(shardNames).toIndexedSeq());
         return region;
     }
 

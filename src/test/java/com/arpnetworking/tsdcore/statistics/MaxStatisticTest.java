@@ -21,11 +21,15 @@ import com.arpnetworking.tsdcore.model.Quantity;
 import com.arpnetworking.tsdcore.model.Unit;
 import com.google.common.collect.Lists;
 import org.hamcrest.Matchers;
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Collections;
 import java.util.List;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests the TPStatistic class.
@@ -36,7 +40,7 @@ public class MaxStatisticTest {
 
     @Test
     public void testName() {
-        Assert.assertEquals("max", MAX_STATISTIC.getName());
+        assertEquals("max", MAX_STATISTIC.getName());
     }
 
     @Test
@@ -45,7 +49,7 @@ public class MaxStatisticTest {
         final List<Double> doubleVals = Lists.newArrayList(ONE_TO_FIVE);
         final List<Quantity> vals = TestBeanFactory.createSamples(doubleVals);
         final Quantity calculated = tp100.calculate(vals);
-        Assert.assertThat(
+        assertThat(
                 calculated,
                 Matchers.equalTo(
                         new Quantity.Builder()
@@ -56,14 +60,14 @@ public class MaxStatisticTest {
 
     @Test
     public void testEquality() {
-        Assert.assertFalse(MAX_STATISTIC.equals(null));
-        Assert.assertFalse(MAX_STATISTIC.equals("ABC"));
-        Assert.assertTrue(MAX_STATISTIC.equals(MAX_STATISTIC));
+        assertFalse(MAX_STATISTIC.equals(null));
+        assertFalse(MAX_STATISTIC.equals("ABC"));
+        assertTrue(MAX_STATISTIC.equals(MAX_STATISTIC));
     }
 
     @Test
     public void testHashCode() {
-        Assert.assertEquals(MAX_STATISTIC.hashCode(), MAX_STATISTIC.hashCode());
+        assertEquals(MAX_STATISTIC.hashCode(), MAX_STATISTIC.hashCode());
     }
 
     @Test
@@ -73,7 +77,7 @@ public class MaxStatisticTest {
         accumulator.accumulate(new Quantity.Builder().setValue(18d).build());
         accumulator.accumulate(new Quantity.Builder().setValue(5d).build());
         final CalculatedValue<Void> calculated = accumulator.calculate(Collections.emptyMap());
-        Assert.assertEquals(calculated.getValue(), new Quantity.Builder().setValue(18.0).build());
+        assertEquals(calculated.getValue(), new Quantity.Builder().setValue(18.0).build());
     }
 
     private static final List<Double> ONE_TO_FIVE = Lists.newArrayList(1d, 2d, 3d, 4d, 5d);
