@@ -428,8 +428,8 @@ public class HttpSinkActor extends AbstractActor {
                         return new PostFailure(attempt, request, err);
                     }
                 });
-        _client.executeRequest(request.getRequest(), new ResponseAsyncCompletionHandler(promise));
         Patterns.pipe(responsePromise, context().dispatcher()).to(self());
+        _client.executeRequest(request.getRequest(), new ResponseAsyncCompletionHandler(promise));
     }
 
     private void scheduleRetry(final RequestEntry requestEntry, final int attempt) {
