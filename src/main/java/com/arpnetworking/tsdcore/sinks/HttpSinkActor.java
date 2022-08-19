@@ -412,7 +412,6 @@ public class HttpSinkActor extends AbstractActor {
     private void fireRequest(final RequestEntry request, final int attempt) {
         final CompletableFuture<Response> promise = new CompletableFuture<>();
         final long requestStartTime = System.currentTimeMillis();
-        _client.executeRequest(request.getRequest(), new ResponseAsyncCompletionHandler(promise));
         final CompletionStage<Object> responsePromise = promise
                 .handle((result, err) -> {
                     _periodicMetrics.recordTimer(
@@ -429,6 +428,7 @@ public class HttpSinkActor extends AbstractActor {
                         return new PostFailure(attempt, request, err);
                     }
                 });
+        _client.executeRequest(request.getRequest(), new ResponseAsyncCompletionHandler(promise));
         Patterns.pipe(responsePromise, context().dispatcher()).to(self());
     }
 
