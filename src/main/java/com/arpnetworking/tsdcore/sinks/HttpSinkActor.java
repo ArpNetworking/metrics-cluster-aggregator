@@ -236,6 +236,14 @@ public class HttpSinkActor extends AbstractActor {
                     _waiting = false;
                     dispatchPending();
                 })
+                .matchAny(message -> {
+                    LOGGER.error()
+                            .setMessage("Unexpected message")
+                            .addData("message", message)
+                            .addContext("actor", self())
+                            .addContext("sink", _sink)
+                            .log();
+                })
                 .build();
     }
 
