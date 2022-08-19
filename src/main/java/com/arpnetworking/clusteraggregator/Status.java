@@ -23,6 +23,7 @@ import akka.cluster.Cluster;
 import akka.cluster.MemberStatus;
 import akka.pattern.Patterns;
 import akka.remote.AssociationErrorEvent;
+import akka.remote.artery.ThisActorSystemQuarantinedEvent;
 import com.arpnetworking.clusteraggregator.models.MetricsRequest;
 import com.arpnetworking.clusteraggregator.models.PeriodMetrics;
 import com.arpnetworking.clusteraggregator.models.StatusResponse;
@@ -66,7 +67,7 @@ public class Status extends AbstractActor {
         _cluster = cluster;
         _clusterStatusCache = clusterStatusCache;
         _localMetrics = localMetrics;
-        context().system().eventStream().subscribe(self(), AssociationErrorEvent.class);
+        context().system().eventStream().subscribe(self(), ThisActorSystemQuarantinedEvent.class);
     }
 
     /**
@@ -89,14 +90,11 @@ public class Status extends AbstractActor {
     public Receive createReceive() {
         return receiveBuilder()
                 .match(StatusRequest.class, message -> processStatusRequest())
-                .match(AssociationErrorEvent.class, error -> {
-                    if (error.cause().getMessage().contains("quarantined this system")) {
+                .match(ThisActorSystemQuarantinedEvent.class, error -> {
                         _quarantined = true;
                         LOGGER.error()
                                 .setMessage("This node is quarantined.")
-                                .setThrowable(error.cause())
                                 .log();
-                    }
                 })
                 .match(HealthRequest.class, message -> {
                     final boolean healthy = _cluster.readView().self().status() == MemberStatus.up() && !_quarantined;

@@ -27,6 +27,8 @@ import org.junit.Test;
 import java.util.Collections;
 import java.util.List;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+
 /**
  * Tests for the SumStatistic class.
  *
@@ -37,7 +39,7 @@ public class SumStatisticTest {
     @Test
     public void testGetName() {
         final Statistic stat = SUM_STATISTIC;
-        Assert.assertThat(stat.getName(), Matchers.equalTo("sum"));
+        assertThat(stat.getName(), Matchers.equalTo("sum"));
     }
 
     @Test
@@ -46,7 +48,7 @@ public class SumStatisticTest {
         final List<Double> doubleVals = Lists.newArrayList(12d, 18d, 5d);
         final List<Quantity> vals = TestBeanFactory.createSamples(doubleVals);
         final Quantity calculated = stat.calculate(vals);
-        Assert.assertThat(
+        assertThat(
                 calculated,
                 Matchers.equalTo(
                         new Quantity.Builder()

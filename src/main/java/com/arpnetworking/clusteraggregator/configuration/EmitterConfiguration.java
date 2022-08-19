@@ -26,7 +26,6 @@ import com.fasterxml.jackson.module.guice.GuiceInjectableValues;
 import com.google.common.collect.Lists;
 import com.google.inject.Injector;
 import net.sf.oval.constraint.Min;
-import net.sf.oval.constraint.NotEmpty;
 import net.sf.oval.constraint.NotNull;
 
 import java.util.Collections;
@@ -112,7 +111,6 @@ public final class EmitterConfiguration {
         }
 
         @NotNull
-        @NotEmpty
         private List<Sink> _sinks;
 
         @NotNull

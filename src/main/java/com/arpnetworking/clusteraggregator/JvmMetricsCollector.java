@@ -56,7 +56,7 @@ public final class JvmMetricsCollector extends AbstractActor {
                 .setMessage("Starting JVM metrics collector actor.")
                 .addData("actor", self().toString())
                 .log();
-        _cancellable = _scheduler.schedule(
+        _cancellable = _scheduler.scheduleAtFixedRate(
                 INITIAL_DELAY,
                 _interval,
                 self(),

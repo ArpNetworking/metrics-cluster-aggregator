@@ -64,13 +64,5 @@ CMD [ \
     "-XX:+UseStringDeduplication", \
     "-XX:+UseG1GC", \
     "-Duser.timezone=UTC", \
-    "--add-exports=java.naming/com.sun.jndi.ldap=ALL-UNNAMED", \
-    "--add-opens=java.base/java.lang=ALL-UNNAMED", \
-    "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", \
-    "--add-opens=java.base/java.io=ALL-UNNAMED", \
-    "--add-opens=java.base/java.security=ALL-UNNAMED", \
-    "--add-opens=java.base/java.util=ALL-UNNAMED", \
-    "--add-opens=java.management/javax.management=ALL-UNNAMED", \
-    "--add-opens=java.naming/javax.naming=ALL-UNNAMED", \
     "--", \
     "${CAGG_CONFIG}" ]

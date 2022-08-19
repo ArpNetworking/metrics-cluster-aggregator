@@ -28,6 +28,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+
+
 /**
  * Tests the TPStatistic class.
  *
@@ -50,7 +53,7 @@ public class TPStatisticTest {
         final List<Double> doubleVals = Lists.newArrayList(ONE_TO_FIVE);
         final List<Quantity> vals = TestBeanFactory.createSamples(doubleVals);
         final Quantity calculated = tp.calculate(vals);
-        Assert.assertThat(
+        assertThat(
                 calculated,
                 Matchers.equalTo(
                         new Quantity.Builder()
@@ -68,7 +71,7 @@ public class TPStatisticTest {
         }
         final List<Quantity> vals = TestBeanFactory.createSamples(vList);
         final Quantity calculated = tp.calculate(vals);
-        Assert.assertThat(
+        assertThat(
                 calculated,
                 Matchers.equalTo(
                         new Quantity.Builder()
@@ -86,7 +89,7 @@ public class TPStatisticTest {
         }
         final List<Quantity> vals = TestBeanFactory.createSamples(vList);
         final Quantity calculated = tp.calculate(vals);
-        Assert.assertThat(
+        assertThat(
                 calculated,
                 Matchers.equalTo(
                         new Quantity.Builder()

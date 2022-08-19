@@ -20,6 +20,7 @@ import com.arpnetworking.tsdcore.model.CalculatedValue;
 import com.arpnetworking.tsdcore.model.Quantity;
 import com.arpnetworking.tsdcore.model.Unit;
 import com.google.common.collect.Lists;
+import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
@@ -57,7 +58,7 @@ public class MedianStatisticTest {
         }
         final List<Quantity> vals = TestBeanFactory.createSamples(vList);
         final Quantity calculated = tp.calculate(vals);
-        Assert.assertThat(
+        MatcherAssert.assertThat(
                 calculated,
                 Matchers.equalTo(
                         new Quantity.Builder()

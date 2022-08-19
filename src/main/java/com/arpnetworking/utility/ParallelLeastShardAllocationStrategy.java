@@ -26,9 +26,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import scala.collection.JavaConversions;
 import scala.collection.immutable.IndexedSeq;
 import scala.concurrent.Future;
+import scala.jdk.javaapi.CollectionConverters;
 
 import java.io.Serializable;
 import java.time.Instant;
@@ -99,7 +99,7 @@ public final class ParallelLeastShardAllocationStrategy extends ShardCoordinator
                     new RegionShardAllocations(
                             entry.getKey(),
                             // Only count the shards that are not currently rebalancing
-                            JavaConversions.setAsJavaSet(entry.getValue().<String>toSet())
+                            CollectionConverters.asJava(entry.getValue().<String>toSet())
                                     .stream()
                                     .filter(e -> !rebalanceInProgress.contains(e))
                                     .collect(Collectors.toSet())));
@@ -149,7 +149,7 @@ public final class ParallelLeastShardAllocationStrategy extends ShardCoordinator
         // Scala representation
         final Map<ActorRef, Set<String>> currentAllocations = Maps.transformValues(
                 currentShardAllocations,
-                e -> Sets.newHashSet(JavaConversions.seqAsJavaList(e)));
+                e -> Sets.newHashSet(CollectionConverters.asJava(e)));
 
         final RebalanceNotification notification = new RebalanceNotification(
                 currentAllocations,

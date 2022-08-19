@@ -70,7 +70,7 @@ public final class JvmMetricsCollectorTest extends BaseActorTest {
         _collector = TestActorRef.create(
                 getSystem(),
                 Props.create(JvmMetricsCollector.class, INTERVAL_DURATION, _runnable, _scheduler));
-        Mockito.verify(_scheduler).schedule(
+        Mockito.verify(_scheduler).scheduleAtFixedRate(
                 Mockito.eq(FiniteDuration.Zero()),
                 Mockito.eq(INTERVAL_DURATION),
                 Mockito.eq(_collector),

@@ -38,9 +38,10 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import scala.compat.java8.OptionConverters;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
+import scala.jdk.javaapi.CollectionConverters;
+import scala.jdk.javaapi.OptionConverters;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -98,7 +99,7 @@ public class ClusterStatusCache extends AbstractActor {
         final Scheduler scheduler = getContext()
                 .system()
                 .scheduler();
-        _pollTimer = scheduler.schedule(
+        _pollTimer = scheduler.scheduleAtFixedRate(
                 Duration.apply(0, TimeUnit.SECONDS),
                 Duration.apply(_pollInterval.toMillis(), TimeUnit.MILLISECONDS),
                 getSelf(),
@@ -120,7 +121,7 @@ public class ClusterStatusCache extends AbstractActor {
                 .match(ClusterEvent.CurrentClusterState.class, clusterState -> {
                     _clusterState = Optional.of(clusterState);
                     try (Metrics metrics = _metricsFactory.create()) {
-                        metrics.setGauge("akka/members_count", clusterState.members().size());
+                        metrics.setGauge("akka/members_count", CollectionConverters.asJava(clusterState.members()).size());
                         if (_cluster.selfAddress().equals(clusterState.getLeader())) {
                             metrics.setGauge("akka/is_leader", 1);
                         } else {

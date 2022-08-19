@@ -25,13 +25,10 @@ import akka.http.javadsl.model.HttpRequest;
 import akka.http.javadsl.model.HttpResponse;
 import akka.http.javadsl.model.RequestEntity;
 import akka.japi.Pair;
-import akka.stream.ActorMaterializer;
-import akka.stream.ActorMaterializerSettings;
 import akka.stream.FanInShape2;
 import akka.stream.FlowShape;
 import akka.stream.Graph;
 import akka.stream.Materializer;
-import akka.stream.Supervision;
 import akka.stream.UniformFanOutShape;
 import akka.stream.javadsl.Broadcast;
 import akka.stream.javadsl.Flow;
@@ -119,10 +116,7 @@ public class HttpSourceActor extends AbstractActor {
         final ActorRef self = self();
         _sink = Sink.foreach(aggregationRequest -> handleAggregation(shardRegion, emitter, self, aggregationRequest));
 
-        _materializer = ActorMaterializer.create(
-                ActorMaterializerSettings.create(context().system())
-                        .withSupervisionStrategy(Supervision.stoppingDecider()),
-                context());
+        _materializer = Materializer.createMaterializer(context().system());
 
         _processGraph = GraphDSL.create(this::processGraph);
 

@@ -117,7 +117,7 @@ public class StreamingAggregator extends AbstractActorWithTimers {
         _periodicMetrics = periodicMetrics;
         context().setReceiveTimeout(FiniteDuration.apply(30, TimeUnit.MINUTES));
 
-        timers().startPeriodicTimer(BUCKET_CHECK_TIMER_KEY, BucketCheck.getInstance(), FiniteDuration.apply(5, TimeUnit.SECONDS));
+        timers().startTimerAtFixedRate(BUCKET_CHECK_TIMER_KEY, BucketCheck.getInstance(), FiniteDuration.apply(5, TimeUnit.SECONDS));
 
         _emitter = emitter;
     }
