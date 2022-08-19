@@ -152,6 +152,11 @@ public class HttpSinkActor extends AbstractActor {
         super.preRestart(reason, message);
 
         _periodicMetrics.recordCounter("actors/http_post_sink/restarted", 1);
+        LOGGER.error()
+                .setMessage("Actor restarted")
+                .addData("sink", _sink)
+                .setThrowable(reason)
+                .log();
     }
 
     /**
@@ -385,7 +390,21 @@ public class HttpSinkActor extends AbstractActor {
             _periodicMetrics.recordTimer(_inQueueLatencyName, latencyInMillis, Optional.of(TimeUnit.MILLISECONDS));
 
             _inflightRequestsCount++;
-            fireRequest(requestEntry, 1);
+            try {
+                fireRequest(requestEntry, 1);
+            // CHECKSTYLE.OFF: IllegalCatch - We need to catch everything here
+            } catch (final RuntimeException e) {
+            // CHECKSTYLE.ON: IllegalCatch
+                _inflightRequestsCount--;
+                POST_ERROR_LOGGER.error()
+                        .setMessage("Error while sending request")
+                        .addData("sink", _sink)
+                        .addData("request", requestEntry)
+                        .addContext("actor", self())
+                        .setThrowable(e)
+                        .log();
+                throw e;
+            }
         }
     }
 
@@ -402,9 +421,9 @@ public class HttpSinkActor extends AbstractActor {
                             Optional.of(TimeUnit.MILLISECONDS));
                     if (err == null) {
                         if (_acceptedStatusCodes.contains(result.getStatusCode())) {
-                             return new PostSuccess(attempt, request, result);
+                            return new PostSuccess(attempt, request, result);
                         } else {
-                             return new PostRejected(attempt, request, result);
+                            return new PostRejected(attempt, request, result);
                         }
                     } else {
                         return new PostFailure(attempt, request, err);
