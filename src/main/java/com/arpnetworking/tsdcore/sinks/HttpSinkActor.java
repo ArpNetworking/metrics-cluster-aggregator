@@ -17,6 +17,7 @@ package com.arpnetworking.tsdcore.sinks;
 
 import akka.actor.AbstractActor;
 import akka.actor.Props;
+import akka.actor.Status;
 import akka.pattern.Patterns;
 import com.arpnetworking.logback.annotations.LogValue;
 import com.arpnetworking.metrics.incubator.PeriodicMetrics;
@@ -235,6 +236,13 @@ public class HttpSinkActor extends AbstractActor {
                             .log();
                     _waiting = false;
                     dispatchPending();
+                })
+                .match(Status.Failure.class, message -> {
+                    LOGGER.error()
+                            .setMessage("Received Status.Failure message")
+                            .addContext("actor", self())
+                            .setThrowable(message.cause())
+                            .log();
                 })
                 .matchAny(message -> {
                     LOGGER.error()
