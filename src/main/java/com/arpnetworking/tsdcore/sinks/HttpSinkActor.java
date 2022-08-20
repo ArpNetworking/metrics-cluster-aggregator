@@ -430,18 +430,30 @@ public class HttpSinkActor extends AbstractActor {
         final long requestStartTime = System.currentTimeMillis();
         final CompletionStage<Object> responsePromise = promise
                 .handle((result, err) -> {
-                    _periodicMetrics.recordTimer(
-                            _requestLatencyName,
-                            System.currentTimeMillis() - requestStartTime,
-                            Optional.of(TimeUnit.MILLISECONDS));
-                    if (err == null) {
-                        if (_acceptedStatusCodes.contains(result.getStatusCode())) {
-                            return new PostSuccess(attempt, request, result);
+                    try {
+                        _periodicMetrics.recordTimer(
+                                _requestLatencyName,
+                                System.currentTimeMillis() - requestStartTime,
+                                Optional.of(TimeUnit.MILLISECONDS));
+                        if (err == null) {
+                            if (_acceptedStatusCodes.contains(result.getStatusCode())) {
+                                return new PostSuccess(attempt, request, result);
+                            } else {
+                                return new PostRejected(attempt, request, result);
+                            }
                         } else {
-                            return new PostRejected(attempt, request, result);
+                            return new PostFailure(attempt, request, err);
                         }
-                    } else {
-                        return new PostFailure(attempt, request, err);
+                        // CHECKSTYLE.OFF: IllegalCatch - We need to catch everything here
+                    } catch (final Exception e) {
+                        // CHECKSTYLE.ON: IllegalCatch
+                        POST_ERROR_LOGGER.error()
+                                .setMessage("Error while handling POST response")
+                                .setThrowable(e)
+                                .addData("sink", _sink)
+                                .addContext("actor", self())
+                                .log();
+                        return new PostFailure(attempt, request, e);
                     }
                 });
         Patterns.pipe(responsePromise, context().dispatcher()).to(self());

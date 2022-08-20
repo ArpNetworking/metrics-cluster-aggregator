@@ -45,6 +45,7 @@ import org.asynchttpclient.Request;
 import org.asynchttpclient.RequestBuilder;
 import org.asynchttpclient.uri.Uri;
 
+import java.io.Serial;
 import java.net.URI;
 import java.time.Duration;
 import java.util.Collection;
@@ -206,6 +207,12 @@ public abstract class HttpPostSink extends BaseSink {
         _uri = builder._uri;
         _aysncHttpClientUri = Uri.create(_uri.toString());
 
+        _maximumAttempts = builder._maximumAttempts;
+        _baseBackoff = builder._baseBackoff;
+        _maximumDelay = builder._maximumDelay;
+        _acceptedStatusCodes = builder._acceptedStatusCodes;
+        _retryableStatusCodes = builder._retryableStatusCodes;
+
         _sinkActor = builder._actorSystem.actorOf(
                 HttpSinkActor.props(
                         CLIENT,
@@ -214,12 +221,6 @@ public abstract class HttpPostSink extends BaseSink {
                         builder._maximumQueueSize,
                         builder._spreadPeriod,
                         builder._periodicMetrics));
-        
-        _maximumAttempts = builder._maximumAttempts;
-        _baseBackoff = builder._baseBackoff;
-        _maximumDelay = builder._maximumDelay;
-        _acceptedStatusCodes = builder._acceptedStatusCodes;
-        _retryableStatusCodes = builder._retryableStatusCodes;
     }
 
     private final URI _uri;
@@ -441,6 +442,7 @@ public abstract class HttpPostSink extends BaseSink {
 
         private static final class CheckPeriod implements CheckWithCheck.SimpleCheck {
 
+            @Serial
             private static final long serialVersionUID = -6924010227680984149L;
 
             @Override
