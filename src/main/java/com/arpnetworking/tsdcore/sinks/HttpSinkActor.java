@@ -15,7 +15,7 @@
  */
 package com.arpnetworking.tsdcore.sinks;
 
-import akka.actor.AbstractActor;
+import akka.actor.AbstractActorWithTimers;
 import akka.actor.Props;
 import akka.actor.Status;
 import akka.pattern.Patterns;
@@ -51,7 +51,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class HttpSinkActor extends AbstractActor {
+public class HttpSinkActor extends AbstractActorWithTimers {
     /**
      * Factory method to create a Props.
      *
@@ -120,6 +120,7 @@ public class HttpSinkActor extends AbstractActor {
         _httpSinkAttemptsName = "sinks/http_post/" + _sink.getMetricSafeName() + "/attempts";
         _samplesSentName = "sinks/http_post/" + sink.getMetricSafeName() + "/samples_sent";
         _samplesDroppedName = "sinks/http_post/" + _sink.getMetricSafeName() + "/samples_dropped";
+        timers().startTimerAtFixedRate("metrics", SampleMetrics.INSTANCE, Duration.ofSeconds(1), Duration.ofSeconds(1));
     }
 
     @Override
@@ -243,6 +244,10 @@ public class HttpSinkActor extends AbstractActor {
                             .addContext("actor", self())
                             .setThrowable(message.cause())
                             .log();
+                })
+                .match(SampleMetrics.class, message -> {
+                    _periodicMetrics.recordCounter(_pendingRequestsQueueSizeName, _pendingRequests.size());
+                    _periodicMetrics.recordCounter(_inflightRequestsCountName, _inflightRequestsCount);
                 })
                 .matchAny(message -> {
                     LOGGER.error()
@@ -653,5 +658,9 @@ public class HttpSinkActor extends AbstractActor {
         }
 
         private final CompletableFuture<Response> _promise;
+    }
+    private static final class SampleMetrics {
+        private SampleMetrics() { }
+        private static final SampleMetrics INSTANCE = new SampleMetrics();
     }
 }
