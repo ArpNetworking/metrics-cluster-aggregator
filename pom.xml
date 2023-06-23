@@ -114,7 +114,7 @@
     <ebean.version>13.8.0</ebean.version>
     <ebean.annotation.version>8.2</ebean.annotation.version>
     <flyway.version>9.1.6</flyway.version>
-    <guava.version>31.1-jre</guava.version>
+    <guava.version>32.0.0-jre</guava.version>
     <guice.version>5.1.0</guice.version>
     <hamcrest.version>2.2</hamcrest.version>
     <hikari.version>5.0.1</hikari.version>
