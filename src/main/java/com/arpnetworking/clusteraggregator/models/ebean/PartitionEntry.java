@@ -28,8 +28,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
-import javax.annotation.Nullable;
 import java.sql.Timestamp;
+import javax.annotation.Nullable;
 
 /**
  * Model that holds the data for a partition.
