@@ -152,7 +152,7 @@
     <scala.library.version>2.13.9</scala.library.version>
     <signalfx.protoc.version>0.0.23</signalfx.protoc.version>
     <slf4j.version>1.7.36</slf4j.version>
-    <spotbugs.annotations.version>4.7.1</spotbugs.annotations.version>
+    <spotbugs.annotations.version>4.8.1</spotbugs.annotations.version>
     <typesafe.config.version>1.4.3</typesafe.config.version>
     <typesafe.ssl.config.version>0.6.1</typesafe.ssl.config.version>
     <wiremock.version>2.27.2</wiremock.version>
