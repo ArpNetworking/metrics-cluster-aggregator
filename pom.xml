@@ -150,7 +150,7 @@
     <reflections.version>0.10.2</reflections.version>
     <scala.version>2.13</scala.version>
     <scala.library.version>2.13.9</scala.library.version>
-    <signalfx.protoc.version>0.0.23</signalfx.protoc.version>
+    <signalfx.protoc.version>1.0.37</signalfx.protoc.version>
     <slf4j.version>1.7.36</slf4j.version>
     <spotbugs.annotations.version>4.8.1</spotbugs.annotations.version>
     <typesafe.config.version>1.4.3</typesafe.config.version>
