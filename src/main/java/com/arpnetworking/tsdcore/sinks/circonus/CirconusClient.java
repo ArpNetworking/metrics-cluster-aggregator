@@ -311,6 +311,7 @@ public final class CirconusClient {
                 config.maxConnectionsTotal(),
                 config.maxConnectionLifetime(),
                 config.idleConnectionInPoolTimeout(),
+                config.connectionPoolCleanerPeriod(),
                 config.maxNumberOfRedirects(),
                 config.maxRequestRetry(),
                 config.disableUrlEncoding(),
