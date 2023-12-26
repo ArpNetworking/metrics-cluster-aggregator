@@ -270,7 +270,7 @@
              cleanup in this project (which is underway separately) but fixing
              the docker build in the short-term is more important. -->
        <!--<version>${maven.clean.plugin.version}</version>-->
-        <version>3.1.0</version>
+        <version>3.3.2</version>
         <executions>
           <execution>
             <id>clean-assemblies</id>
