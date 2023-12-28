@@ -151,7 +151,7 @@
     <scala.version>2.13</scala.version>
     <scala.library.version>2.13.12</scala.library.version>
     <signalfx.protoc.version>1.0.37</signalfx.protoc.version>
-    <slf4j.version>1.7.36</slf4j.version>
+    <slf4j.version>2.0.9</slf4j.version>
     <spotbugs.annotations.version>4.8.1</spotbugs.annotations.version>
     <typesafe.config.version>1.4.3</typesafe.config.version>
     <typesafe.ssl.config.version>0.6.1</typesafe.ssl.config.version>
