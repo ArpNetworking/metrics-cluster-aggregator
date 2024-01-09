@@ -122,7 +122,7 @@
     <fastutil.version>8.5.12</fastutil.version>
     <h2.version>2.2.224</h2.version>
     <jackson.version>2.16.1</jackson.version>
-    <javassist.version>3.29.1-GA</javassist.version>
+    <javassist.version>3.30.2-GA</javassist.version>
     <javassist.maven.core.version>0.2.7</javassist.maven.core.version>
     <javax.persistence.version>1.0.2</javax.persistence.version>
     <javax.xml.version>2.3.1</javax.xml.version>
