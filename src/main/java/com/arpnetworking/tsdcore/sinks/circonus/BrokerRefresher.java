@@ -160,5 +160,5 @@ public class BrokerRefresher extends AbstractActor {
         private final Throwable _cause;
     }
 
-    private static class LookupBrokers { }
+    private static final class LookupBrokers { }
 }

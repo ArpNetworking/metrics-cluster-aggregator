@@ -92,6 +92,6 @@ public class ReflectionsDatabaseTest {
 
     private static class TestClassImplementsInterface implements TestInterface {}
 
-    private static class TestSubClassClass extends TestClassImplementsInterface {}
+    private static final class TestSubClassClass extends TestClassImplementsInterface {}
 
 }

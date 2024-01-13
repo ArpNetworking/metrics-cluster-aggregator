@@ -108,7 +108,7 @@ public class ConfigurableActorProxyTest extends BaseActorTest {
     @Mock
     private ConfiguredLaunchableFactory<Props, Object> _factoryMock;
 
-    private static class NullActor extends AbstractActor {
+    private static final class NullActor extends AbstractActor {
         @Override
         public Receive createReceive() {
             return receiveBuilder()

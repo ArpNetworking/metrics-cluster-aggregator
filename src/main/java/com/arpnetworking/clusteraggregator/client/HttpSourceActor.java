@@ -74,7 +74,7 @@ import java.util.concurrent.CompletionStage;
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class HttpSourceActor extends AbstractActor {
+public final class HttpSourceActor extends AbstractActor {
     /**
      * Creates a {@link Props} for this actor.
      *
