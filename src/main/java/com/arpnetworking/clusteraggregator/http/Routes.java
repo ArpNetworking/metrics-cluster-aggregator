@@ -307,7 +307,7 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
      */
     public static final String INCOMING_DATA_REAGGREGATE_V1_PATH = "/metrics/v1/data/reaggregate";
 
-    private static class MemberSerializer extends JsonSerializer<Member> {
+    private static final class MemberSerializer extends JsonSerializer<Member> {
         @Override
         public void serialize(
                 final Member value,

@@ -156,7 +156,7 @@ public final class ShardAllocation {
         private ActorRef _shardRegion;
     }
 
-    private static class CountingSetSerializer extends JsonSerializer<Set<?>> {
+    private static final class CountingSetSerializer extends JsonSerializer<Set<?>> {
 
         /**
          * Method that can be called to ask implementation to serialize values of type this serializer handles.

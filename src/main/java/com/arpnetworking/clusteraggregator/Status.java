@@ -151,7 +151,7 @@ public class Status extends AbstractActor {
     private static final CastMapper<Object, ClusterStatusCache.StatusResponse> CAST_MAPPER = new CastMapper<>();
     private static final Logger LOGGER = LoggerFactory.getLogger(Status.class);
 
-    private static class AsNullRecovery<T> implements Function<Throwable, T> {
+    private static final class AsNullRecovery<T> implements Function<Throwable, T> {
         @Override
         public T apply(final Throwable failure) {
             return null;

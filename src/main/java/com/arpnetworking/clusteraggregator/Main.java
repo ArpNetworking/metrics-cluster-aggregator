@@ -17,6 +17,7 @@ package com.arpnetworking.clusteraggregator;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import akka.http.javadsl.ServerBinding;
 import ch.qos.logback.classic.LoggerContext;
 import com.arpnetworking.clusteraggregator.configuration.ClusterAggregatorConfiguration;
 import com.arpnetworking.commons.builder.Builder;
@@ -44,6 +45,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -311,5 +313,5 @@ public final class Main implements Launchable {
         }
     }
 
-    private static class SourceTypeLiteral extends TypeLiteral<java.util.concurrent.CompletionStage<akka.http.javadsl.ServerBinding>> {}
+    private static final class SourceTypeLiteral extends TypeLiteral<CompletionStage<ServerBinding>> {}
 }

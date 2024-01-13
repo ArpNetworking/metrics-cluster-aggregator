@@ -74,7 +74,7 @@ public class ActorRefSerializerTest extends BaseActorTest {
 
     private ObjectMapper _mapper;
 
-    private static class DoNothingActor extends AbstractActor {
+    private static final class DoNothingActor extends AbstractActor {
         @Override
         public Receive createReceive() {
             return receiveBuilder()
