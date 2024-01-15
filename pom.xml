@@ -139,7 +139,7 @@
     <metrics.jvm.extra.version>0.12.1</metrics.jvm.extra.version>
     <metrics.http.extra.version>0.12.1</metrics.http.extra.version>
     <metrics.aggregator.protocol.version>1.0.10</metrics.aggregator.protocol.version>
-    <mockito.version>5.8.0</mockito.version>
+    <mockito.version>5.9.0</mockito.version>
     <netty.version>4.0.56.Final</netty.version>
     <netty.all.version>4.0.21.Final</netty.all.version>
     <ning.http.client.version>1.9.31</ning.http.client.version>
