@@ -131,7 +131,7 @@
     <junitparams.version>1.1.1</junitparams.version>
     <leveldb.version>0.12</leveldb.version>
     <leveldb.jni.version>1.8</leveldb.jni.version>
-    <logback.version>1.4.12</logback.version>
+    <logback.version>1.4.14</logback.version>
     <logback.steno.version>2.1.0</logback.steno.version>
     <log4j.over.slf4j.version>2.0.11</log4j.over.slf4j.version>
     <metrics.client.version>0.12.1</metrics.client.version>
