@@ -1,18 +1,9 @@
 Metrics Cluster Aggregator
 ==========================
 
-<a href="https://raw.githubusercontent.com/ArpNetworking/metrics-cluster-aggregator/master/LICENSE">
-    <img src="https://img.shields.io/hexpm/l/plug.svg"
-         alt="License: Apache 2">
-</a>
-<a href="https://travis-ci.com/ArpNetworking/metrics-cluster-aggregator">
-    <img src="https://travis-ci.com/ArpNetworking/metrics-cluster-aggregator.svg?branch=master"
-         alt="Travis Build">
-</a>
-<a href="http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.arpnetworking.metrics%22%20a%3A%22metrics-cluster-aggregator%22">
-    <img src="https://img.shields.io/maven-central/v/com.arpnetworking.metrics/metrics-cluster-aggregator.svg"
-         alt="Maven Artifact">
-</a>
+[![License:Apache 2](https://img.shields.io/hexpm/l/plug.svg)](https://raw.githubusercontent.com/ArpNetworking/metrics-cluster-aggregator/master/LICENSE)
+[![Build Status](https://build.arpnetworking.com/job/ArpNetworking/job/metrics-cluster-aggregator/job/master/badge/icon)](https://build.arpnetworking.com/job/ArpNetworking/job/metrics-cluster-aggregator/job/master/)
+[![Maven Artifact](https://img.shields.io/maven-central/v/com.arpnetworking.metrics/metrics-cluster-aggregator.svg)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.arpnetworking.metrics%22%20a%3A%22metrics-cluster-aggregator%22)
 
 Reaggregates statistics received from multiple Metric Aggregator Daemon instances into aggregates across each cluster.  Simply, this means combining the values from each host in your fleet.  Both the host and cluster values are published to various configurable data sinks.
 
