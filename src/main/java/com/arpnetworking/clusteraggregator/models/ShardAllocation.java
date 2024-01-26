@@ -15,7 +15,6 @@
  */
 package com.arpnetworking.clusteraggregator.models;
 
-import akka.actor.ActorRef;
 import com.arpnetworking.commons.builder.OvalBuilder;
 import com.arpnetworking.utility.LexicalNumericComparator;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -24,6 +23,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.Sets;
 import net.sf.oval.constraint.NotNull;
+import org.apache.pekko.actor.ActorRef;
 
 import java.io.IOException;
 import java.util.Collections;

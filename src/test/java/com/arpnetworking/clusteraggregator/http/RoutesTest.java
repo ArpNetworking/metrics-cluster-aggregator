@@ -15,9 +15,9 @@
  */
 package com.arpnetworking.clusteraggregator.http;
 
-import akka.http.javadsl.model.HttpRequest;
 import com.arpnetworking.metrics.incubator.PeriodicMetrics;
 import com.arpnetworking.utility.BaseActorTest;
+import org.apache.pekko.http.javadsl.model.HttpRequest;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;

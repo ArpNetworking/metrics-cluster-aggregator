@@ -16,13 +16,6 @@
 
 package com.arpnetworking.clusteraggregator.client;
 
-import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
-import akka.actor.AllForOneStrategy;
-import akka.actor.SupervisorStrategy;
-import akka.actor.Terminated;
-import akka.io.Tcp;
-import akka.io.TcpMessage;
 import com.arpnetworking.clusteraggregator.configuration.ClusterAggregatorConfiguration;
 import com.arpnetworking.metrics.aggregation.protocol.Messages;
 import com.arpnetworking.steno.Logger;
@@ -31,6 +24,13 @@ import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import org.apache.pekko.actor.AbstractActor;
+import org.apache.pekko.actor.ActorRef;
+import org.apache.pekko.actor.AllForOneStrategy;
+import org.apache.pekko.actor.SupervisorStrategy;
+import org.apache.pekko.actor.Terminated;
+import org.apache.pekko.io.Tcp;
+import org.apache.pekko.io.TcpMessage;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.net.InetSocketAddress;

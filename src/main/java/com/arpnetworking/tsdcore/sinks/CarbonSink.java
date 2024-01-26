@@ -15,13 +15,13 @@
  */
 package com.arpnetworking.tsdcore.sinks;
 
-import akka.util.ByteString;
-import akka.util.ByteStringBuilder;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.google.common.base.Charsets;
+import org.apache.pekko.util.ByteString;
+import org.apache.pekko.util.ByteStringBuilder;
 
 /**
  * Publisher to send data to a Carbon server.

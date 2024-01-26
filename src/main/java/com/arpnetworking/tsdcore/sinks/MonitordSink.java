@@ -15,8 +15,6 @@
  */
 package com.arpnetworking.tsdcore.sinks;
 
-import akka.http.javadsl.model.HttpMethods;
-import akka.http.javadsl.model.MediaTypes;
 import com.arpnetworking.logback.annotations.LogValue;
 import com.arpnetworking.steno.LogValueMapFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
@@ -30,6 +28,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import net.sf.oval.constraint.NotNull;
+import org.apache.pekko.http.javadsl.model.HttpMethods;
+import org.apache.pekko.http.javadsl.model.MediaTypes;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.RequestBuilder;

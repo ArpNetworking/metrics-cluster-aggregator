@@ -15,7 +15,6 @@
  */
 package com.arpnetworking.clusteraggregator.models;
 
-import akka.util.ByteString;
 import com.arpnetworking.commons.builder.OvalBuilder;
 import com.arpnetworking.logback.annotations.Loggable;
 import com.arpnetworking.metrics.aggregation.protocol.Messages;
@@ -32,6 +31,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import net.sf.oval.constraint.NotNull;
+import org.apache.pekko.util.ByteString;
 
 import java.time.Duration;
 import java.time.ZonedDateTime;

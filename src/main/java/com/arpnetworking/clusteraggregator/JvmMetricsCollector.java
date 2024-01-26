@@ -15,15 +15,15 @@
  */
 package com.arpnetworking.clusteraggregator;
 
-import akka.actor.AbstractActor;
-import akka.actor.Cancellable;
-import akka.actor.Props;
-import akka.actor.Scheduler;
 import com.arpnetworking.metrics.MetricsFactory;
 import com.arpnetworking.metrics.jvm.JvmMetricsRunnable;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.google.common.base.MoreObjects;
+import org.apache.pekko.actor.AbstractActor;
+import org.apache.pekko.actor.Cancellable;
+import org.apache.pekko.actor.Props;
+import org.apache.pekko.actor.Scheduler;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.time.Duration;

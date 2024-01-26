@@ -15,8 +15,8 @@
  */
 package com.arpnetworking.configuration.jackson.akka;
 
-import akka.actor.ActorRef;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import org.apache.pekko.actor.ActorRef;
 
 /**
  * Jackson module for serializing and deserializing Akka objects.

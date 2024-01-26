@@ -15,8 +15,6 @@
  */
 package com.arpnetworking.clusteraggregator;
 
-import akka.actor.AbstractActor;
-import akka.actor.Props;
 import com.arpnetworking.clusteraggregator.configuration.EmitterConfiguration;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
@@ -26,6 +24,8 @@ import com.arpnetworking.tsdcore.sinks.MultiSink;
 import com.arpnetworking.tsdcore.sinks.Sink;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.apache.pekko.actor.AbstractActor;
+import org.apache.pekko.actor.Props;
 
 import java.time.Duration;
 import java.time.ZonedDateTime;

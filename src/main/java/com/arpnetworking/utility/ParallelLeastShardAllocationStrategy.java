@@ -15,10 +15,6 @@
  */
 package com.arpnetworking.utility;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSelection;
-import akka.cluster.sharding.ShardCoordinator;
-import akka.dispatch.Futures;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.google.common.collect.ImmutableMap;
@@ -26,6 +22,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import org.apache.pekko.actor.ActorRef;
+import org.apache.pekko.actor.ActorSelection;
+import org.apache.pekko.cluster.sharding.ShardCoordinator;
+import org.apache.pekko.dispatch.Futures;
 import scala.collection.immutable.IndexedSeq;
 import scala.concurrent.Future;
 import scala.jdk.javaapi.CollectionConverters;

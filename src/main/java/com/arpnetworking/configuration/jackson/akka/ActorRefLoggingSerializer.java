@@ -15,10 +15,10 @@
  */
 package com.arpnetworking.configuration.jackson.akka;
 
-import akka.actor.ActorRef;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import org.apache.pekko.actor.ActorRef;
 
 import java.io.IOException;
 

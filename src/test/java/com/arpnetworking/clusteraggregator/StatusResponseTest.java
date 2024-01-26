@@ -15,12 +15,12 @@
  */
 package com.arpnetworking.clusteraggregator;
 
-import akka.actor.ActorRef;
-import akka.testkit.TestProbe;
 import com.arpnetworking.utility.BaseActorTest;
 import com.arpnetworking.utility.ParallelLeastShardAllocationStrategy;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import org.apache.pekko.actor.ActorRef;
+import org.apache.pekko.testkit.TestProbe;
 import org.junit.Test;
 
 import java.util.Map;

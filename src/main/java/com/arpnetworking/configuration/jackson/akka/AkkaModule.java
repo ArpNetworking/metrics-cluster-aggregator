@@ -15,12 +15,12 @@
  */
 package com.arpnetworking.configuration.jackson.akka;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import com.arpnetworking.logback.annotations.LogValue;
 import com.arpnetworking.steno.LogValueMapFactory;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.apache.pekko.actor.ActorRef;
+import org.apache.pekko.actor.ActorSystem;
 
 /**
  * Jackson module for serializing and deserializing Akka objects.

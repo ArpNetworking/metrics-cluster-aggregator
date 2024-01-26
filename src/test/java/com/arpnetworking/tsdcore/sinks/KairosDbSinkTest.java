@@ -15,7 +15,6 @@
  */
 package com.arpnetworking.tsdcore.sinks;
 
-import akka.http.javadsl.model.MediaTypes;
 import com.arpnetworking.commons.jackson.databind.ObjectMapperFactory;
 import com.arpnetworking.metrics.incubator.PeriodicMetrics;
 import com.arpnetworking.tsdcore.model.AggregatedData;
@@ -33,6 +32,7 @@ import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import net.sf.oval.exception.ConstraintsViolatedException;
+import org.apache.pekko.http.javadsl.model.MediaTypes;
 import org.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.Assert;

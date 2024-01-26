@@ -15,12 +15,12 @@
  */
 package com.arpnetworking.clusteraggregator;
 
-import akka.actor.Props;
-import akka.actor.Scheduler;
-import akka.testkit.TestActorRef;
 import com.arpnetworking.metrics.Metrics;
 import com.arpnetworking.metrics.MetricsFactory;
 import com.arpnetworking.utility.BaseActorTest;
+import org.apache.pekko.actor.Props;
+import org.apache.pekko.actor.Scheduler;
+import org.apache.pekko.testkit.TestActorRef;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

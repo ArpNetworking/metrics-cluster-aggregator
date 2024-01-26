@@ -15,13 +15,13 @@
  */
 package com.arpnetworking.tsdcore.model;
 
-import akka.util.ByteIterator;
-import akka.util.ByteString;
-import akka.util.ByteStringBuilder;
 import com.arpnetworking.metrics.aggregation.protocol.Messages;
 import com.google.protobuf.GeneratedMessageV3;
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.pekko.util.ByteIterator;
+import org.apache.pekko.util.ByteString;
+import org.apache.pekko.util.ByteStringBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

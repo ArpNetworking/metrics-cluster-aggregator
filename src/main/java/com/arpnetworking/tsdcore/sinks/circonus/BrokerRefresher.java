@@ -15,14 +15,14 @@
  */
 package com.arpnetworking.tsdcore.sinks.circonus;
 
-import akka.actor.AbstractActor;
-import akka.actor.Props;
-import akka.pattern.Patterns;
 import com.arpnetworking.akka.UniformRandomTimeScheduler;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.sinks.circonus.api.BrokerListResponse;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.apache.pekko.actor.AbstractActor;
+import org.apache.pekko.actor.Props;
+import org.apache.pekko.pattern.Patterns;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.util.concurrent.CompletionStage;

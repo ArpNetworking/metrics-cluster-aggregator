@@ -15,8 +15,6 @@
  */
 package com.arpnetworking.clusteraggregator.models;
 
-import akka.actor.Address;
-import akka.cluster.Member;
 import com.arpnetworking.clusteraggregator.ClusterStatusCache;
 import com.arpnetworking.commons.builder.OvalBuilder;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -27,6 +25,8 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.Iterables;
 import net.sf.oval.constraint.NotNull;
+import org.apache.pekko.actor.Address;
+import org.apache.pekko.cluster.Member;
 import scala.jdk.javaapi.CollectionConverters;
 
 import java.io.IOException;

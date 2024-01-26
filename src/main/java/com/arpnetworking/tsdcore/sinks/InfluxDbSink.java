@@ -15,7 +15,6 @@
  */
 package com.arpnetworking.tsdcore.sinks;
 
-import akka.http.javadsl.model.HttpMethods;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.FQDSN;
 import com.arpnetworking.tsdcore.model.PeriodicData;
@@ -23,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import net.sf.oval.constraint.Min;
 import net.sf.oval.constraint.NotNull;
+import org.apache.pekko.http.javadsl.model.HttpMethods;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.RequestBuilder;

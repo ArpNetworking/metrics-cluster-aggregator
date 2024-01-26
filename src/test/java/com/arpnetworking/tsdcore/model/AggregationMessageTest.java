@@ -15,10 +15,10 @@
  */
 package com.arpnetworking.tsdcore.model;
 
-import akka.util.ByteString;
-import akka.util.ByteStringBuilder;
 import com.arpnetworking.metrics.aggregation.protocol.Messages;
 import com.google.protobuf.GeneratedMessageV3;
+import org.apache.pekko.util.ByteString;
+import org.apache.pekko.util.ByteStringBuilder;
 import org.junit.Assert;
 import org.junit.Test;
 

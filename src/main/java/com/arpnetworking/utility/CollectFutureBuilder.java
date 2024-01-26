@@ -15,9 +15,9 @@
  */
 package com.arpnetworking.utility;
 
-import akka.dispatch.Futures;
-import akka.dispatch.OnComplete;
 import com.google.common.collect.Lists;
+import org.apache.pekko.dispatch.Futures;
+import org.apache.pekko.dispatch.OnComplete;
 import scala.Function0;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;

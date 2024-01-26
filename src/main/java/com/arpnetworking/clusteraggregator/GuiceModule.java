@@ -15,19 +15,6 @@
  */
 package com.arpnetworking.clusteraggregator;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.cluster.Cluster;
-import akka.cluster.sharding.ClusterSharding;
-import akka.cluster.sharding.ClusterShardingSettings;
-import akka.http.javadsl.Http;
-import akka.http.javadsl.IncomingConnection;
-import akka.http.javadsl.ServerBinding;
-import akka.routing.DefaultResizer;
-import akka.routing.RoundRobinPool;
-import akka.stream.Materializer;
-import akka.stream.javadsl.Source;
 import com.arpnetworking.clusteraggregator.aggregation.AggMessageExtractor;
 import com.arpnetworking.clusteraggregator.aggregation.AggregationRouter;
 import com.arpnetworking.clusteraggregator.client.AggClientServer;
@@ -75,6 +62,19 @@ import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigParseOptions;
 import com.typesafe.config.ConfigSyntax;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.apache.pekko.actor.ActorRef;
+import org.apache.pekko.actor.ActorSystem;
+import org.apache.pekko.actor.Props;
+import org.apache.pekko.cluster.Cluster;
+import org.apache.pekko.cluster.sharding.ClusterSharding;
+import org.apache.pekko.cluster.sharding.ClusterShardingSettings;
+import org.apache.pekko.http.javadsl.Http;
+import org.apache.pekko.http.javadsl.IncomingConnection;
+import org.apache.pekko.http.javadsl.ServerBinding;
+import org.apache.pekko.routing.DefaultResizer;
+import org.apache.pekko.routing.RoundRobinPool;
+import org.apache.pekko.stream.Materializer;
+import org.apache.pekko.stream.javadsl.Source;
 
 import java.io.File;
 import java.io.IOException;

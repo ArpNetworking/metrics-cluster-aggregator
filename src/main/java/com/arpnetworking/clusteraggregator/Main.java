@@ -15,9 +15,6 @@
  */
 package com.arpnetworking.clusteraggregator;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.http.javadsl.ServerBinding;
 import ch.qos.logback.classic.LoggerContext;
 import com.arpnetworking.clusteraggregator.configuration.ClusterAggregatorConfiguration;
 import com.arpnetworking.commons.builder.Builder;
@@ -37,6 +34,9 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
+import org.apache.pekko.actor.ActorRef;
+import org.apache.pekko.actor.ActorSystem;
+import org.apache.pekko.http.javadsl.ServerBinding;
 import org.slf4j.LoggerFactory;
 import scala.concurrent.Await;
 import scala.concurrent.duration.Duration;
