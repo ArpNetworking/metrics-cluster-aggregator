@@ -16,13 +16,13 @@
 
 package com.arpnetworking.clusteraggregator;
 
-import akka.actor.AbstractActor;
-import akka.actor.Props;
 import com.arpnetworking.clusteraggregator.models.MetricsRequest;
 import com.arpnetworking.clusteraggregator.models.PeriodMetrics;
 import com.arpnetworking.metrics.MetricsFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.google.common.collect.Maps;
+import org.apache.pekko.actor.AbstractActor;
+import org.apache.pekko.actor.Props;
 
 import java.time.Duration;
 import java.util.Map;
@@ -34,7 +34,7 @@ import java.util.Map;
  */
 public class PeriodicStatisticsActor extends AbstractActor {
     /**
-     * Creates a {@link Props} for construction in Akka.
+     * Creates a {@link Props} for construction in Pekko.
      *
      * @param metricsFactory A {@link MetricsFactory} to use for metrics creation.
      * @return A new {@link Props}.

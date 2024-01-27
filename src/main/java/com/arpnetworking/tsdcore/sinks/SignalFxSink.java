@@ -15,7 +15,6 @@
  */
 package com.arpnetworking.tsdcore.sinks;
 
-import akka.http.javadsl.model.HttpMethods;
 import com.arpnetworking.logback.annotations.LogValue;
 import com.arpnetworking.steno.LogValueMapFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
@@ -25,6 +24,7 @@ import com.signalfx.metrics.protobuf.SignalFxProtocolBuffers;
 import net.sf.oval.constraint.Min;
 import net.sf.oval.constraint.NotEmpty;
 import net.sf.oval.constraint.NotNull;
+import org.apache.pekko.http.javadsl.model.HttpMethods;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.RequestBuilder;

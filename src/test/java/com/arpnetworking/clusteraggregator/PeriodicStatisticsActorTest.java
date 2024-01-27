@@ -16,11 +16,6 @@
 
 package com.arpnetworking.clusteraggregator;
 
-import akka.actor.Actor;
-import akka.actor.ActorRef;
-import akka.actor.UnhandledMessage;
-import akka.testkit.TestActorRef;
-import akka.testkit.TestProbe;
 import com.arpnetworking.clusteraggregator.test.ThrowingMetrics;
 import com.arpnetworking.metrics.Metrics;
 import com.arpnetworking.metrics.MetricsFactory;
@@ -30,6 +25,11 @@ import com.arpnetworking.tsdcore.model.Quantity;
 import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.arpnetworking.tsdcore.statistics.StatisticFactory;
 import com.arpnetworking.utility.BaseActorTest;
+import org.apache.pekko.actor.Actor;
+import org.apache.pekko.actor.ActorRef;
+import org.apache.pekko.actor.UnhandledMessage;
+import org.apache.pekko.testkit.TestActorRef;
+import org.apache.pekko.testkit.TestProbe;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;

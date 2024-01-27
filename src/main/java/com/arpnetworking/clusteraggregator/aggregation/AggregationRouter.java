@@ -15,11 +15,6 @@
  */
 package com.arpnetworking.clusteraggregator.aggregation;
 
-import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.ReceiveTimeout;
-import akka.cluster.sharding.ShardRegion;
 import com.arpnetworking.metrics.aggregation.protocol.Messages;
 import com.arpnetworking.metrics.incubator.PeriodicMetrics;
 import com.arpnetworking.steno.Logger;
@@ -28,6 +23,11 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.apache.pekko.actor.AbstractActor;
+import org.apache.pekko.actor.ActorRef;
+import org.apache.pekko.actor.Props;
+import org.apache.pekko.actor.ReceiveTimeout;
+import org.apache.pekko.cluster.sharding.ShardRegion;
 
 import java.io.Serializable;
 import java.time.Duration;
@@ -41,7 +41,7 @@ import java.util.Optional;
 public class AggregationRouter extends AbstractActor {
 
     /**
-     * Creates a {@link Props} for use in Akka.
+     * Creates a {@link Props} for use in Pekko.
      *
      * @param metricsListener Where to send metrics about aggregation computations.
      * @param emitter Where to send the metrics data.

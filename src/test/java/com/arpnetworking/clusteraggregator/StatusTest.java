@@ -16,20 +16,20 @@
 
 package com.arpnetworking.clusteraggregator;
 
-import akka.actor.Actor;
-import akka.actor.ActorRef;
-import akka.actor.Address;
-import akka.actor.UnhandledMessage;
-import akka.cluster.Cluster;
-import akka.cluster.ClusterEvent;
-import akka.cluster.ClusterReadView;
-import akka.cluster.Member;
-import akka.cluster.MemberStatus;
-import akka.cluster.UniqueAddress;
-import akka.testkit.TestActorRef;
-import akka.testkit.TestProbe;
-import akka.util.Version;
 import com.arpnetworking.utility.BaseActorTest;
+import org.apache.pekko.actor.Actor;
+import org.apache.pekko.actor.ActorRef;
+import org.apache.pekko.actor.Address;
+import org.apache.pekko.actor.UnhandledMessage;
+import org.apache.pekko.cluster.Cluster;
+import org.apache.pekko.cluster.ClusterEvent;
+import org.apache.pekko.cluster.ClusterReadView;
+import org.apache.pekko.cluster.Member;
+import org.apache.pekko.cluster.MemberStatus;
+import org.apache.pekko.cluster.UniqueAddress;
+import org.apache.pekko.testkit.TestActorRef;
+import org.apache.pekko.testkit.TestProbe;
+import org.apache.pekko.util.Version;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;

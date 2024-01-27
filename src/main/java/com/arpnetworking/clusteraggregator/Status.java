@@ -16,14 +16,6 @@
 
 package com.arpnetworking.clusteraggregator;
 
-import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.cluster.Cluster;
-import akka.cluster.MemberStatus;
-import akka.pattern.Patterns;
-import akka.remote.AssociationErrorEvent;
-import akka.remote.artery.ThisActorSystemQuarantinedEvent;
 import com.arpnetworking.clusteraggregator.models.MetricsRequest;
 import com.arpnetworking.clusteraggregator.models.PeriodMetrics;
 import com.arpnetworking.clusteraggregator.models.StatusResponse;
@@ -31,6 +23,14 @@ import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.utility.CastMapper;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.apache.pekko.actor.AbstractActor;
+import org.apache.pekko.actor.ActorRef;
+import org.apache.pekko.actor.Props;
+import org.apache.pekko.cluster.Cluster;
+import org.apache.pekko.cluster.MemberStatus;
+import org.apache.pekko.pattern.Patterns;
+import org.apache.pekko.remote.AssociationErrorEvent;
+import org.apache.pekko.remote.artery.ThisActorSystemQuarantinedEvent;
 
 import java.time.Duration;
 import java.util.Map;
@@ -71,7 +71,7 @@ public class Status extends AbstractActor {
     }
 
     /**
-     * Creates a {@link Props} for use in Akka.
+     * Creates a {@link Props} for use in Pekko.
      *
      * @param cluster The instance of the Clustering extension.
      * @param clusterStatusCache The actor holding the cached cluster status.

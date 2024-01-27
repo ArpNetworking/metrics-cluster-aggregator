@@ -15,7 +15,6 @@
  */
 package com.arpnetworking.tsdcore.sinks;
 
-import akka.util.ByteString;
 import com.arpnetworking.test.TestBeanFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.PeriodicData;
@@ -23,6 +22,7 @@ import com.arpnetworking.utility.BaseActorTest;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.apache.pekko.util.ByteString;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

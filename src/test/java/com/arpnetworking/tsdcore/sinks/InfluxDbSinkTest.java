@@ -15,7 +15,6 @@
  */
 package com.arpnetworking.tsdcore.sinks;
 
-import akka.actor.ActorSystem;
 import com.arpnetworking.metrics.incubator.PeriodicMetrics;
 import com.arpnetworking.test.TestBeanFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
@@ -24,6 +23,7 @@ import com.arpnetworking.tsdcore.statistics.StatisticFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import org.apache.pekko.actor.ActorSystem;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;

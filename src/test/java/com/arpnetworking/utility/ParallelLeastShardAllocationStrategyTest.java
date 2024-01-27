@@ -15,15 +15,15 @@
  */
 package com.arpnetworking.utility;
 
-import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
-import akka.actor.ActorSelection;
-import akka.actor.Props;
-import akka.testkit.TestActorRef;
-import akka.testkit.TestProbe;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import org.apache.pekko.actor.AbstractActor;
+import org.apache.pekko.actor.ActorRef;
+import org.apache.pekko.actor.ActorSelection;
+import org.apache.pekko.actor.Props;
+import org.apache.pekko.testkit.TestActorRef;
+import org.apache.pekko.testkit.TestProbe;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;

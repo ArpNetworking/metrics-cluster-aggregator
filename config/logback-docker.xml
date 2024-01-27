@@ -15,17 +15,8 @@
   ~ limitations under the License.
   -->
 <configuration>
-    <appender name="cagg-logger" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>/opt/cluster-aggregator/logs/cluster-aggregator.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <timeBasedFileNamingAndTriggeringPolicy class="com.arpnetworking.logback.SizeAndRandomizedTimeBasedFNATP">
-                <maxOffsetInMillis>900000</maxOffsetInMillis>
-                <maxFileSize>100MB</maxFileSize>
-            </timeBasedFileNamingAndTriggeringPolicy>
-            <fileNamePattern>/opt/cluster-aggregator/logs/cluster-aggregator.%d{yyyy-MM-dd_HH}.%i.log.gz</fileNamePattern>
-            <maxHistory>4</maxHistory>
-            <cleanHistoryOnStart>true</cleanHistoryOnStart>
-        </rollingPolicy>
+    <import class="ch.qos.logback.core.ConsoleAppender"/>
+    <appender name="cagg-logger" class="ConsoleAppender">
         <encoder class="com.arpnetworking.logback.StenoEncoder">
             <injectContextLogger>true</injectContextLogger>
             <compressLoggerName>true</compressLoggerName>

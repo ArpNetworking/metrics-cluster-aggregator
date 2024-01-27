@@ -101,12 +101,12 @@
 
   <properties>
     <!--Dependency versions-->
-    <akka.version>2.6.21</akka.version>
-    <akka.http.version>10.2.9</akka.http.version>
-    <akka.persistence.cassandra.version>1.0.6</akka.persistence.cassandra.version>
+    <pekko.version>1.0.2</pekko.version>
+    <pekko.http.version>1.0.0</pekko.http.version>
+    <pekko.persistence.cassandra.version>1.0.0</pekko.persistence.cassandra.version>
     <apache.httpclient.version>4.5.14</apache.httpclient.version>
     <apache.httpcore.version>4.4.16</apache.httpcore.version>
-    <arpnetworking.commons.version>3.0.0</arpnetworking.commons.version>
+    <arpnetworking.commons.version>3.1.0</arpnetworking.commons.version>
     <aspectjrt.version>1.9.21</aspectjrt.version>
     <asynchttpclient.version>2.12.3</asynchttpclient.version>
     <awaitility.version>4.2.0</awaitility.version>
@@ -129,25 +129,23 @@
     <jsr305.version>3.0.2</jsr305.version>
     <junit.version>4.13.2</junit.version>
     <junitparams.version>1.1.1</junitparams.version>
-    <leveldb.version>0.12</leveldb.version>
-    <leveldb.jni.version>1.8</leveldb.jni.version>
     <logback.version>1.4.14</logback.version>
     <logback.steno.version>2.1.1</logback.steno.version>
     <log4j.over.slf4j.version>2.0.11</log4j.over.slf4j.version>
     <metrics.client.version>0.13.0</metrics.client.version>
     <metrics.client.incubator.version>0.13.0</metrics.client.incubator.version>
     <metrics.jvm.extra.version>0.13.0</metrics.jvm.extra.version>
-    <metrics.http.extra.version>0.13.0</metrics.http.extra.version>
+    <metrics.http.extra.version>0.13.1</metrics.http.extra.version>
     <metrics.aggregator.protocol.version>1.1.0</metrics.aggregator.protocol.version>
     <mockito.version>5.10.0</mockito.version>
     <netty.version>4.0.56.Final</netty.version>
     <netty.all.version>4.0.21.Final</netty.all.version>
     <ning.http.client.version>1.9.31</ning.http.client.version>
     <oval.version>3.2.1</oval.version>
-    <play.ws.version>2.2.5</play.ws.version>
+    <play.ws.version>3.0.1</play.ws.version>
     <postgresql.version>42.7.1</postgresql.version>
     <protobuf.version>3.25.2</protobuf.version>
-    <reflections.version>0.10.2</reflections.version>
+    <reflections.version>0.11.7</reflections.version>
     <scala.version>2.13</scala.version>
     <scala.library.version>2.13.12</scala.library.version>
     <signalfx.protoc.version>1.0.38</signalfx.protoc.version>
@@ -572,9 +570,9 @@
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-slf4j_${scala.version}</artifactId>
-      <version>${akka.version}</version>
+      <groupId>org.apache.pekko</groupId>
+      <artifactId>pekko-slf4j_${scala.version}</artifactId>
+      <version>${pekko.version}</version>
       <scope>runtime</scope>
     </dependency>
     <!-- Metrics -->
@@ -667,7 +665,7 @@
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.module</groupId>
-      <artifactId>jackson-module-guice</artifactId>
+      <artifactId>jackson-module-guice7</artifactId>
       <version>${jackson.version}</version>
     </dependency>
     <dependency>
@@ -682,21 +680,21 @@
       <version>${jackson.version}</version>
       <scope>runtime</scope>
     </dependency>
-    <!-- Akka -->
+    <!-- Pekko -->
     <dependency>
-      <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-actor_${scala.version}</artifactId>
-      <version>${akka.version}</version>
+      <groupId>org.apache.pekko</groupId>
+      <artifactId>pekko-actor_${scala.version}</artifactId>
+      <version>${pekko.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-http-core_${scala.version}</artifactId>
-      <version>${akka.http.version}</version>
+      <groupId>org.apache.pekko</groupId>
+      <artifactId>pekko-http-core_${scala.version}</artifactId>
+      <version>${pekko.http.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-stream_${scala.version}</artifactId>
-      <version>${akka.version}</version>
+      <groupId>org.apache.pekko</groupId>
+      <artifactId>pekko-stream_${scala.version}</artifactId>
+      <version>${pekko.version}</version>
     </dependency>
     <dependency>
       <groupId>com.typesafe</groupId>
@@ -704,24 +702,24 @@
       <version>${typesafe.config.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-cluster_${scala.version}</artifactId>
-      <version>${akka.version}</version>
+      <groupId>org.apache.pekko</groupId>
+      <artifactId>pekko-cluster_${scala.version}</artifactId>
+      <version>${pekko.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-remote_${scala.version}</artifactId>
-      <version>${akka.version}</version>
+      <groupId>org.apache.pekko</groupId>
+      <artifactId>pekko-remote_${scala.version}</artifactId>
+      <version>${pekko.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-cluster-sharding_${scala.version}</artifactId>
-      <version>${akka.version}</version>
+      <groupId>org.apache.pekko</groupId>
+      <artifactId>pekko-cluster-sharding_${scala.version}</artifactId>
+      <version>${pekko.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-distributed-data_${scala.version}</artifactId>
-      <version>${akka.version}</version>
+      <groupId>org.apache.pekko</groupId>
+      <artifactId>pekko-distributed-data_${scala.version}</artifactId>
+      <version>${pekko.version}</version>
       <scope>runtime</scope>
     </dependency>
     <dependency>
@@ -730,33 +728,21 @@
       <version>${typesafe.ssl.config.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-persistence-cassandra_${scala.version}</artifactId>
-      <version>${akka.persistence.cassandra.version}</version>
+      <groupId>org.apache.pekko</groupId>
+      <artifactId>pekko-persistence-cassandra_${scala.version}</artifactId>
+      <version>${pekko.persistence.cassandra.version}</version>
       <scope>runtime</scope>
       <exclusions>
         <exclusion>
-          <groupId>com.typesafe.akka</groupId>
-          <artifactId>akka-persistence-query</artifactId>
+          <groupId>org.apache.pekko</groupId>
+          <artifactId>pekko-persistence-query</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-persistence-query_${scala.version}</artifactId>
-      <version>${akka.version}</version>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.iq80.leveldb</groupId>
-      <artifactId>leveldb</artifactId>
-      <version>${leveldb.version}</version>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.fusesource.leveldbjni</groupId>
-      <artifactId>leveldbjni-all</artifactId>
-      <version>${leveldb.jni.version}</version>
+      <groupId>org.apache.pekko</groupId>
+      <artifactId>pekko-persistence-query_${scala.version}</artifactId>
+      <version>${pekko.version}</version>
       <scope>runtime</scope>
     </dependency>
     <!-- Database -->
@@ -875,12 +861,12 @@
       <version>${asynchttpclient.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.typesafe.play</groupId>
+      <groupId>org.playframework</groupId>
       <artifactId>play-ahc-ws-standalone_${scala.version}</artifactId>
       <version>${play.ws.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.typesafe.play</groupId>
+      <groupId>org.playframework</groupId>
       <artifactId>play-ws-standalone_${scala.version}</artifactId>
       <version>${play.ws.version}</version>
     </dependency>
@@ -895,16 +881,9 @@
       <version>${apache.httpcore.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.reflections</groupId>
-      <artifactId>reflections</artifactId>
+      <groupId>net.oneandone.reflections8</groupId>
+      <artifactId>reflections8</artifactId>
       <version>${reflections.version}</version>
-      <exclusions>
-        <!-- TODO(ville): Remove suppression once findbugs to spotbugs migration is complete in CAGG -->
-        <exclusion>
-          <groupId>com.google.code.findbugs</groupId>
-          <artifactId>findbugs-annotations</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.aspectj</groupId>
@@ -965,15 +944,15 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-testkit_${scala.version}</artifactId>
-      <version>${akka.version}</version>
+      <groupId>org.apache.pekko</groupId>
+      <artifactId>pekko-testkit_${scala.version}</artifactId>
+      <version>${pekko.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-persistence-cassandra-launcher_${scala.version}</artifactId>
-      <version>${akka.persistence.cassandra.version}</version>
+      <groupId>org.apache.pekko</groupId>
+      <artifactId>pekko-persistence-cassandra-launcher_${scala.version}</artifactId>
+      <version>${pekko.persistence.cassandra.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

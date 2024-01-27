@@ -15,15 +15,15 @@
  */
 package com.arpnetworking.clusteraggregator.configuration;
 
-import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.Terminated;
-import akka.testkit.CallingThreadDispatcher;
-import akka.testkit.TestActorRef;
-import akka.testkit.TestProbe;
 import com.arpnetworking.utility.BaseActorTest;
 import com.arpnetworking.utility.ConfiguredLaunchableFactory;
+import org.apache.pekko.actor.AbstractActor;
+import org.apache.pekko.actor.ActorRef;
+import org.apache.pekko.actor.Props;
+import org.apache.pekko.actor.Terminated;
+import org.apache.pekko.testkit.CallingThreadDispatcher;
+import org.apache.pekko.testkit.TestActorRef;
+import org.apache.pekko.testkit.TestProbe;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

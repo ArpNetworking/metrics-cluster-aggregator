@@ -15,11 +15,11 @@
  */
 package com.arpnetworking.tsdcore.sinks;
 
-import akka.actor.ActorSystem;
 import com.arpnetworking.test.TestBeanFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.google.common.collect.ImmutableList;
+import org.apache.pekko.actor.ActorSystem;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;

@@ -16,10 +16,10 @@
 
 package com.arpnetworking.utility;
 
-import akka.actor.ActorRef;
 import com.arpnetworking.clusteraggregator.configuration.ConfigurableActorProxy;
 import com.arpnetworking.configuration.Configuration;
 import com.arpnetworking.configuration.Listener;
+import org.apache.pekko.actor.ActorRef;
 
 import java.util.Optional;
 

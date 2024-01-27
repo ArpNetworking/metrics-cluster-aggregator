@@ -16,17 +16,6 @@
 
 package com.arpnetworking.clusteraggregator;
 
-import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Address;
-import akka.actor.Cancellable;
-import akka.actor.Props;
-import akka.actor.Scheduler;
-import akka.cluster.Cluster;
-import akka.cluster.ClusterEvent;
-import akka.cluster.sharding.ClusterSharding;
-import akka.cluster.sharding.ShardRegion;
 import com.arpnetworking.clusteraggregator.models.ShardAllocation;
 import com.arpnetworking.metrics.Metrics;
 import com.arpnetworking.metrics.MetricsFactory;
@@ -38,6 +27,17 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.apache.pekko.actor.AbstractActor;
+import org.apache.pekko.actor.ActorRef;
+import org.apache.pekko.actor.ActorSystem;
+import org.apache.pekko.actor.Address;
+import org.apache.pekko.actor.Cancellable;
+import org.apache.pekko.actor.Props;
+import org.apache.pekko.actor.Scheduler;
+import org.apache.pekko.cluster.Cluster;
+import org.apache.pekko.cluster.ClusterEvent;
+import org.apache.pekko.cluster.sharding.ClusterSharding;
+import org.apache.pekko.cluster.sharding.ShardRegion;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 import scala.jdk.javaapi.CollectionConverters;
@@ -62,13 +62,13 @@ import javax.annotation.Nullable;
 public class ClusterStatusCache extends AbstractActor {
 
     /**
-     * Creates a {@link akka.actor.Props} for use in Akka.
+     * Creates a {@link org.apache.pekko.actor.Props} for use in Pekko.
      *
      *
-     * @param system The Akka {@link ActorSystem}.
+     * @param system The Pekko {@link ActorSystem}.
      * @param pollInterval The {@link java.time.Duration} for polling state.
      * @param metricsFactory A {@link MetricsFactory} to use for metrics creation.
-     * @return A new {@link akka.actor.Props}
+     * @return A new {@link org.apache.pekko.actor.Props}
      */
     public static Props props(
             final ActorSystem system,
@@ -80,7 +80,7 @@ public class ClusterStatusCache extends AbstractActor {
     /**
      * Public constructor.
      *
-     * @param system The Akka {@link ActorSystem}.
+     * @param system The Pekko {@link ActorSystem}.
      * @param pollInterval The {@link java.time.Duration} for polling state.
      * @param metricsFactory A {@link MetricsFactory} to use for metrics creation.
      */
@@ -121,11 +121,11 @@ public class ClusterStatusCache extends AbstractActor {
                 .match(ClusterEvent.CurrentClusterState.class, clusterState -> {
                     _clusterState = Optional.of(clusterState);
                     try (Metrics metrics = _metricsFactory.create()) {
-                        metrics.setGauge("akka/members_count", CollectionConverters.asJava(clusterState.members()).size());
+                        metrics.setGauge("pekko/members_count", CollectionConverters.asJava(clusterState.members()).size());
                         if (_cluster.selfAddress().equals(clusterState.getLeader())) {
-                            metrics.setGauge("akka/is_leader", 1);
+                            metrics.setGauge("pekko/is_leader", 1);
                         } else {
-                            metrics.setGauge("akka/is_leader", 0);
+                            metrics.setGauge("pekko/is_leader", 0);
                         }
                     }
                 })
@@ -153,8 +153,8 @@ public class ClusterStatusCache extends AbstractActor {
                             rebalancePending = _rebalanceState.get().getPendingRebalances().size();
                         }
                         try (Metrics metrics = _metricsFactory.create()) {
-                            metrics.setGauge("akka/cluster/rebalance/inflight", rebalanceInflight);
-                            metrics.setGauge("akka/cluster/rebalance/pending", rebalancePending);
+                            metrics.setGauge("pekko/cluster/rebalance/inflight", rebalanceInflight);
+                            metrics.setGauge("pekko/cluster/rebalance/pending", rebalancePending);
                         }
                     } else {
                         unhandled(message);
@@ -185,10 +185,10 @@ public class ClusterStatusCache extends AbstractActor {
         for (final Map.Entry<String, Integer> entry : shardsPerAddress.entrySet()) {
             try (Metrics metrics = _metricsFactory.create()) {
                 metrics.addAnnotation("address", entry.getKey());
-                metrics.setGauge("akka/cluster/shards", entry.getValue());
+                metrics.setGauge("pekko/cluster/shards", entry.getValue());
                 @Nullable final Long actorCount = actorsPerAddress.get(entry.getKey());
                 if (actorCount != null) {
-                    metrics.setGauge("akka/cluster/actors", actorCount);
+                    metrics.setGauge("pekko/cluster/actors", actorCount);
                 }
             }
         }

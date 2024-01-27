@@ -17,7 +17,7 @@ package com.arpnetworking.utility;
 
 import com.arpnetworking.logback.annotations.LogValue;
 import com.arpnetworking.steno.LogValueMapFactory;
-import org.reflections.Reflections;
+import org.reflections8.Reflections;
 
 import java.lang.annotation.Annotation;
 import java.util.Set;

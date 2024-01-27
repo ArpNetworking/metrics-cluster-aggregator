@@ -13,39 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.arpnetworking.configuration.jackson.akka;
+package com.arpnetworking.configuration.jackson.pekko;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import com.arpnetworking.logback.annotations.LogValue;
 import com.arpnetworking.steno.LogValueMapFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import org.apache.pekko.actor.ActorRef;
+import org.apache.pekko.actor.ActorSystem;
 
 import java.io.IOException;
 
 /**
- * Serializer for an Akka ActorRef.
+ * Deserializer for a Pekko ActorRef.
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class ActorRefSerializer extends JsonSerializer<ActorRef> {
+public class ActorRefDeserializer extends JsonDeserializer<ActorRef> {
     /**
      * Public constructor.
      *
-     * @param system actor system to use to resolve references
+     * @param system actor system used to resolve references
      */
-    public ActorRefSerializer(final ActorSystem system) {
+    public ActorRefDeserializer(final ActorSystem system) {
         _system = system;
     }
 
     @Override
-    public void serialize(
-            final ActorRef value,
-            final JsonGenerator gen,
-            final SerializerProvider serializers) throws IOException {
-        gen.writeString(value.path().toStringWithAddress(_system.provider().getDefaultAddress()));
+    public ActorRef deserialize(final JsonParser p, final DeserializationContext ctxt) throws IOException {
+        return _system.provider().resolveActorRef(p.getValueAsString());
     }
 
     /**

@@ -19,7 +19,7 @@
   <!-- IMPORTANT: This logger is only used during testing -->
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>%relative [%level] [%t %X{sourceThread}] %X{akkaSource}: %message %ex%n</pattern>
+      <pattern>%relative [%level] [%t %X{sourceThread}] %X{pekkoSource}: %message %ex%n</pattern>
     </encoder>
   </appender>
 

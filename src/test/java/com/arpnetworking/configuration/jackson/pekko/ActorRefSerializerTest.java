@@ -13,20 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.arpnetworking.configuration.jackson.akka;
+package com.arpnetworking.configuration.jackson.pekko;
 
-import akka.actor.AbstractActor;
-import akka.actor.Actor;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.testkit.TestActorRef;
-import akka.testkit.TestProbe;
 import com.arpnetworking.commons.jackson.databind.ObjectMapperFactory;
 import com.arpnetworking.utility.BaseActorTest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.pekko.actor.AbstractActor;
+import org.apache.pekko.actor.Actor;
+import org.apache.pekko.actor.ActorRef;
+import org.apache.pekko.actor.ActorSystem;
+import org.apache.pekko.actor.Props;
+import org.apache.pekko.testkit.TestActorRef;
+import org.apache.pekko.testkit.TestProbe;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,7 +36,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Tests for the akka actor reference serializer.
+ * Tests for the pekko actor reference serializer.
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
@@ -47,7 +47,7 @@ public class ActorRefSerializerTest extends BaseActorTest {
     public void setUp() {
         super.setUp();
         _mapper = ObjectMapperFactory.createInstance();
-        _mapper.registerModule(new AkkaModule(getSystem()));
+        _mapper.registerModule(new PekkoModule(getSystem()));
     }
 
     @Test
@@ -65,7 +65,7 @@ public class ActorRefSerializerTest extends BaseActorTest {
 
         final ActorSystem system2 = ActorSystem.create("Test");
         final ObjectMapper system2Mapper = ObjectMapperFactory.createInstance();
-        system2Mapper.registerModule(new AkkaModule(system2));
+        system2Mapper.registerModule(new PekkoModule(system2));
         final ActorRef remoteRef = system2Mapper.readValue(serialized.toString(), ActorRef.class);
 
         remoteRef.tell("OK", ActorRef.noSender());

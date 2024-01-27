@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.arpnetworking.configuration.jackson.akka;
+package com.arpnetworking.configuration.jackson.pekko;
 
-import akka.actor.ActorRef;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import org.apache.pekko.actor.ActorRef;
 
 import java.io.IOException;
 
 /**
- * Serializer for an Akka ActorRef.
+ * Serializer for a Pekko ActorRef.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */

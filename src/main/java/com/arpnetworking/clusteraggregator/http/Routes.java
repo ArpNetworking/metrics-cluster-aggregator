@@ -15,25 +15,11 @@
  */
 package com.arpnetworking.clusteraggregator.http;
 
-import akka.actor.ActorSystem;
-import akka.cluster.Member;
-import akka.http.javadsl.model.ContentType;
-import akka.http.javadsl.model.ContentTypes;
-import akka.http.javadsl.model.HttpHeader;
-import akka.http.javadsl.model.HttpMethods;
-import akka.http.javadsl.model.HttpRequest;
-import akka.http.javadsl.model.HttpResponse;
-import akka.http.javadsl.model.StatusCodes;
-import akka.http.javadsl.model.headers.CacheControl;
-import akka.http.javadsl.model.headers.CacheDirectives;
-import akka.japi.function.Function;
-import akka.pattern.Patterns;
-import akka.util.ByteString;
 import com.arpnetworking.clusteraggregator.Status;
 import com.arpnetworking.clusteraggregator.models.StatusResponse;
 import com.arpnetworking.clusteraggregator.models.VersionInfo;
 import com.arpnetworking.commons.jackson.databind.ObjectMapperFactory;
-import com.arpnetworking.configuration.jackson.akka.AkkaModule;
+import com.arpnetworking.configuration.jackson.pekko.PekkoModule;
 import com.arpnetworking.metrics.incubator.PeriodicMetrics;
 import com.arpnetworking.steno.LogBuilder;
 import com.arpnetworking.steno.Logger;
@@ -48,6 +34,20 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.apache.pekko.actor.ActorSystem;
+import org.apache.pekko.cluster.Member;
+import org.apache.pekko.http.javadsl.model.ContentType;
+import org.apache.pekko.http.javadsl.model.ContentTypes;
+import org.apache.pekko.http.javadsl.model.HttpHeader;
+import org.apache.pekko.http.javadsl.model.HttpMethods;
+import org.apache.pekko.http.javadsl.model.HttpRequest;
+import org.apache.pekko.http.javadsl.model.HttpResponse;
+import org.apache.pekko.http.javadsl.model.StatusCodes;
+import org.apache.pekko.http.javadsl.model.headers.CacheControl;
+import org.apache.pekko.http.javadsl.model.headers.CacheDirectives;
+import org.apache.pekko.japi.function.Function;
+import org.apache.pekko.pattern.Patterns;
+import org.apache.pekko.util.ByteString;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -95,7 +95,7 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
 
         _objectMapper = ObjectMapperFactory.createInstance();
         _objectMapper.registerModule(new SimpleModule().addSerializer(Member.class, new MemberSerializer()));
-        _objectMapper.registerModule(new AkkaModule(actorSystem));
+        _objectMapper.registerModule(new PekkoModule(actorSystem));
     }
 
     @Override

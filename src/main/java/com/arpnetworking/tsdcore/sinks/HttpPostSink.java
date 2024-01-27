@@ -15,12 +15,6 @@
  */
 package com.arpnetworking.tsdcore.sinks;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.PoisonPill;
-import akka.http.javadsl.model.HttpMethods;
-import akka.http.javadsl.model.MediaTypes;
-import akka.http.javadsl.model.StatusCodes;
 import com.arpnetworking.logback.annotations.LogValue;
 import com.arpnetworking.metrics.incubator.PeriodicMetrics;
 import com.arpnetworking.steno.LogValueMapFactory;
@@ -37,6 +31,12 @@ import net.sf.oval.constraint.CheckWithCheck;
 import net.sf.oval.constraint.Min;
 import net.sf.oval.constraint.NotNull;
 import net.sf.oval.context.OValContext;
+import org.apache.pekko.actor.ActorRef;
+import org.apache.pekko.actor.ActorSystem;
+import org.apache.pekko.actor.PoisonPill;
+import org.apache.pekko.http.javadsl.model.HttpMethods;
+import org.apache.pekko.http.javadsl.model.MediaTypes;
+import org.apache.pekko.http.javadsl.model.StatusCodes;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.AsyncHttpClientConfig;
 import org.asynchttpclient.DefaultAsyncHttpClient;

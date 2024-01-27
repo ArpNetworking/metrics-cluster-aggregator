@@ -15,15 +15,15 @@
  */
 package com.arpnetworking.clusteraggregator.aggregation;
 
-import akka.actor.ActorRef;
-import akka.actor.ReceiveTimeout;
-import akka.actor.Terminated;
-import akka.cluster.sharding.ShardRegion;
-import akka.testkit.TestActorRef;
-import akka.testkit.TestProbe;
 import com.arpnetworking.metrics.incubator.PeriodicMetrics;
 import com.arpnetworking.utility.BaseActorTest;
 import com.google.common.collect.ImmutableSet;
+import org.apache.pekko.actor.ActorRef;
+import org.apache.pekko.actor.ReceiveTimeout;
+import org.apache.pekko.actor.Terminated;
+import org.apache.pekko.cluster.sharding.ShardRegion;
+import org.apache.pekko.testkit.TestActorRef;
+import org.apache.pekko.testkit.TestProbe;
 import org.junit.Assert;
 import org.junit.Test;
 import scala.concurrent.duration.FiniteDuration;

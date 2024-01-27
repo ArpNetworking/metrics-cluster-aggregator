@@ -15,15 +15,15 @@
  */
 package com.arpnetworking.clusteraggregator;
 
-import akka.actor.AbstractActor;
-import akka.actor.Cancellable;
-import akka.actor.Props;
-import akka.actor.Scheduler;
 import com.arpnetworking.metrics.MetricsFactory;
 import com.arpnetworking.metrics.jvm.JvmMetricsRunnable;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.google.common.base.MoreObjects;
+import org.apache.pekko.actor.AbstractActor;
+import org.apache.pekko.actor.Cancellable;
+import org.apache.pekko.actor.Props;
+import org.apache.pekko.actor.Scheduler;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.time.Duration;
@@ -38,7 +38,7 @@ import javax.annotation.Nullable;
 public final class JvmMetricsCollector extends AbstractActor {
 
     /**
-     * Creates a {@link Props} for construction in Akka.
+     * Creates a {@link Props} for construction in Pekko.
      *
      * @param interval An instance of {@link Duration}.
      * @param metricsFactory A {@link MetricsFactory} to use for metrics creation.
@@ -116,7 +116,7 @@ public final class JvmMetricsCollector extends AbstractActor {
                         TimeUnit.MILLISECONDS),
                 new JvmMetricsRunnable.Builder()
                         .setMetricsFactory(metricsFactory)
-                        .setSwallowException(false) // Relying on the default akka supervisor strategy here.
+                        .setSwallowException(false) // Relying on the default pekko supervisor strategy here.
                         .build(),
         null
         );

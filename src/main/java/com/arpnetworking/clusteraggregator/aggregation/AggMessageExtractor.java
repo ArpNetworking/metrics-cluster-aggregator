@@ -15,12 +15,12 @@
  */
 package com.arpnetworking.clusteraggregator.aggregation;
 
-import akka.cluster.sharding.ShardRegion;
 import com.arpnetworking.clusteraggregator.models.CombinedMetricData;
 import com.arpnetworking.metrics.aggregation.protocol.Messages;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import org.apache.pekko.cluster.sharding.ShardRegion;
 
 import java.util.Comparator;
 import java.util.Map;

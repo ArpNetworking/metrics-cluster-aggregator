@@ -16,11 +16,6 @@
 
 package com.arpnetworking.clusteraggregator;
 
-import akka.actor.Actor;
-import akka.actor.ActorRef;
-import akka.actor.UnhandledMessage;
-import akka.testkit.TestActorRef;
-import akka.testkit.TestProbe;
 import com.arpnetworking.clusteraggregator.configuration.EmitterConfiguration;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.FQDSN;
@@ -30,6 +25,11 @@ import com.arpnetworking.tsdcore.sinks.Sink;
 import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.arpnetworking.tsdcore.statistics.StatisticFactory;
 import com.arpnetworking.utility.BaseActorTest;
+import org.apache.pekko.actor.Actor;
+import org.apache.pekko.actor.ActorRef;
+import org.apache.pekko.actor.UnhandledMessage;
+import org.apache.pekko.testkit.TestActorRef;
+import org.apache.pekko.testkit.TestProbe;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

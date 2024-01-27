@@ -16,13 +16,6 @@
 
 package com.arpnetworking.clusteraggregator.client;
 
-import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.Terminated;
-import akka.io.Tcp;
-import akka.io.TcpMessage;
-import akka.util.ByteString;
 import com.arpnetworking.clusteraggregator.models.AggregationMode;
 import com.arpnetworking.clusteraggregator.models.CombinedMetricData;
 import com.arpnetworking.metrics.aggregation.protocol.Messages;
@@ -37,6 +30,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.GeneratedMessageV3;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.apache.pekko.actor.AbstractActor;
+import org.apache.pekko.actor.ActorRef;
+import org.apache.pekko.actor.Props;
+import org.apache.pekko.actor.Terminated;
+import org.apache.pekko.io.Tcp;
+import org.apache.pekko.io.TcpMessage;
+import org.apache.pekko.util.ByteString;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.net.InetSocketAddress;
@@ -52,7 +52,7 @@ import java.util.Optional;
  */
 public class AggClientConnection extends AbstractActor {
     /**
-     * Creates a {@link Props} for use in Akka.
+     * Creates a {@link Props} for use in Pekko.
      *
      * @param connection Reference to the client connection actor.
      * @param remote The address of the client socket.

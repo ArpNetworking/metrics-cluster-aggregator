@@ -15,19 +15,19 @@
  */
 package com.arpnetworking.tsdcore.sinks;
 
-import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.io.Tcp;
-import akka.io.TcpExt;
-import akka.io.TcpMessage;
-import akka.util.ByteString;
 import com.arpnetworking.logback.annotations.LogValue;
 import com.arpnetworking.steno.LogValueMapFactory;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.model.PeriodicData;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.apache.pekko.actor.AbstractActor;
+import org.apache.pekko.actor.ActorRef;
+import org.apache.pekko.actor.Props;
+import org.apache.pekko.io.Tcp;
+import org.apache.pekko.io.TcpExt;
+import org.apache.pekko.io.TcpMessage;
+import org.apache.pekko.util.ByteString;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.net.InetSocketAddress;
@@ -36,7 +36,7 @@ import java.util.LinkedList;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Actor that sends TCP data with Akka.
+ * Actor that sends TCP data with Pekko.
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */

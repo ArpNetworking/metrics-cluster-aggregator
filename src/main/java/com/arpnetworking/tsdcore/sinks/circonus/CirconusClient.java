@@ -15,9 +15,6 @@
  */
 package com.arpnetworking.tsdcore.sinks.circonus;
 
-import akka.http.javadsl.model.HttpMethods;
-import akka.stream.Materializer;
-import akka.util.ByteString;
 import com.arpnetworking.commons.builder.OvalBuilder;
 import com.arpnetworking.commons.jackson.databind.ObjectMapperFactory;
 import com.arpnetworking.logback.annotations.LogValue;
@@ -33,6 +30,9 @@ import com.google.common.base.Charsets;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.sslconfig.ssl.SSLConfigSettings;
 import net.sf.oval.constraint.NotNull;
+import org.apache.pekko.http.javadsl.model.HttpMethods;
+import org.apache.pekko.stream.Materializer;
+import org.apache.pekko.util.ByteString;
 import play.api.libs.ws.WSClientConfig;
 import play.api.libs.ws.ahc.AhcWSClientConfig;
 import play.libs.ws.InMemoryBodyWritable;

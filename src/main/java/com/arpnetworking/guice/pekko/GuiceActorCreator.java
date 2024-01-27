@@ -13,21 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.arpnetworking.guice.akka;
+package com.arpnetworking.guice.pekko;
 
-import akka.actor.Actor;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.IndirectActorProducer;
-import akka.actor.Props;
 import com.arpnetworking.logback.annotations.LogValue;
 import com.arpnetworking.steno.LogValueMapFactory;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
+import org.apache.pekko.actor.Actor;
+import org.apache.pekko.actor.ActorRef;
+import org.apache.pekko.actor.ActorSystem;
+import org.apache.pekko.actor.IndirectActorProducer;
+import org.apache.pekko.actor.Props;
 
 /**
- * A Guice-based factory for Akka actors.
+ * A Guice-based factory for Pekko actors.
  *
  * TODO(vkoskela): This is _duplicated_ in metrics-portal and should find its way to a common utility package.
  *

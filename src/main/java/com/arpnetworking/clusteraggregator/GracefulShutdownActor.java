@@ -15,20 +15,20 @@
  */
 package com.arpnetworking.clusteraggregator;
 
-import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Terminated;
-import akka.cluster.Cluster;
-import akka.cluster.sharding.ShardRegion;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.apache.pekko.actor.AbstractActor;
+import org.apache.pekko.actor.ActorRef;
+import org.apache.pekko.actor.ActorSystem;
+import org.apache.pekko.actor.Terminated;
+import org.apache.pekko.cluster.Cluster;
+import org.apache.pekko.cluster.sharding.ShardRegion;
 
 /**
- * Shuts down the Akka cluster gracefully.
+ * Shuts down the Pekko cluster gracefully.
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */

@@ -16,16 +16,16 @@
 
 package com.arpnetworking.clusteraggregator.configuration;
 
-import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
-import akka.actor.PoisonPill;
-import akka.actor.Props;
-import akka.actor.Terminated;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.utility.ConfiguredLaunchableFactory;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Service;
+import org.apache.pekko.actor.AbstractActor;
+import org.apache.pekko.actor.ActorRef;
+import org.apache.pekko.actor.PoisonPill;
+import org.apache.pekko.actor.Props;
+import org.apache.pekko.actor.Terminated;
 
 import java.io.Serializable;
 import java.util.Deque;
