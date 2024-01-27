@@ -265,7 +265,7 @@ public class GuiceModule extends AbstractModule {
     @Singleton
     @Named("http-server")
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
-    private java.util.concurrent.CompletionStage<akka.http.javadsl.ServerBinding> provideHttpServer(
+    private java.util.concurrent.CompletionStage<org.apache.pekko.http.javadsl.ServerBinding> provideHttpServer(
             final ActorSystem system,
             final Routes routes) {
         // Create and bind Http server
@@ -276,7 +276,7 @@ public class GuiceModule extends AbstractModule {
                         _configuration.getHttpPort())
                 .connectionSource();
         return binding.to(
-                akka.stream.javadsl.Sink.foreach(
+                org.apache.pekko.stream.javadsl.Sink.foreach(
                         connection -> connection.handleWithAsyncHandler(routes, materializer)))
                 .run(materializer);
     }
