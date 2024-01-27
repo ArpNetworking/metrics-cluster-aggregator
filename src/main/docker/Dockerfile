@@ -26,7 +26,7 @@ ENV CAGG_UID=1000
 ENV CAGG_GID=1000
 ENV JVM_XMS="64m"
 ENV JVM_XMX="1024m"
-ENV LOGBACK_CONFIG="-Dlogback.configurationFile=/opt/cluster-aggregator/config/logback.xml"
+ENV LOGBACK_CONFIG="-Dlogback.configurationFile=/opt/cluster-aggregator/config/logback-docker.xml"
 ENV CAGG_CONFIG="/opt/cluster-aggregator/config/config.conf"
 ENV JAVA_OPTS=""
 
