@@ -81,7 +81,7 @@ For example:
       "stdout-loglevel": "DEBUG",
       "logging-filter": "org.apache.pekko.event.slf4j.Slf4jLoggingFilter",
       "actor": {
-        "provider": "pekko.cluster.ClusterActorRefProvider",
+        "provider": "org.apache.pekko.cluster.ClusterActorRefProvider",
         "debug": {
           "unhandled": "on"
         }
