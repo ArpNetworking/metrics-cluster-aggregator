@@ -665,7 +665,7 @@
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.module</groupId>
-      <artifactId>jackson-module-guice</artifactId>
+      <artifactId>jackson-module-guice7</artifactId>
       <version>${jackson.version}</version>
     </dependency>
     <dependency>
