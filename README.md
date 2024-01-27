@@ -76,10 +76,10 @@ For example:
   },
   "pekkoConfiguration": {
     "pekko": {
-      "loggers": ["pekko.event.slf4j.Slf4jLogger"],
+      "loggers": ["org.apache.pekko.event.slf4j.Slf4jLogger"],
       "loglevel": "DEBUG",
       "stdout-loglevel": "DEBUG",
-      "logging-filter": "pekko.event.slf4j.Slf4jLoggingFilter",
+      "logging-filter": "org.apache.pekko.event.slf4j.Slf4jLoggingFilter",
       "actor": {
         "provider": "pekko.cluster.ClusterActorRefProvider",
         "debug": {
