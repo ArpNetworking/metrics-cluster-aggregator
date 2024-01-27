@@ -34,7 +34,7 @@ import java.time.Duration;
 import java.util.function.Function;
 
 /**
- * Abstract publisher to send data to a server via Akka TCP channel.
+ * Abstract publisher to send data to a server via Pekko TCP channel.
  *
  * This class leverages a TcpSinkActor to interact with the TCP channel.
  *

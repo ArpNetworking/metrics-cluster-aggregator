@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.arpnetworking.guice.akka;
+package com.arpnetworking.guice.pekko;
 
 import com.arpnetworking.logback.annotations.LogValue;
 import com.arpnetworking.steno.LogValueMapFactory;
@@ -27,7 +27,7 @@ import org.apache.pekko.actor.IndirectActorProducer;
 import org.apache.pekko.actor.Props;
 
 /**
- * A Guice-based factory for Akka actors.
+ * A Guice-based factory for Pekko actors.
  *
  * TODO(vkoskela): This is _duplicated_ in metrics-portal and should find its way to a common utility package.
  *

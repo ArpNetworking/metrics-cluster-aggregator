@@ -13,32 +13,57 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.arpnetworking.configuration.jackson.akka;
+package com.arpnetworking.configuration.jackson.pekko;
 
+import com.arpnetworking.logback.annotations.LogValue;
+import com.arpnetworking.steno.LogValueMapFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import org.apache.pekko.actor.ActorRef;
+import org.apache.pekko.actor.ActorSystem;
 
 import java.io.IOException;
 
 /**
- * Serializer for an Akka ActorRef.
+ * Serializer for a Pekko ActorRef.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class ActorRefLoggingSerializer extends JsonSerializer<ActorRef> {
-
+public class ActorRefSerializer extends JsonSerializer<ActorRef> {
     /**
      * Public constructor.
+     *
+     * @param system actor system to use to resolve references
      */
-    public ActorRefLoggingSerializer() { }
+    public ActorRefSerializer(final ActorSystem system) {
+        _system = system;
+    }
 
     @Override
     public void serialize(
             final ActorRef value,
             final JsonGenerator gen,
             final SerializerProvider serializers) throws IOException {
-        gen.writeString(value.toString());
+        gen.writeString(value.path().toStringWithAddress(_system.provider().getDefaultAddress()));
     }
+
+    /**
+     * Generate a Steno log compatible representation.
+     *
+     * @return Steno log compatible representation.
+     */
+    @LogValue
+    public Object toLogValue() {
+        return LogValueMapFactory.builder(this)
+                .put("actorSystem", _system)
+                .build();
+    }
+
+    @Override
+    public String toString() {
+        return toLogValue().toString();
+    }
+
+    private final ActorSystem _system;
 }

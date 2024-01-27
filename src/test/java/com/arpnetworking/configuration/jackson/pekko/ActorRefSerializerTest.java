@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.arpnetworking.configuration.jackson.akka;
+package com.arpnetworking.configuration.jackson.pekko;
 
 import com.arpnetworking.commons.jackson.databind.ObjectMapperFactory;
 import com.arpnetworking.utility.BaseActorTest;
@@ -36,7 +36,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Tests for the akka actor reference serializer.
+ * Tests for the pekko actor reference serializer.
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
@@ -47,7 +47,7 @@ public class ActorRefSerializerTest extends BaseActorTest {
     public void setUp() {
         super.setUp();
         _mapper = ObjectMapperFactory.createInstance();
-        _mapper.registerModule(new AkkaModule(getSystem()));
+        _mapper.registerModule(new PekkoModule(getSystem()));
     }
 
     @Test
@@ -65,7 +65,7 @@ public class ActorRefSerializerTest extends BaseActorTest {
 
         final ActorSystem system2 = ActorSystem.create("Test");
         final ObjectMapper system2Mapper = ObjectMapperFactory.createInstance();
-        system2Mapper.registerModule(new AkkaModule(system2));
+        system2Mapper.registerModule(new PekkoModule(system2));
         final ActorRef remoteRef = system2Mapper.readValue(serialized.toString(), ActorRef.class);
 
         remoteRef.tell("OK", ActorRef.noSender());

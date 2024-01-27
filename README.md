@@ -54,7 +54,7 @@ The configuration specifies:
 * minConnectionTimeout - The minimum aggregation server client connection timeout in ISO-8601 period notation.
 * jvmMetricsCollectionInterval - The JVM metrics collection interval in ISO-8601 period notation.
 * rebalanceConfiguration - Configuration for aggregator shard rebalancing.
-* akkaConfiguration - Configuration of Akka.
+* pekkoConfiguration - Configuration of Pekko.
 
 For example:
 
@@ -74,30 +74,16 @@ For example:
     "maxParallel": 100,
     "threshold": 500
   },
-  "akkaConfiguration": {
-    "akka": {
-      "loggers": ["akka.event.slf4j.Slf4jLogger"],
+  "pekkoConfiguration": {
+    "pekko": {
+      "loggers": ["pekko.event.slf4j.Slf4jLogger"],
       "loglevel": "DEBUG",
       "stdout-loglevel": "DEBUG",
-      "logging-filter": "akka.event.slf4j.Slf4jLoggingFilter",
+      "logging-filter": "pekko.event.slf4j.Slf4jLoggingFilter",
       "actor": {
-        "provider": "akka.cluster.ClusterActorRefProvider",
+        "provider": "pekko.cluster.ClusterActorRefProvider",
         "debug": {
           "unhandled": "on"
-        },
-        "serializers": {
-          "kryo": "com.romix.akka.serialization.kryo.KryoSerializer"
-        },
-        "serialization-bindings": {
-          "java.lang.Object": "kryo",
-          "java.io.Serializable": "none"
-        },
-        "kryo": {
-          "type": "graph",
-          "idstrategy": "default",
-          "buffer-size": 4096,
-          "max-buffer-size": -1,
-          "kryo-custom-serializer-init": "com.arpnetworking.clusteraggregator.kryo.KryoInitialization"
         }
       },
       "cluster": {
@@ -105,7 +91,7 @@ For example:
           "state-store-mode": "persistence"
         },
         "seed-nodes": [
-          "akka.tcp://Metrics@127.0.0.1:2551"
+          "pekko.tcp://Metrics@127.0.0.1:2551"
         ]
       },
       "remote": {

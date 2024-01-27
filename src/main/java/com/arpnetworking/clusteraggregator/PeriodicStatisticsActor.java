@@ -34,7 +34,7 @@ import java.util.Map;
  */
 public class PeriodicStatisticsActor extends AbstractActor {
     /**
-     * Creates a {@link Props} for construction in Akka.
+     * Creates a {@link Props} for construction in Pekko.
      *
      * @param metricsFactory A {@link MetricsFactory} to use for metrics creation.
      * @return A new {@link Props}.

@@ -34,7 +34,7 @@ import com.arpnetworking.configuration.jackson.HoconFileSource;
 import com.arpnetworking.configuration.jackson.JsonNodeFileSource;
 import com.arpnetworking.configuration.jackson.JsonNodeSource;
 import com.arpnetworking.configuration.triggers.FileTrigger;
-import com.arpnetworking.guice.akka.GuiceActorCreator;
+import com.arpnetworking.guice.pekko.GuiceActorCreator;
 import com.arpnetworking.metrics.MetricsFactory;
 import com.arpnetworking.metrics.Sink;
 import com.arpnetworking.metrics.impl.ApacheHttpSink;
@@ -134,17 +134,17 @@ public class GuiceModule extends AbstractModule {
 
     @Provides
     @Singleton
-    @Named("akka-config")
+    @Named("pekko-config")
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
-    private Config provideAkkaConfig() {
+    private Config providePekkoConfig() {
         // This is necessary because the keys contain periods which when
         // transforming from a map are considered compound path elements. By
         // rendering to JSON and then parsing it this forces the keys to be
         // quoted and thus considered single path elements even with periods.
         try {
-            final String akkaJsonConfig = OBJECT_MAPPER.writeValueAsString(_configuration.getAkkaConfiguration());
+            final String pekkoJsonConfig = OBJECT_MAPPER.writeValueAsString(_configuration.getPekkoConfiguration());
             return ConfigFactory.parseString(
-                    akkaJsonConfig,
+                    pekkoJsonConfig,
                     ConfigParseOptions.defaults()
                             .setSyntax(ConfigSyntax.JSON));
         } catch (final IOException e) {
@@ -184,9 +184,9 @@ public class GuiceModule extends AbstractModule {
     @Provides
     @Singleton
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
-    private ActorSystem provideActorSystem(@Named("akka-config") final Config akkaConfig) {
-        System.out.println(akkaConfig);
-        return ActorSystem.create("Metrics", akkaConfig);
+    private ActorSystem provideActorSystem(@Named("pekko-config") final Config pekkoConfig) {
+        System.out.println(pekkoConfig);
+        return ActorSystem.create("Metrics", pekkoConfig);
     }
 
     @Provides

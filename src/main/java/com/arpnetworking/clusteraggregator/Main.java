@@ -50,7 +50,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Entry point for the akka-based cluster aggregator.
+ * Entry point for the pekko-based cluster aggregator.
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
@@ -140,7 +140,7 @@ public final class Main implements Launchable {
     public synchronized void launch() {
         final Injector injector = launchGuice();
         launchDatabases(injector);
-        launchAkka(injector);
+        launchPekko(injector);
         launchActors(injector);
     }
 
@@ -149,7 +149,7 @@ public final class Main implements Launchable {
      */
     @Override
     public synchronized void shutdown() {
-        shutdownAkka();
+        shutdownPekko();
         shutdownDatabases();
         shutdownGuice();
     }
@@ -208,9 +208,9 @@ public final class Main implements Launchable {
         _shutdownActor = injector.getInstance(Key.get(ActorRef.class, Names.named("graceful-shutdown-actor")));
     }
 
-    private void launchAkka(final Injector injector) {
+    private void launchPekko(final Injector injector) {
         LOGGER.info()
-                .setMessage("Launching Akka")
+                .setMessage("Launching Pekko")
                 .log();
         _system = injector.getInstance(ActorSystem.class);
     }
@@ -232,9 +232,9 @@ public final class Main implements Launchable {
         }
     }
 
-    private void shutdownAkka() {
+    private void shutdownPekko() {
         LOGGER.info()
-                .setMessage("Stopping Akka")
+                .setMessage("Stopping Pekko")
                 .log();
         if (_shutdownActor != null) {
             _shutdownActor.tell(GracefulShutdownActor.Shutdown.instance(), ActorRef.noSender());

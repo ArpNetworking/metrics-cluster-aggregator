@@ -682,7 +682,7 @@
       <version>${jackson.version}</version>
       <scope>runtime</scope>
     </dependency>
-    <!-- Akka -->
+    <!-- Pekko -->
     <dependency>
       <groupId>org.apache.pekko</groupId>
       <artifactId>pekko-actor_${scala.version}</artifactId>

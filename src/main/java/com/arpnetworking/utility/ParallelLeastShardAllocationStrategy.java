@@ -52,7 +52,7 @@ public final class ParallelLeastShardAllocationStrategy extends ShardCoordinator
      *
      * @param maxParallel number of allocations to start in parallel
      * @param rebalanceThreshold difference in number of shards required to cause a rebalance
-     * @param notify the {@link akka.actor.ActorSelection} selection to notify of changes
+     * @param notify the {@link org.apache.pekko.actor.ActorSelection} selection to notify of changes
      */
     public ParallelLeastShardAllocationStrategy(
             final int maxParallel,

@@ -78,7 +78,7 @@ import java.util.stream.Collectors;
 @SuppressWarnings("deprecation")
 public final class CirconusSinkActor extends AbstractActor {
     /**
-     * Creates a {@link akka.actor.Props} for use in Akka.
+     * Creates a {@link org.apache.pekko.actor.Props} for use in Pekko.
      *
      * @param client Circonus client
      * @param broker Circonus broker to push to
@@ -87,7 +87,7 @@ public final class CirconusSinkActor extends AbstractActor {
      * @param spreadDuration the maximum wait time before starting to send metrics
      * @param enableHistograms true to turn on histogram publication
      * @param partitionSet the partition set to partition the check bundles with
-     * @return A new {@link akka.actor.Props}
+     * @return A new {@link org.apache.pekko.actor.Props}
      */
     public static Props props(
             final CirconusClient client,

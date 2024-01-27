@@ -19,7 +19,7 @@ import com.arpnetworking.clusteraggregator.Status;
 import com.arpnetworking.clusteraggregator.models.StatusResponse;
 import com.arpnetworking.clusteraggregator.models.VersionInfo;
 import com.arpnetworking.commons.jackson.databind.ObjectMapperFactory;
-import com.arpnetworking.configuration.jackson.akka.AkkaModule;
+import com.arpnetworking.configuration.jackson.pekko.PekkoModule;
 import com.arpnetworking.metrics.incubator.PeriodicMetrics;
 import com.arpnetworking.steno.LogBuilder;
 import com.arpnetworking.steno.Logger;
@@ -95,7 +95,7 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
 
         _objectMapper = ObjectMapperFactory.createInstance();
         _objectMapper.registerModule(new SimpleModule().addSerializer(Member.class, new MemberSerializer()));
-        _objectMapper.registerModule(new AkkaModule(actorSystem));
+        _objectMapper.registerModule(new PekkoModule(actorSystem));
     }
 
     @Override

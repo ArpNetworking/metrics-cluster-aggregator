@@ -198,7 +198,7 @@ public final class HttpSourceActor extends AbstractActor {
 
         // Wire the shapes
         builder.from(split.out(0)).via(getBody).toInlet(join.in0()); // Split to get the body bytes
-        builder.from(split.out(1)).toInlet(join.in1()); // Pass the Akka HTTP request through
+        builder.from(split.out(1)).toInlet(join.in1()); // Pass the Pekko HTTP request through
         builder.from(join.out()).toInlet(createRequest.in()); // Join to create the Request and parse it
 
         return FlowShape.of(split.in(), createRequest.out());

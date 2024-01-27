@@ -28,7 +28,7 @@ import org.apache.pekko.cluster.Cluster;
 import org.apache.pekko.cluster.sharding.ShardRegion;
 
 /**
- * Shuts down the Akka cluster gracefully.
+ * Shuts down the Pekko cluster gracefully.
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */

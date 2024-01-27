@@ -36,7 +36,7 @@ import java.util.LinkedList;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Actor that sends TCP data with Akka.
+ * Actor that sends TCP data with Pekko.
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */

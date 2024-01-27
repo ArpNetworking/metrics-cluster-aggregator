@@ -62,13 +62,13 @@ import javax.annotation.Nullable;
 public class ClusterStatusCache extends AbstractActor {
 
     /**
-     * Creates a {@link akka.actor.Props} for use in Akka.
+     * Creates a {@link org.apache.pekko.actor.Props} for use in Pekko.
      *
      *
-     * @param system The Akka {@link ActorSystem}.
+     * @param system The Pekko {@link ActorSystem}.
      * @param pollInterval The {@link java.time.Duration} for polling state.
      * @param metricsFactory A {@link MetricsFactory} to use for metrics creation.
-     * @return A new {@link akka.actor.Props}
+     * @return A new {@link org.apache.pekko.actor.Props}
      */
     public static Props props(
             final ActorSystem system,
@@ -80,7 +80,7 @@ public class ClusterStatusCache extends AbstractActor {
     /**
      * Public constructor.
      *
-     * @param system The Akka {@link ActorSystem}.
+     * @param system The Pekko {@link ActorSystem}.
      * @param pollInterval The {@link java.time.Duration} for polling state.
      * @param metricsFactory A {@link MetricsFactory} to use for metrics creation.
      */
@@ -121,11 +121,11 @@ public class ClusterStatusCache extends AbstractActor {
                 .match(ClusterEvent.CurrentClusterState.class, clusterState -> {
                     _clusterState = Optional.of(clusterState);
                     try (Metrics metrics = _metricsFactory.create()) {
-                        metrics.setGauge("akka/members_count", CollectionConverters.asJava(clusterState.members()).size());
+                        metrics.setGauge("pekko/members_count", CollectionConverters.asJava(clusterState.members()).size());
                         if (_cluster.selfAddress().equals(clusterState.getLeader())) {
-                            metrics.setGauge("akka/is_leader", 1);
+                            metrics.setGauge("pekko/is_leader", 1);
                         } else {
-                            metrics.setGauge("akka/is_leader", 0);
+                            metrics.setGauge("pekko/is_leader", 0);
                         }
                     }
                 })
@@ -153,8 +153,8 @@ public class ClusterStatusCache extends AbstractActor {
                             rebalancePending = _rebalanceState.get().getPendingRebalances().size();
                         }
                         try (Metrics metrics = _metricsFactory.create()) {
-                            metrics.setGauge("akka/cluster/rebalance/inflight", rebalanceInflight);
-                            metrics.setGauge("akka/cluster/rebalance/pending", rebalancePending);
+                            metrics.setGauge("pekko/cluster/rebalance/inflight", rebalanceInflight);
+                            metrics.setGauge("pekko/cluster/rebalance/pending", rebalancePending);
                         }
                     } else {
                         unhandled(message);
@@ -185,10 +185,10 @@ public class ClusterStatusCache extends AbstractActor {
         for (final Map.Entry<String, Integer> entry : shardsPerAddress.entrySet()) {
             try (Metrics metrics = _metricsFactory.create()) {
                 metrics.addAnnotation("address", entry.getKey());
-                metrics.setGauge("akka/cluster/shards", entry.getValue());
+                metrics.setGauge("pekko/cluster/shards", entry.getValue());
                 @Nullable final Long actorCount = actorsPerAddress.get(entry.getKey());
                 if (actorCount != null) {
-                    metrics.setGauge("akka/cluster/actors", actorCount);
+                    metrics.setGauge("pekko/cluster/actors", actorCount);
                 }
             }
         }

@@ -15,7 +15,7 @@
  */
 package com.arpnetworking.tsdcore.sinks.circonus;
 
-import com.arpnetworking.akka.UniformRandomTimeScheduler;
+import com.arpnetworking.pekko.UniformRandomTimeScheduler;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.sinks.circonus.api.BrokerListResponse;

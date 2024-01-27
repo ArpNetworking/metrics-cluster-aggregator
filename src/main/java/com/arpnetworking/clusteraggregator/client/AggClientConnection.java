@@ -52,7 +52,7 @@ import java.util.Optional;
  */
 public class AggClientConnection extends AbstractActor {
     /**
-     * Creates a {@link Props} for use in Akka.
+     * Creates a {@link Props} for use in Pekko.
      *
      * @param connection Reference to the client connection actor.
      * @param remote The address of the client socket.

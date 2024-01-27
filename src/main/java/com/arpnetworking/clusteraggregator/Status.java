@@ -71,7 +71,7 @@ public class Status extends AbstractActor {
     }
 
     /**
-     * Creates a {@link Props} for use in Akka.
+     * Creates a {@link Props} for use in Pekko.
      *
      * @param cluster The instance of the Clustering extension.
      * @param clusterStatusCache The actor holding the cached cluster status.

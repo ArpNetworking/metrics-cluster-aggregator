@@ -37,7 +37,7 @@ import java.time.ZonedDateTime;
  */
 public class Emitter extends AbstractActor {
     /**
-     * Creates a {@link Props} for construction in Akka.
+     * Creates a {@link Props} for construction in Pekko.
      *
      * @param config Config describing the sinks to write to
      * @return A new {@link Props}.

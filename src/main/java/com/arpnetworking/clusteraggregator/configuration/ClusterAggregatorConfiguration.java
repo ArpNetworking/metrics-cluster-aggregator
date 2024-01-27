@@ -108,8 +108,8 @@ public final class ClusterAggregatorConfiguration {
         return _jvmMetricsCollectionInterval;
     }
 
-    public Map<String, ?> getAkkaConfiguration() {
-        return Collections.unmodifiableMap(_akkaConfiguration);
+    public Map<String, ?> getPekkoConfiguration() {
+        return Collections.unmodifiableMap(_pekkoConfiguration);
     }
 
     public File getHostPipelineConfiguration() {
@@ -178,7 +178,7 @@ public final class ClusterAggregatorConfiguration {
                 .add("AggregatorHost", _aggregationHost)
                 .add("AggregatorPort", _aggregationPort)
                 .add("LogDirectory", _logDirectory)
-                .add("AkkaConfiguration", _akkaConfiguration)
+                .add("PekkoConfiguration", _pekkoConfiguration)
                 .add("HostPipelineConfiguration", _hostPipelineConfiguration)
                 .add("ClusterPipelineConfiguration", _hostPipelineConfiguration)
                 .add("ReaggregationDimensions", _reaggregationDimensions)
@@ -206,7 +206,7 @@ public final class ClusterAggregatorConfiguration {
         _aggregationHost = builder._aggregationHost;
         _aggregationPort = builder._aggregationPort;
         _logDirectory = builder._logDirectory;
-        _akkaConfiguration = Maps.newHashMap(builder._akkaConfiguration);
+        _pekkoConfiguration = Maps.newHashMap(builder._pekkoConfiguration);
         _hostPipelineConfiguration = builder._hostPipelineConfiguration;
         _clusterPipelineConfiguration = builder._clusterPipelineConfiguration;
         _reaggregationDimensions = builder._reaggregationDimensions;
@@ -235,7 +235,7 @@ public final class ClusterAggregatorConfiguration {
     private final String _httpVersionPath;
     private final String _aggregationHost;
     private final int _aggregationPort;
-    private final Map<String, ?> _akkaConfiguration;
+    private final Map<String, ?> _pekkoConfiguration;
     private final File _clusterPipelineConfiguration;
     private final File _hostPipelineConfiguration;
     private final ImmutableSet<String> _reaggregationDimensions;
@@ -425,19 +425,19 @@ public final class ClusterAggregatorConfiguration {
         }
 
         /**
-         * Akka configuration. Cannot be null. By convention Akka configuration
-         * begins with a map containing a single key "akka" and a value of a
+         * Pekko configuration. Cannot be null. By convention Pekko configuration
+         * begins with a map containing a single key "pekko" and a value of a
          * nested map. For more information please see:
          *
-         * http://doc.akka.io/docs/akka/snapshot/general/configuration.html
+         * https://pekko.apache.org/docs/pekko/current/general/configuration.html
          *
-         * NOTE: No validation is performed on the Akka configuration itself.
+         * NOTE: No validation is performed on the Pekko configuration itself.
          *
-         * @param value The Akka configuration.
+         * @param value The Pekko configuration.
          * @return This instance of {@link Builder}.
          */
-        public Builder setAkkaConfiguration(final Map<String, ?> value) {
-            _akkaConfiguration = value;
+        public Builder setPekkoConfiguration(final Map<String, ?> value) {
+            _pekkoConfiguration = value;
             return this;
         }
 
@@ -640,7 +640,7 @@ public final class ClusterAggregatorConfiguration {
         @NotNull
         private File _hostPipelineConfiguration;
         @NotNull
-        private Map<String, ?> _akkaConfiguration;
+        private Map<String, ?> _pekkoConfiguration;
         @NotNull
         private Duration _maxConnectionTimeout;
         @NotNull

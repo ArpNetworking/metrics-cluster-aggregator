@@ -13,36 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.arpnetworking.configuration.jackson.akka;
+package com.arpnetworking.configuration.jackson.pekko;
 
 import com.arpnetworking.logback.annotations.LogValue;
 import com.arpnetworking.steno.LogValueMapFactory;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
 import org.apache.pekko.actor.ActorRef;
 import org.apache.pekko.actor.ActorSystem;
 
+import java.io.IOException;
+
 /**
- * Jackson module for serializing and deserializing Akka objects.
+ * Deserializer for a Pekko ActorRef.
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class AkkaModule extends SimpleModule {
-
+public class ActorRefDeserializer extends JsonDeserializer<ActorRef> {
     /**
      * Public constructor.
      *
-     * @param system the actor system to resolve references
+     * @param system actor system used to resolve references
      */
-    public AkkaModule(final ActorSystem system) {
+    public ActorRefDeserializer(final ActorSystem system) {
         _system = system;
     }
 
     @Override
-    public void setupModule(final SetupContext context) {
-        addSerializer(ActorRef.class, new ActorRefSerializer(_system));
-        addDeserializer(ActorRef.class, new ActorRefDeserializer(_system));
-        super.setupModule(context);
+    public ActorRef deserialize(final JsonParser p, final DeserializationContext ctxt) throws IOException {
+        return _system.provider().resolveActorRef(p.getValueAsString());
     }
 
     /**
@@ -62,8 +62,5 @@ public class AkkaModule extends SimpleModule {
         return toLogValue().toString();
     }
 
-    @SuppressFBWarnings("SE_BAD_FIELD")
     private final ActorSystem _system;
-
-    private static final long serialVersionUID = 4294591813352245070L;
 }

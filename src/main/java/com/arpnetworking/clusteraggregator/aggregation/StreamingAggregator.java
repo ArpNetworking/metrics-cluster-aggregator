@@ -58,7 +58,7 @@ import javax.annotation.Nullable;
 public class StreamingAggregator extends AbstractActorWithTimers {
 
     /**
-     * Creates a {@link Props} for use in Akka.
+     * Creates a {@link Props} for use in Pekko.
      *
      * @param metricsListener Where to send metrics about aggregation computations.
      * @param emitter Where to send the metrics data.

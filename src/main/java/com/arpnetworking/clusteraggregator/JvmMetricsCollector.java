@@ -38,7 +38,7 @@ import javax.annotation.Nullable;
 public final class JvmMetricsCollector extends AbstractActor {
 
     /**
-     * Creates a {@link Props} for construction in Akka.
+     * Creates a {@link Props} for construction in Pekko.
      *
      * @param interval An instance of {@link Duration}.
      * @param metricsFactory A {@link MetricsFactory} to use for metrics creation.
@@ -116,7 +116,7 @@ public final class JvmMetricsCollector extends AbstractActor {
                         TimeUnit.MILLISECONDS),
                 new JvmMetricsRunnable.Builder()
                         .setMetricsFactory(metricsFactory)
-                        .setSwallowException(false) // Relying on the default akka supervisor strategy here.
+                        .setSwallowException(false) // Relying on the default pekko supervisor strategy here.
                         .build(),
         null
         );
