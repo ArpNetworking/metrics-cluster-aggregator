@@ -106,7 +106,7 @@
     <pekko.persistence.cassandra.version>1.0.0</pekko.persistence.cassandra.version>
     <apache.httpclient.version>4.5.14</apache.httpclient.version>
     <apache.httpcore.version>4.4.16</apache.httpcore.version>
-    <arpnetworking.commons.version>3.0.0</arpnetworking.commons.version>
+    <arpnetworking.commons.version>3.1.0</arpnetworking.commons.version>
     <aspectjrt.version>1.9.21</aspectjrt.version>
     <asynchttpclient.version>2.12.3</asynchttpclient.version>
     <awaitility.version>4.2.0</awaitility.version>
@@ -145,7 +145,7 @@
     <play.ws.version>3.0.1</play.ws.version>
     <postgresql.version>42.7.1</postgresql.version>
     <protobuf.version>3.25.2</protobuf.version>
-    <reflections.version>0.11.5</reflections.version>
+    <reflections.version>0.11.7</reflections.version>
     <scala.version>2.13</scala.version>
     <scala.library.version>2.13.12</scala.library.version>
     <signalfx.protoc.version>1.0.38</signalfx.protoc.version>
