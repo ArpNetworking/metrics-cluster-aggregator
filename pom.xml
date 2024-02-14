@@ -156,7 +156,7 @@
     <wiremock.version>2.27.2</wiremock.version>
 
     <!--Plugin versions-->
-    <avaje.ebeanorm.mavenenhancer.version>13.26.0</avaje.ebeanorm.mavenenhancer.version>
+    <avaje.ebeanorm.mavenenhancer.version>13.26.1</avaje.ebeanorm.mavenenhancer.version>
     <aspectjtools.maven.plugin>1.9.21.1</aspectjtools.maven.plugin>
     <aspectj.maven.plugin.version>1.15.0</aspectj.maven.plugin.version>
     <docker.maven.plugin.version>0.43.4</docker.maven.plugin.version>
