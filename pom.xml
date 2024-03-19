@@ -109,7 +109,7 @@
     <arpnetworking.commons.version>3.1.0</arpnetworking.commons.version>
     <aspectjrt.version>1.9.21.2</aspectjrt.version>
     <asynchttpclient.version>2.12.3</asynchttpclient.version>
-    <awaitility.version>4.2.0</awaitility.version>
+    <awaitility.version>4.2.1</awaitility.version>
     <commons.codec.version>1.16.1</commons.codec.version>
     <ebean.version>15.0.1</ebean.version>
     <ebean.annotation.version>8.4</ebean.annotation.version>
