@@ -44,7 +44,7 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
     }
 
     public Optional<Unit> getUnit() {
-        return _unit;
+        return Optional.ofNullable(_unit);
     }
 
     /**
@@ -56,19 +56,19 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
      * @return The resulting sum {@link Quantity}.
      */
     public Quantity add(final Quantity otherQuantity) {
-        if (_unit.isPresent() != otherQuantity._unit.isPresent()) {
+        if ((_unit == null) != (otherQuantity._unit == null)) {
             throw new IllegalStateException(String.format(
                     "Units must both be present or absent; thisQuantity=%s otherQuantity=%s",
                     this,
                     otherQuantity));
         }
         if (_unit.equals(otherQuantity._unit)) {
-            return new Quantity(_value + otherQuantity._value, _unit);
+            return new Quantity(_value + otherQuantity._value, Optional.ofNullable(_unit));
         }
-        final Unit smallerUnit = _unit.get().getSmallerUnit(otherQuantity.getUnit().get());
+        final Unit smallerUnit = _unit.getSmallerUnit(otherQuantity.getUnit().get());
         return new Quantity(
-                smallerUnit.convert(_value, _unit.get())
-                        + smallerUnit.convert(otherQuantity._value, otherQuantity._unit.get()),
+                smallerUnit.convert(_value, _unit)
+                        + smallerUnit.convert(otherQuantity._value, otherQuantity._unit),
                 Optional.of(smallerUnit));
     }
 
@@ -81,19 +81,19 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
      * @return The resulting difference {@link Quantity}.
      */
     public Quantity subtract(final Quantity otherQuantity) {
-        if (_unit.isPresent() != otherQuantity._unit.isPresent()) {
+        if ((_unit == null) != (otherQuantity._unit == null)) {
             throw new IllegalStateException(String.format(
                     "Units must both be present or absent; thisQuantity=%s otherQuantity=%s",
                     this,
                     otherQuantity));
         }
         if (_unit.equals(otherQuantity._unit)) {
-            return new Quantity(_value - otherQuantity._value, _unit);
+            return new Quantity(_value - otherQuantity._value, Optional.ofNullable(_unit));
         }
-        final Unit smallerUnit = _unit.get().getSmallerUnit(otherQuantity.getUnit().get());
+        final Unit smallerUnit = _unit.getSmallerUnit(otherQuantity.getUnit().get());
         return new Quantity(
-                smallerUnit.convert(_value, _unit.get())
-                        - smallerUnit.convert(otherQuantity._value, otherQuantity._unit.get()),
+                smallerUnit.convert(_value, _unit)
+                        - smallerUnit.convert(otherQuantity._value, otherQuantity._unit),
                 Optional.of(smallerUnit));
     }
 
@@ -106,7 +106,7 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
      */
     public Quantity multiply(final Quantity otherQuantity) {
         // TODO(vkoskela): Support division by quantity with unit [2F].
-        if (otherQuantity._unit.isPresent()) {
+        if (otherQuantity._unit != null) {
             throw new UnsupportedOperationException("Compount units not supported yet");
         }
         if (_unit.equals(otherQuantity._unit)) {
@@ -114,7 +114,7 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
         }
         return new Quantity(
                 _value * otherQuantity._value,
-                _unit);
+                Optional.ofNullable(_unit));
     }
 
     /**
@@ -126,7 +126,7 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
      */
     public Quantity divide(final Quantity otherQuantity) {
         // TODO(vkoskela): Support division by quantity with unit [2F].
-        if (otherQuantity._unit.isPresent()) {
+        if (otherQuantity._unit != null) {
             throw new UnsupportedOperationException("Compount units not supported yet");
         }
         if (_unit.equals(otherQuantity._unit)) {
@@ -134,7 +134,7 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
         }
         return new Quantity(
                 _value / otherQuantity._value,
-                _unit);
+                Optional.ofNullable(_unit));
     }
 
     /**
@@ -146,16 +146,16 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
      * @return {@link Quantity} in specified unit.
      */
     public Quantity convertTo(final Unit unit) {
-        if (!_unit.isPresent()) {
+        if (_unit == null) {
             throw new IllegalStateException(String.format(
                     "Cannot convert a quantity without a unit; this=%s",
                     this));
         }
-        if (_unit.get().equals(unit)) {
+        if (_unit.equals(unit)) {
             return this;
         }
         return new Quantity(
-                unit.convert(_value, _unit.get()),
+                unit.convert(_value, _unit),
                 Optional.of(unit));
     }
 
@@ -168,7 +168,7 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
      * @return {@link Quantity} in specified unit.
      */
     public Quantity convertTo(final Optional<Unit> unit) {
-        if (_unit.isPresent() != unit.isPresent()) {
+        if ((_unit != null) != unit.isPresent()) {
             throw new IllegalStateException(String.format(
                     "Units must both be present or absent; quantity=%s unit=%s",
                     this,
@@ -178,7 +178,7 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
             return this;
         }
         return new Quantity(
-                unit.get().convert(_value, _unit.get()),
+                unit.get().convert(_value, _unit),
                 unit);
     }
 
@@ -186,10 +186,10 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
     public int compareTo(final Quantity other) {
         if (other._unit.equals(_unit)) {
             return Double.compare(_value, other._value);
-        } else if (other._unit.isPresent() && _unit.isPresent()) {
-            final Unit smallerUnit = _unit.get().getSmallerUnit(other._unit.get());
-            final double convertedValue = smallerUnit.convert(_value, _unit.get());
-            final double otherConvertedValue = smallerUnit.convert(other._value, other._unit.get());
+        } else if ((other._unit != null) && (_unit!= null)) {
+            final Unit smallerUnit = _unit.getSmallerUnit(other._unit);
+            final double convertedValue = smallerUnit.convert(_value, _unit);
+            final double otherConvertedValue = smallerUnit.convert(other._value, other._unit);
             return Double.compare(convertedValue, otherConvertedValue);
         }
         throw new IllegalArgumentException(String.format(
@@ -264,11 +264,12 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
 
     private Quantity(final double value, final Optional<Unit> unit) {
         _value = value;
-        _unit = unit;
+        _unit = unit.orElse(null);
     }
 
     @SuppressFBWarnings("SE_BAD_FIELD")
-    private final Optional<Unit> _unit;
+    @Nullable
+    private final Unit _unit;
     private final double _value;
 
     private static final long serialVersionUID = -6339526234042605516L;

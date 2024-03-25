@@ -94,7 +94,7 @@ public final class AggregatedData implements Serializable {
         return _populationSize;
     }
 
-    public Object getSupportingData() {
+    public Serializable getSupportingData() {
         return _supportingData;
     }
 
@@ -155,7 +155,6 @@ public final class AggregatedData implements Serializable {
     public int hashCode() {
         return Objects.hashCode(
                 getFQDSN(),
-                getHost(),
                 getValue(),
                 getStart(),
                 getPeriod(),
@@ -219,7 +218,7 @@ public final class AggregatedData implements Serializable {
     private final Duration _period;
     private final String _host;
     private final boolean _isSpecified;
-    private final Object _supportingData;
+    private final Serializable _supportingData;
 
     private static final long serialVersionUID = 9124136139360447095L;
 
@@ -332,7 +331,7 @@ public final class AggregatedData implements Serializable {
          * @param value The supporting data.
          * @return This instance of {@link Builder}.
          */
-        public Builder setSupportingData(final Object value) {
+        public Builder setSupportingData(final Serializable value) {
             _supportingData = value;
             return this;
         }
@@ -354,6 +353,6 @@ public final class AggregatedData implements Serializable {
         private String _host;
         @NotNull
         private Boolean _isSpecified;
-        private Object _supportingData;
+        private Serializable _supportingData;
     }
 }

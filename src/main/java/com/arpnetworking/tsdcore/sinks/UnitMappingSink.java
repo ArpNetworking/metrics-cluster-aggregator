@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import net.sf.oval.constraint.NotNull;
 
+import java.io.Serializable;
 import java.util.Map;
 
 /**
@@ -40,7 +41,7 @@ public final class UnitMappingSink extends BaseSink {
     public void recordAggregateData(final PeriodicData periodicData) {
         final ImmutableList.Builder<AggregatedData> dataBuilder = ImmutableList.builder();
         for (final AggregatedData datum : periodicData.getData()) {
-            final Object supportingData = mapSupportingData(datum.getSupportingData());
+            final Serializable supportingData = mapSupportingData(datum.getSupportingData());
             final Quantity value = mapQuantity(datum.getValue());
             dataBuilder.add(
                     AggregatedData.Builder.<AggregatedData, AggregatedData.Builder>clone(datum)
@@ -111,7 +112,7 @@ public final class UnitMappingSink extends BaseSink {
         return quantity;
     }
 
-    private Object mapSupportingData(final Object supportingData) {
+    private Serializable mapSupportingData(final Serializable supportingData) {
         if (supportingData instanceof HistogramStatistic.HistogramSupportingData) {
             final HistogramStatistic.HistogramSupportingData hsd = (HistogramStatistic.HistogramSupportingData) supportingData;
             if (hsd.getUnit().isPresent()) {

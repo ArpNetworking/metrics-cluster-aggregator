@@ -18,6 +18,8 @@ package com.arpnetworking.tsdcore.statistics;
 import com.arpnetworking.tsdcore.model.CalculatedValue;
 import com.arpnetworking.tsdcore.model.Quantity;
 
+import java.io.Serializable;
+
 /**
  * Specialization of {@link Calculator} directly supporting streaming
  * calculations over {@link Quantity} and {@link CalculatedValue}
@@ -26,7 +28,7 @@ import com.arpnetworking.tsdcore.model.Quantity;
  * @param <T> The type of supporting data.
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
-public interface Accumulator<T> extends Calculator<T> {
+public interface Accumulator<T extends Serializable> extends Calculator<T> {
 
     /**
      * Add the specified {@link Quantity} to the accumulated value. It is

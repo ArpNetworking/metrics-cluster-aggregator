@@ -17,6 +17,7 @@ package com.arpnetworking.tsdcore.statistics;
 
 import com.arpnetworking.tsdcore.model.CalculatedValue;
 
+import java.io.Serializable;
 import java.util.Map;
 
 /**
@@ -25,7 +26,7 @@ import java.util.Map;
  * @param <T> The type of supporting data.
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
-public interface Calculator<T> {
+public interface Calculator<T extends Serializable> {
 
     /**
      * Accessor for the {@link Statistic} computed by this {@link Calculator}.

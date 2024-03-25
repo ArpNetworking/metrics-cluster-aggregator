@@ -18,13 +18,15 @@ package com.arpnetworking.tsdcore.model;
 import com.arpnetworking.commons.builder.OvalBuilder;
 import net.sf.oval.constraint.NotNull;
 
+import java.io.Serializable;
+
 /**
  * Represents a value that is reaggregatable.
  *
  * @param <T> The type of supporting data.
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
-public final class CalculatedValue<T> {
+public final class CalculatedValue<T extends Serializable> implements Serializable {
 
     public Quantity getValue() {
         return _value;
@@ -48,7 +50,7 @@ public final class CalculatedValue<T> {
      *
      * @param <T> type of the object to be built
      */
-    public static final class Builder<T> extends OvalBuilder<CalculatedValue<T>> {
+    public static final class Builder<T extends Serializable> extends OvalBuilder<CalculatedValue<T>> {
 
         /**
          * Public constructor.

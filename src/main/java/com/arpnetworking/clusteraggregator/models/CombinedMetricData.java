@@ -25,6 +25,7 @@ import com.arpnetworking.tsdcore.model.CalculatedValue;
 import com.arpnetworking.tsdcore.model.Quantity;
 import com.arpnetworking.tsdcore.model.Unit;
 import com.arpnetworking.tsdcore.statistics.HistogramStatistic;
+import com.arpnetworking.tsdcore.statistics.NullSupportingData;
 import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.arpnetworking.tsdcore.statistics.StatisticFactory;
 import com.google.common.base.Strings;
@@ -33,6 +34,7 @@ import com.google.common.collect.Maps;
 import net.sf.oval.constraint.NotNull;
 import org.apache.pekko.util.ByteString;
 
+import java.io.Serializable;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Map;
@@ -318,7 +320,7 @@ public final class CombinedMetricData {
                             .setData(histogramSupportingData);
 
                 } else {
-                    calculatedValueBuilder = new CalculatedValue.Builder<Void>();
+                    calculatedValueBuilder = new CalculatedValue.Builder<NullSupportingData>();
                 }
 
                 calculatedValueBuilder.setValue(quantity);
@@ -381,7 +383,7 @@ public final class CombinedMetricData {
      *
      * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
      */
-    public static class StatisticValue {
+    public static class StatisticValue implements Serializable {
         /**
          * Public constructor.
          *

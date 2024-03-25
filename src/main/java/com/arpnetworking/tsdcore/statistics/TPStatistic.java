@@ -58,7 +58,7 @@ public class TPStatistic extends BaseStatistic implements OrderedStatistic {
     }
 
     @Override
-    public Calculator<Void> createCalculator() {
+    public Calculator<NullSupportingData> createCalculator() {
         return new PercentileCalculator(this);
     }
 
@@ -133,7 +133,7 @@ public class TPStatistic extends BaseStatistic implements OrderedStatistic {
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
-    public static final class PercentileCalculator extends BaseCalculator<Void> {
+    public static final class PercentileCalculator extends BaseCalculator<NullSupportingData> {
 
         /**
          * Public constructor.
@@ -145,10 +145,10 @@ public class TPStatistic extends BaseStatistic implements OrderedStatistic {
         }
 
         @Override
-        public CalculatedValue<Void> calculate(final Map<Statistic, Calculator<?>> dependencies) {
+        public CalculatedValue<NullSupportingData> calculate(final Map<Statistic, Calculator<?>> dependencies) {
             final HistogramStatistic.HistogramAccumulator calculator =
                     (HistogramStatistic.HistogramAccumulator) dependencies.get(HISTOGRAM_STATISTIC.get());
-            return new CalculatedValue.Builder<Void>()
+            return new CalculatedValue.Builder<NullSupportingData>()
                     .setValue(calculator.calculate(((TPStatistic) getStatistic()).getPercentile()))
                     .build();
         }

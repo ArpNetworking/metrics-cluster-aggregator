@@ -43,7 +43,7 @@ public final class MeanStatistic extends BaseStatistic {
     }
 
     @Override
-    public Calculator<Void> createCalculator() {
+    public Calculator<NullSupportingData> createCalculator() {
         return new MeanCalculator(this);
     }
 
@@ -101,7 +101,7 @@ public final class MeanStatistic extends BaseStatistic {
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
-    public static final class MeanCalculator extends BaseCalculator<Void> {
+    public static final class MeanCalculator extends BaseCalculator<NullSupportingData> {
 
         /**
          * Public constructor.
@@ -113,11 +113,11 @@ public final class MeanStatistic extends BaseStatistic {
         }
 
         @Override
-        public CalculatedValue<Void> calculate(final Map<Statistic, Calculator<?>> dependencies) {
+        public CalculatedValue<NullSupportingData> calculate(final Map<Statistic, Calculator<?>> dependencies) {
             final CalculatedValue<?> sum = dependencies.get(SUM_STATISTIC.get()).calculate(dependencies);
             final CalculatedValue<?> count = dependencies.get(COUNT_STATISTIC.get()).calculate(dependencies);
 
-            return new CalculatedValue.Builder<Void>()
+            return new CalculatedValue.Builder<NullSupportingData>()
                     .setValue(sum.getValue().divide(count.getValue()))
                     .build();
         }

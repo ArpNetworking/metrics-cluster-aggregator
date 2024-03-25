@@ -26,6 +26,7 @@ import it.unimi.dsi.fastutil.doubles.Double2LongSortedMap;
 import it.unimi.dsi.fastutil.objects.ObjectSortedSet;
 import net.sf.oval.constraint.NotNull;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -161,7 +162,7 @@ public final class HistogramStatistic extends BaseStatistic {
      *
      * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
      */
-    public static final class HistogramSupportingData {
+    public static final class HistogramSupportingData implements Serializable {
         /**
          * Public constructor.
          *

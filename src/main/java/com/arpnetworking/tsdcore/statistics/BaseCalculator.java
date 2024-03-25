@@ -15,6 +15,8 @@
  */
 package com.arpnetworking.tsdcore.statistics;
 
+import java.io.Serializable;
+
 /**
  * A calculator base class.
  *
@@ -22,7 +24,7 @@ package com.arpnetworking.tsdcore.statistics;
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
-public abstract class BaseCalculator<T> implements Calculator<T> {
+public abstract class BaseCalculator<T extends Serializable> implements Calculator<T> {
 
     @Override
     public Statistic getStatistic() {
