@@ -61,7 +61,7 @@ public abstract class BaseStatistic implements Statistic {
                 .toString();
     }
 
-    private final Supplier<Integer> _hashCodeSupplier = Suppliers.memoize(() -> getClass().hashCode());
+    private transient final Supplier<Integer> _hashCodeSupplier = Suppliers.memoize(() -> getClass().hashCode());
 
     private static final long serialVersionUID = -1334453626232464982L;
 }

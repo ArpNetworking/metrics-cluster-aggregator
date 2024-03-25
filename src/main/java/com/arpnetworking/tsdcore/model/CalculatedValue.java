@@ -43,6 +43,7 @@ public final class CalculatedValue<T extends Serializable> implements Serializab
 
     private final Quantity _value;
     private final T _data;
+    private static final long serialVersionUID = 1L;
 
     /**
      * {@link com.arpnetworking.commons.builder.Builder} implementation for

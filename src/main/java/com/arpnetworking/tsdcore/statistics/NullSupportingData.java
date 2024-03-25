@@ -25,4 +25,5 @@ import java.io.Serializable;
  */
 public class NullSupportingData implements Serializable {
     private NullSupportingData() {}
+    private static final long serialVersionUID = 1L;
 }

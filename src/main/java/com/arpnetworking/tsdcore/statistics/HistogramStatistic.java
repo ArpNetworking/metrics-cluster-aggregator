@@ -30,6 +30,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 /**
  * Histogram statistic. This is a supporting statistic and does not produce
@@ -185,10 +186,10 @@ public final class HistogramStatistic extends BaseStatistic {
          * @return a new HistogramSupportingData with the units converted
          */
         public HistogramSupportingData toUnit(final Unit newUnit) {
-            if (_unit.isPresent()) {
+            if (_unit != null) {
                 final Histogram newHistogram = new Histogram();
                 for (final Double2LongMap.Entry entry : _histogramSnapshot.getValues()) {
-                    final double newBucket = newUnit.convert(entry.getDoubleKey(), _unit.get());
+                    final double newBucket = newUnit.convert(entry.getDoubleKey(), _unit);
                     newHistogram.recordValue(newBucket, entry.getLongValue());
                 }
                 return new HistogramSupportingData.Builder()
@@ -200,11 +201,13 @@ public final class HistogramStatistic extends BaseStatistic {
         }
 
         public Optional<Unit> getUnit() {
-            return _unit;
+            return Optional.ofNullable(_unit);
         }
 
-        private final Optional<Unit> _unit;
+        @Nullable
+        private final Unit _unit;
         private final HistogramSnapshot _histogramSnapshot;
+        private static final long serialVersionUID = 1L;
 
         /**
          * {@link com.arpnetworking.commons.builder.Builder} implementation for
@@ -238,12 +241,13 @@ public final class HistogramStatistic extends BaseStatistic {
              * @return This {@link Builder} instance.
              */
             public Builder setUnit(final Optional<Unit> value) {
-                _unit = value;
+                _unit = value.orElse(null);
                 return this;
             }
 
             @NotNull
-            private Optional<Unit> _unit = Optional.empty();
+            @Nullable
+            private Unit _unit = null;
             @NotNull
             private HistogramSnapshot _histogramSnapshot;
         }
@@ -358,7 +362,7 @@ public final class HistogramStatistic extends BaseStatistic {
      *
      * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
      */
-    public static final class HistogramSnapshot {
+    public static final class HistogramSnapshot implements Serializable {
         private HistogramSnapshot(final Double2LongSortedMap data, final long entriesCount, final int precision) {
             _precision = precision;
             _entriesCount = entriesCount;
@@ -399,7 +403,8 @@ public final class HistogramStatistic extends BaseStatistic {
         }
 
         private long _entriesCount = 0;
-        private final Double2LongSortedMap _data = new Double2LongAVLTreeMap();
+        private final Double2LongAVLTreeMap _data = new Double2LongAVLTreeMap();
         private final int _precision;
+        private static final long serialVersionUID = 1L;
     }
 }

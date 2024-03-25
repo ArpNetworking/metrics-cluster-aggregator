@@ -55,7 +55,7 @@ public final class MeanStatistic extends BaseStatistic {
     @Override
     public Quantity calculate(final List<Quantity> orderedValues) {
         // TODO(vkoskela): Statistic calculation should be allowed to either fail or not return a quantity. [MAI-?]
-        if (orderedValues.size() == 0) {
+        if (orderedValues.isEmpty()) {
             return ZERO;
         }
         double sum = 0;
@@ -70,12 +70,12 @@ public final class MeanStatistic extends BaseStatistic {
     @Override
     public Quantity calculateAggregations(final List<AggregatedData> aggregations) {
         double weighted = 0D;
-        int count = 0;
+        long count = 0;
         Optional<Unit> unit = Optional.empty();
         for (final AggregatedData aggregation : aggregations) {
             final double populationSize = aggregation.getPopulationSize();
             weighted += aggregation.getValue().getValue() * populationSize;
-            count += populationSize;
+            count += (long) populationSize;
             unit = Optional.ofNullable(unit.orElse(aggregation.getValue().getUnit().orElse(null)));
         }
         return new Quantity.Builder()

@@ -405,5 +405,6 @@ public final class CombinedMetricData {
 
         private final CalculatedValue<?> _value;
         private final Boolean _userSpecified;
+        private static final long serialVersionUID = 1L;
     }
 }

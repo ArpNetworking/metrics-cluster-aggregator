@@ -26,6 +26,7 @@ import com.google.common.collect.Sets;
 
 import java.text.DecimalFormat;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -118,7 +119,7 @@ public class TPStatistic extends BaseStatistic implements OrderedStatistic {
 
     private final double _percentile;
     private final String _defaultName;
-    private final Set<String> _aliases;
+    private final HashSet<String> _aliases;
 
     private static final DecimalFormat FORMAT = new DecimalFormat("##0.#");
     private static final StatisticFactory STATISTIC_FACTORY = new StatisticFactory();

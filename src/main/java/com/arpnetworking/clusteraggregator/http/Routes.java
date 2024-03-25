@@ -257,9 +257,9 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
     }
 
     @SuppressFBWarnings("SE_BAD_FIELD")
-    private final ActorSystem _actorSystem;
+    private final transient ActorSystem _actorSystem;
     @SuppressFBWarnings("SE_BAD_FIELD")
-    private final PeriodicMetrics _periodicMetrics;
+    private final transient PeriodicMetrics _periodicMetrics;
     private final String _healthCheckPath;
     private final String _statusPath;
     private final String _versionPath;

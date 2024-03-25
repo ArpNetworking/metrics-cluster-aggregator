@@ -63,7 +63,7 @@ public class PekkoModule extends SimpleModule {
     }
 
     @SuppressFBWarnings("SE_BAD_FIELD")
-    private final ActorSystem _system;
+    private final transient ActorSystem _system;
 
     private static final long serialVersionUID = 4294591813352245070L;
 }

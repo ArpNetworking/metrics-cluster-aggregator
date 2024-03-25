@@ -44,6 +44,7 @@ import scala.jdk.javaapi.CollectionConverters;
 import scala.jdk.javaapi.OptionConverters;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -258,12 +259,12 @@ public class ClusterStatusCache extends AbstractActor {
 
                 final Map<ActorRef, Set<String>> currentAllocations = notification.getCurrentAllocations();
 
-                _allocations = Optional.of(
+                _allocations =
                         allRefs.stream()
                                 .map(shardRegion -> computeShardAllocation(pendingRebalances, currentAllocations, shardRegion))
-                                .collect(Collectors.toList()));
+                                .collect(Collectors.toCollection(ArrayList::new));
             } else {
-                _allocations = Optional.empty();
+                _allocations = null;
             }
         }
 
@@ -302,13 +303,14 @@ public class ClusterStatusCache extends AbstractActor {
         }
 
         public Optional<List<ShardAllocation>> getAllocations() {
-            return _allocations;
+            return Optional.ofNullable(_allocations);
         }
 
         @Nullable
         private final ClusterEvent.CurrentClusterState _clusterState;
         @SuppressFBWarnings("SE_BAD_FIELD")
-        private final Optional<List<ShardAllocation>> _allocations;
+        @Nullable
+        private final ArrayList<ShardAllocation> _allocations;
         private static final long serialVersionUID = 603308359721162702L;
     }
 }

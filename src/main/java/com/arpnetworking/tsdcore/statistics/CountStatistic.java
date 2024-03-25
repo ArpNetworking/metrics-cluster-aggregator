@@ -90,7 +90,7 @@ public final class CountStatistic extends BaseStatistic {
 
         @Override
         public Accumulator<NullSupportingData> accumulate(final CalculatedValue<NullSupportingData> calculatedValue) {
-            _count += calculatedValue.getValue().getValue();
+            _count += (long) calculatedValue.getValue().getValue();
             return this;
         }
 
