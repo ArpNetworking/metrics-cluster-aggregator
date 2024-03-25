@@ -19,6 +19,9 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serial;
 import java.util.Collections;
 import java.util.Set;
 
@@ -61,7 +64,14 @@ public abstract class BaseStatistic implements Statistic {
                 .toString();
     }
 
-    private transient final Supplier<Integer> _hashCodeSupplier = Suppliers.memoize(() -> getClass().hashCode());
+    @Serial
+    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        _hashCodeSupplier = Suppliers.memoize(() -> getClass().hashCode());
 
+    }
+    private transient Supplier<Integer> _hashCodeSupplier = Suppliers.memoize(() -> getClass().hashCode());
+
+    @Serial
     private static final long serialVersionUID = -1334453626232464982L;
 }

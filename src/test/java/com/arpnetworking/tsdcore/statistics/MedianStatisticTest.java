@@ -85,7 +85,7 @@ public class MedianStatisticTest {
         for (int x = 0; x < 100; ++x) {
             accumulator.accumulate(new Quantity.Builder().setValue((double) x).build());
         }
-        final CalculatedValue<Void> calculated = MEDIAN_STATISTIC.createCalculator().calculate(
+        final CalculatedValue<NullSupportingData> calculated = MEDIAN_STATISTIC.createCalculator().calculate(
                 Collections.singletonMap(HISTOGRAM_STATISTIC, accumulator));
         Assert.assertTrue(areClose(new Quantity.Builder().setValue(50.0).build(), calculated.getValue()));
     }

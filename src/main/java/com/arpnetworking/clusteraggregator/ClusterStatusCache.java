@@ -26,7 +26,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.pekko.actor.AbstractActor;
 import org.apache.pekko.actor.ActorRef;
 import org.apache.pekko.actor.ActorSystem;
@@ -308,7 +307,6 @@ public class ClusterStatusCache extends AbstractActor {
 
         @Nullable
         private final ClusterEvent.CurrentClusterState _clusterState;
-        @SuppressFBWarnings("SE_BAD_FIELD")
         @Nullable
         private final ArrayList<ShardAllocation> _allocations;
         private static final long serialVersionUID = 603308359721162702L;

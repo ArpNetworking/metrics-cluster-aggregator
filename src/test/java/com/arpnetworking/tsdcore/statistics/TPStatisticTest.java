@@ -136,7 +136,7 @@ public class TPStatisticTest {
         for (int x = 1; x <= 10000; ++x) {
             accumulator.accumulate(new Quantity.Builder().setValue((double) x).build());
         }
-        final CalculatedValue<Void> calculated = TP75_STATISTIC.createCalculator().calculate(
+        final CalculatedValue<NullSupportingData> calculated = TP75_STATISTIC.createCalculator().calculate(
                 Collections.singletonMap(HISTOGRAM_STATISTIC, accumulator));
         Assert.assertTrue(areClose(new Quantity.Builder().setValue(7500.0).build(), calculated.getValue()));
     }
@@ -147,7 +147,7 @@ public class TPStatisticTest {
         for (int x = 1; x <= 10000; ++x) {
             accumulator.accumulate(new Quantity.Builder().setValue((double) x).build());
         }
-        final CalculatedValue<Void> calculated = TP90_STATISTIC.createCalculator().calculate(
+        final CalculatedValue<NullSupportingData> calculated = TP90_STATISTIC.createCalculator().calculate(
                 Collections.singletonMap(HISTOGRAM_STATISTIC, accumulator));
         Assert.assertTrue(areClose(new Quantity.Builder().setValue(9000.0).build(), calculated.getValue()));
     }
@@ -158,7 +158,7 @@ public class TPStatisticTest {
         for (int x = 1; x <= 10000; ++x) {
             accumulator.accumulate(new Quantity.Builder().setValue((double) x).build());
         }
-        final CalculatedValue<Void> calculated = TP95_STATISTIC.createCalculator().calculate(
+        final CalculatedValue<NullSupportingData> calculated = TP95_STATISTIC.createCalculator().calculate(
                 Collections.singletonMap(HISTOGRAM_STATISTIC, accumulator));
         Assert.assertTrue(areClose(new Quantity.Builder().setValue(9500.0).build(), calculated.getValue()));
     }
@@ -169,7 +169,7 @@ public class TPStatisticTest {
         for (int x = 1; x <= 10000; ++x) {
             accumulator.accumulate(new Quantity.Builder().setValue((double) x).build());
         }
-        final CalculatedValue<Void> calculated = TP99_STATISTIC.createCalculator().calculate(
+        final CalculatedValue<NullSupportingData> calculated = TP99_STATISTIC.createCalculator().calculate(
                 Collections.singletonMap(HISTOGRAM_STATISTIC, accumulator));
         Assert.assertTrue(areClose(new Quantity.Builder().setValue(9900.0).build(), calculated.getValue()));
     }
@@ -180,7 +180,7 @@ public class TPStatisticTest {
         for (int x = 1; x <= 10000; ++x) {
             accumulator.accumulate(new Quantity.Builder().setValue((double) x).build());
         }
-        final CalculatedValue<Void> calculated = TP99P9_STATISTIC.createCalculator().calculate(
+        final CalculatedValue<NullSupportingData> calculated = TP99P9_STATISTIC.createCalculator().calculate(
                 Collections.singletonMap(HISTOGRAM_STATISTIC, accumulator));
         Assert.assertTrue(areClose(new Quantity.Builder().setValue(9990.0).build(), calculated.getValue()));
     }
@@ -193,7 +193,7 @@ public class TPStatisticTest {
         for (int x = 1; x <= 100; ++x) {
             accumulator.accumulate(new Quantity.Builder().setValue((double) 100).build());
         }
-        final CalculatedValue<Void> calculated = TP99P9_STATISTIC.createCalculator().calculate(
+        final CalculatedValue<NullSupportingData> calculated = TP99P9_STATISTIC.createCalculator().calculate(
                 Collections.singletonMap(HISTOGRAM_STATISTIC, accumulator));
         Assert.assertTrue(areClose(new Quantity.Builder().setValue(100.0).build(), calculated.getValue()));
     }

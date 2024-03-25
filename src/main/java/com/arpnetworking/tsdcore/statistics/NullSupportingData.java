@@ -22,8 +22,10 @@ import java.io.Serializable;
  * This class represents no supporting data for a statistic. It is used to
  * represent the case where a statistic does not have any supporting data.
  * This class cannot be instantiated.
+ *
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public class NullSupportingData implements Serializable {
+public final class NullSupportingData implements Serializable {
     private NullSupportingData() {}
     private static final long serialVersionUID = 1L;
 }

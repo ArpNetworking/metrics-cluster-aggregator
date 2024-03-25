@@ -21,7 +21,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import net.sf.oval.constraint.NotNull;
 
 import java.io.Serializable;
@@ -62,7 +61,7 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
                     this,
                     otherQuantity));
         }
-        if (_unit.equals(otherQuantity._unit)) {
+        if (Objects.equals(_unit, otherQuantity._unit)) {
             return new Quantity(_value + otherQuantity._value, Optional.ofNullable(_unit));
         }
         final Unit smallerUnit = _unit.getSmallerUnit(otherQuantity.getUnit().get());
@@ -87,7 +86,7 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
                     this,
                     otherQuantity));
         }
-        if (_unit.equals(otherQuantity._unit)) {
+        if (Objects.equals(_unit, otherQuantity._unit)) {
             return new Quantity(_value - otherQuantity._value, Optional.ofNullable(_unit));
         }
         final Unit smallerUnit = _unit.getSmallerUnit(otherQuantity.getUnit().get());
@@ -107,9 +106,9 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
     public Quantity multiply(final Quantity otherQuantity) {
         // TODO(vkoskela): Support division by quantity with unit [2F].
         if (otherQuantity._unit != null) {
-            throw new UnsupportedOperationException("Compount units not supported yet");
+            throw new UnsupportedOperationException("Compound units not supported yet");
         }
-        if (_unit.equals(otherQuantity._unit)) {
+        if (Objects.equals(_unit, otherQuantity._unit)) {
             return new Quantity(_value * otherQuantity._value, Optional.empty());
         }
         return new Quantity(
@@ -127,9 +126,9 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
     public Quantity divide(final Quantity otherQuantity) {
         // TODO(vkoskela): Support division by quantity with unit [2F].
         if (otherQuantity._unit != null) {
-            throw new UnsupportedOperationException("Compount units not supported yet");
+            throw new UnsupportedOperationException("Compound units not supported yet");
         }
-        if (_unit.equals(otherQuantity._unit)) {
+        if (Objects.equals(_unit, otherQuantity._unit)) {
             return new Quantity(_value / otherQuantity._value, Optional.empty());
         }
         return new Quantity(
@@ -168,13 +167,13 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
      * @return {@link Quantity} in specified unit.
      */
     public Quantity convertTo(final Optional<Unit> unit) {
-        if ((_unit != null) != unit.isPresent()) {
+        if ((_unit == null) != unit.isEmpty()) {
             throw new IllegalStateException(String.format(
                     "Units must both be present or absent; quantity=%s unit=%s",
                     this,
                     unit));
         }
-        if (_unit.equals(unit)) {
+        if (Objects.equals(_unit, unit.orElse(null))) {
             return this;
         }
         return new Quantity(
@@ -184,9 +183,9 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
 
     @Override
     public int compareTo(final Quantity other) {
-        if (other._unit.equals(_unit)) {
+        if (Objects.equals(_unit, other._unit)) {
             return Double.compare(_value, other._value);
-        } else if ((other._unit != null) && (_unit!= null)) {
+        } else if (other._unit != null && _unit != null) {
             final Unit smallerUnit = _unit.getSmallerUnit(other._unit);
             final double convertedValue = smallerUnit.convert(_value, _unit);
             final double otherConvertedValue = smallerUnit.convert(other._value, other._unit);
@@ -267,7 +266,6 @@ public final class Quantity implements Comparable<Quantity>, Serializable {
         _unit = unit.orElse(null);
     }
 
-    @SuppressFBWarnings("SE_BAD_FIELD")
     @Nullable
     private final Unit _unit;
     private final double _value;

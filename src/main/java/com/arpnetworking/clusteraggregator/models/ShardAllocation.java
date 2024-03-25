@@ -26,15 +26,17 @@ import net.sf.oval.constraint.NotNull;
 import org.apache.pekko.actor.ActorRef;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Represents a shard allocation.
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
-public final class ShardAllocation {
+public final class ShardAllocation implements Serializable {
     public String getHost() {
         return _host;
     }
@@ -71,9 +73,10 @@ public final class ShardAllocation {
 
     private final String _host;
     private final ActorRef _shardRegion;
-    private final Set<String> _currentShards;
-    private final Set<String> _incomingShards;
-    private final Set<String> _outgoingShards;
+    private final TreeSet<String> _currentShards;
+    private final TreeSet<String> _incomingShards;
+    private final TreeSet<String> _outgoingShards;
+    private static final long serialVersionUID = 1L;
 
     /**
      * {@link com.arpnetworking.commons.builder.Builder} implementation for

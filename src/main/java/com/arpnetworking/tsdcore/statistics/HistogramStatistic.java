@@ -245,7 +245,6 @@ public final class HistogramStatistic extends BaseStatistic {
                 return this;
             }
 
-            @NotNull
             @Nullable
             private Unit _unit = null;
             @NotNull
