@@ -44,7 +44,7 @@ public final class CountStatistic extends BaseStatistic {
     }
 
     @Override
-    public Calculator<Void> createCalculator() {
+    public Calculator<NullSupportingData> createCalculator() {
         return new CountAccumulator(this);
     }
 
@@ -71,7 +71,7 @@ public final class CountStatistic extends BaseStatistic {
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
-    private static final class CountAccumulator extends BaseCalculator<Void> implements Accumulator<Void> {
+    private static final class CountAccumulator extends BaseCalculator<NullSupportingData> implements Accumulator<NullSupportingData> {
 
         /**
          * Public constructor.
@@ -83,20 +83,20 @@ public final class CountStatistic extends BaseStatistic {
         }
 
         @Override
-        public Accumulator<Void> accumulate(final Quantity quantity) {
+        public Accumulator<NullSupportingData> accumulate(final Quantity quantity) {
             ++_count;
             return this;
         }
 
         @Override
-        public Accumulator<Void> accumulate(final CalculatedValue<Void> calculatedValue) {
-            _count += calculatedValue.getValue().getValue();
+        public Accumulator<NullSupportingData> accumulate(final CalculatedValue<NullSupportingData> calculatedValue) {
+            _count += (long) calculatedValue.getValue().getValue();
             return this;
         }
 
         @Override
-        public CalculatedValue<Void> calculate(final Map<Statistic, Calculator<?>> dependencies) {
-            return new CalculatedValue.Builder<Void>()
+        public CalculatedValue<NullSupportingData> calculate(final Map<Statistic, Calculator<?>> dependencies) {
+            return new CalculatedValue.Builder<NullSupportingData>()
                     .setValue(new Quantity.Builder()
                             .setValue((double) _count)
                             .build())

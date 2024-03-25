@@ -45,7 +45,7 @@ public final class MaxStatistic extends BaseStatistic {
     }
 
     @Override
-    public Calculator<Void> createCalculator() {
+    public Calculator<NullSupportingData> createCalculator() {
         return new MaxAccumulator(this);
     }
 
@@ -96,7 +96,7 @@ public final class MaxStatistic extends BaseStatistic {
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
-    public static final class MaxAccumulator extends BaseCalculator<Void> implements Accumulator<Void> {
+    public static final class MaxAccumulator extends BaseCalculator<NullSupportingData> implements Accumulator<NullSupportingData> {
 
         /**
          * Public constructor.
@@ -108,7 +108,7 @@ public final class MaxStatistic extends BaseStatistic {
         }
 
         @Override
-        public Accumulator<Void> accumulate(final Quantity quantity) {
+        public Accumulator<NullSupportingData> accumulate(final Quantity quantity) {
             if (_max.isPresent()) {
                 if (quantity.compareTo(_max.get()) > 0) {
                     _max = Optional.of(quantity);
@@ -120,13 +120,13 @@ public final class MaxStatistic extends BaseStatistic {
         }
 
         @Override
-        public Accumulator<Void> accumulate(final CalculatedValue<Void> calculatedValue) {
+        public Accumulator<NullSupportingData> accumulate(final CalculatedValue<NullSupportingData> calculatedValue) {
             return accumulate(calculatedValue.getValue());
         }
 
         @Override
-        public CalculatedValue<Void> calculate(final Map<Statistic, Calculator<?>> dependencies) {
-            return new CalculatedValue.Builder<Void>()
+        public CalculatedValue<NullSupportingData> calculate(final Map<Statistic, Calculator<?>> dependencies) {
+            return new CalculatedValue.Builder<NullSupportingData>()
                     .setValue(_max.orElse(null))
                     .build();
         }

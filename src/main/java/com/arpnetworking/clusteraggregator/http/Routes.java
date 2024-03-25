@@ -256,10 +256,10 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
         return nameBuilder.toString();
     }
 
-    @SuppressFBWarnings("SE_BAD_FIELD")
-    private final ActorSystem _actorSystem;
-    @SuppressFBWarnings("SE_BAD_FIELD")
-    private final PeriodicMetrics _periodicMetrics;
+    @SuppressFBWarnings("SE_TRANSIENT_FIELD_NOT_RESTORED")
+    private final transient ActorSystem _actorSystem;
+    @SuppressFBWarnings("SE_TRANSIENT_FIELD_NOT_RESTORED")
+    private final transient PeriodicMetrics _periodicMetrics;
     private final String _healthCheckPath;
     private final String _statusPath;
     private final String _versionPath;

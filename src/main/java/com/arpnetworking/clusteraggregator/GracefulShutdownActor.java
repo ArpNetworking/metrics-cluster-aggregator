@@ -42,8 +42,6 @@ public class GracefulShutdownActor extends AbstractActor {
     @SuppressFBWarnings(value = "MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR", justification = "Context is safe to use in constructor.")
     public GracefulShutdownActor(@Named("aggregator-shard-region") final ActorRef shardRegion) {
         _shardRegion = shardRegion;
-        _cluster = Cluster.get(context().system());
-        _system = context().system();
     }
 
     @Override
@@ -64,9 +62,16 @@ public class GracefulShutdownActor extends AbstractActor {
                 .build();
     }
 
+    @Override
+    public void preStart() throws Exception {
+        super.preStart();
+        _cluster = Cluster.get(context().system());
+        _system = context().system();
+    }
+
     private ActorRef _shardRegion;
-    private final Cluster _cluster;
-    private final ActorSystem _system;
+    private Cluster _cluster;
+    private ActorSystem _system;
     private static final Logger LOGGER = LoggerFactory.getLogger(GracefulShutdownActor.class);
     /**
      * Message to initiate a graceful shutdown.

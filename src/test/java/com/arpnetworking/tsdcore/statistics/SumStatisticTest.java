@@ -71,11 +71,11 @@ public class SumStatisticTest {
 
     @Test
     public void testAccumulator() {
-        final Accumulator<Void> accumulator = (Accumulator<Void>) SUM_STATISTIC.createCalculator();
+        final Accumulator<NullSupportingData> accumulator = (Accumulator<NullSupportingData>) SUM_STATISTIC.createCalculator();
         accumulator.accumulate(new Quantity.Builder().setValue(12d).build());
         accumulator.accumulate(new Quantity.Builder().setValue(18d).build());
         accumulator.accumulate(new Quantity.Builder().setValue(5d).build());
-        final CalculatedValue<Void> calculated = accumulator.calculate(Collections.emptyMap());
+        final CalculatedValue<NullSupportingData> calculated = accumulator.calculate(Collections.emptyMap());
         Assert.assertEquals(calculated.getValue(), new Quantity.Builder().setValue(35.0).build());
     }
 

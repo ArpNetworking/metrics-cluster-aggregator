@@ -39,7 +39,7 @@ public final class ExpressionStatistic extends BaseStatistic {
     }
 
     @Override
-    public Accumulator<Void> createCalculator() {
+    public Accumulator<NullSupportingData> createCalculator() {
         throw new UnsupportedOperationException("Calculation of ExpressionStatistic instances is not supported");
     }
 

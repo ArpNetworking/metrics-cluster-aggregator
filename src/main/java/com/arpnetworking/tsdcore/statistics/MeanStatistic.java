@@ -43,7 +43,7 @@ public final class MeanStatistic extends BaseStatistic {
     }
 
     @Override
-    public Calculator<Void> createCalculator() {
+    public Calculator<NullSupportingData> createCalculator() {
         return new MeanCalculator(this);
     }
 
@@ -55,7 +55,7 @@ public final class MeanStatistic extends BaseStatistic {
     @Override
     public Quantity calculate(final List<Quantity> orderedValues) {
         // TODO(vkoskela): Statistic calculation should be allowed to either fail or not return a quantity. [MAI-?]
-        if (orderedValues.size() == 0) {
+        if (orderedValues.isEmpty()) {
             return ZERO;
         }
         double sum = 0;
@@ -70,12 +70,12 @@ public final class MeanStatistic extends BaseStatistic {
     @Override
     public Quantity calculateAggregations(final List<AggregatedData> aggregations) {
         double weighted = 0D;
-        int count = 0;
+        long count = 0;
         Optional<Unit> unit = Optional.empty();
         for (final AggregatedData aggregation : aggregations) {
             final double populationSize = aggregation.getPopulationSize();
             weighted += aggregation.getValue().getValue() * populationSize;
-            count += populationSize;
+            count += (long) populationSize;
             unit = Optional.ofNullable(unit.orElse(aggregation.getValue().getUnit().orElse(null)));
         }
         return new Quantity.Builder()
@@ -101,7 +101,7 @@ public final class MeanStatistic extends BaseStatistic {
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
-    public static final class MeanCalculator extends BaseCalculator<Void> {
+    public static final class MeanCalculator extends BaseCalculator<NullSupportingData> {
 
         /**
          * Public constructor.
@@ -113,11 +113,11 @@ public final class MeanStatistic extends BaseStatistic {
         }
 
         @Override
-        public CalculatedValue<Void> calculate(final Map<Statistic, Calculator<?>> dependencies) {
+        public CalculatedValue<NullSupportingData> calculate(final Map<Statistic, Calculator<?>> dependencies) {
             final CalculatedValue<?> sum = dependencies.get(SUM_STATISTIC.get()).calculate(dependencies);
             final CalculatedValue<?> count = dependencies.get(COUNT_STATISTIC.get()).calculate(dependencies);
 
-            return new CalculatedValue.Builder<Void>()
+            return new CalculatedValue.Builder<NullSupportingData>()
                     .setValue(sum.getValue().divide(count.getValue()))
                     .build();
         }

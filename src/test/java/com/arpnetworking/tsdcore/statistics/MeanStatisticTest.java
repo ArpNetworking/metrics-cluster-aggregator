@@ -97,27 +97,27 @@ public class MeanStatisticTest {
     @Test
     public void testCalculator() {
         Mockito.doReturn(
-                new CalculatedValue.Builder<Void>()
+                new CalculatedValue.Builder<NullSupportingData>()
                     .setValue(new Quantity.Builder().setValue(45.0).build())
                     .build())
                 .when(_sumCalculator).calculate(Mockito.any());
         Mockito.doReturn(
-                new CalculatedValue.Builder<Void>()
+                new CalculatedValue.Builder<NullSupportingData>()
                         .setValue(new Quantity.Builder().setValue(3.0).build())
                         .build())
                 .when(_countCalculator).calculate(Mockito.any());
 
-        final Calculator<Void> calculator = MEAN_STATISTIC.createCalculator();
-        final CalculatedValue<Void> calculated = calculator.calculate(ImmutableMap.of(
+        final Calculator<NullSupportingData> calculator = MEAN_STATISTIC.createCalculator();
+        final CalculatedValue<NullSupportingData> calculated = calculator.calculate(ImmutableMap.of(
                 COUNT_STATISTIC, _countCalculator,
                 SUM_STATISTIC, _sumCalculator));
         Assert.assertEquals(calculated.getValue(), new Quantity.Builder().setValue(15.0).build());
     }
 
     @Mock
-    private Calculator<Void> _sumCalculator;
+    private Calculator<NullSupportingData> _sumCalculator;
     @Mock
-    private Calculator<Void> _countCalculator;
+    private Calculator<NullSupportingData> _countCalculator;
 
     private AutoCloseable _openMocks;
 

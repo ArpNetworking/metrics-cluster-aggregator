@@ -115,12 +115,11 @@ public class StreamingAggregator extends AbstractActorWithTimers {
         _injectClusterAsHost = injectClusterAsHost;
         _aggregatorTimeout = aggregatorTimeout;
         _periodicMetrics = periodicMetrics;
-        context().setReceiveTimeout(FiniteDuration.apply(30, TimeUnit.MINUTES));
-
-        timers().startTimerAtFixedRate(BUCKET_CHECK_TIMER_KEY, BucketCheck.getInstance(), FiniteDuration.apply(5, TimeUnit.SECONDS));
 
         _emitter = emitter;
     }
+
+
 
     @Override
     public Receive createReceive() {
@@ -198,6 +197,9 @@ public class StreamingAggregator extends AbstractActorWithTimers {
 
     @Override
     public void preStart() {
+        context().setReceiveTimeout(FiniteDuration.apply(30, TimeUnit.MINUTES));
+
+        timers().startTimerAtFixedRate(BUCKET_CHECK_TIMER_KEY, BucketCheck.getInstance(), FiniteDuration.apply(5, TimeUnit.SECONDS));
         _periodicMetrics.recordCounter("actors/streaming_aggregator/started", 1);
     }
 

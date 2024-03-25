@@ -67,7 +67,6 @@ public class Status extends AbstractActor {
         _cluster = cluster;
         _clusterStatusCache = clusterStatusCache;
         _localMetrics = localMetrics;
-        context().system().eventStream().subscribe(self(), ThisActorSystemQuarantinedEvent.class);
     }
 
     /**
@@ -84,6 +83,12 @@ public class Status extends AbstractActor {
             final ActorRef localMetrics) {
 
         return Props.create(Status.class, cluster, clusterStatusCache, localMetrics);
+    }
+
+    @Override
+    public void preStart() throws Exception {
+        super.preStart();
+        context().system().eventStream().subscribe(self(), ThisActorSystemQuarantinedEvent.class);
     }
 
     @Override

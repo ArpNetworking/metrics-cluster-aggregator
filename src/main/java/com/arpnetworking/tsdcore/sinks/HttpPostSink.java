@@ -212,7 +212,15 @@ public abstract class HttpPostSink extends BaseSink {
         _maximumDelay = builder._maximumDelay;
         _acceptedStatusCodes = builder._acceptedStatusCodes;
         _retryableStatusCodes = builder._retryableStatusCodes;
+    }
 
+    /**
+     * Starts the actor for the sink. This is necessary to prevent references to 'this' from
+     * escaping the constructor.
+     *
+     * @param builder The builder used to create the sink.
+     */
+    protected void start(final Builder<?, ?> builder) {
         _sinkActor = builder._actorSystem.actorOf(
                 HttpSinkActor.props(
                         CLIENT,
@@ -225,7 +233,7 @@ public abstract class HttpPostSink extends BaseSink {
 
     private final URI _uri;
     private final Uri _aysncHttpClientUri;
-    private final ActorRef _sinkActor;
+    private ActorRef _sinkActor;
     private final int _maximumAttempts;
     private final Duration _baseBackoff;
     private final Duration _maximumDelay;
@@ -250,6 +258,13 @@ public abstract class HttpPostSink extends BaseSink {
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
     public abstract static class Builder<B extends BaseSink.Builder<B, S>, S extends HttpPostSink> extends BaseSink.Builder<B, S> {
+
+        @Override
+        public S build() {
+            final S result = super.build();
+            result.start(this);
+            return result;
+        }
 
         /**
          * The {@link URI} to post the aggregated data to. Cannot be null.

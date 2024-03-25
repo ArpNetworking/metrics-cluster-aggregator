@@ -95,7 +95,7 @@ public class AggregatedDataTest {
                         .setIsSpecified(true)
                         .setPeriod(Duration.ofMinutes(1))
                         .setPopulationSize(1L)
-                        .setSupportingData(new Object())
+                        .setSupportingData(7)
                         .setSamples(Lists.newArrayList(TestBeanFactory.createSample())),
                 new AggregatedData.Builder()
                         .setFQDSN(new FQDSN.Builder()
@@ -110,7 +110,7 @@ public class AggregatedDataTest {
                         .setIsSpecified(false)
                         .setPeriod(Duration.ofMinutes(5))
                         .setPopulationSize(2L)
-                        .setSupportingData(new Object())
+                        .setSupportingData("foo")
                         .setSamples(Lists.newArrayList(TestBeanFactory.createSample(), TestBeanFactory.createSample())));
     }
 

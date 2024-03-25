@@ -55,6 +55,7 @@ public class CarbonSinkTest extends BaseActorTest {
         @SuppressWarnings("unchecked")
         final Consumer<ByteString> recorder = (Consumer<ByteString>) Mockito.mock(Consumer.class);
         final CarbonSink carbonSink = new CarbonTestSink(recorder, _carbonSinkBuilder);
+        carbonSink.start(_carbonSinkBuilder);
         final AggregatedData datum = TestBeanFactory.createAggregatedData();
         final PeriodicData periodicData = new PeriodicData.Builder()
                 .setData(ImmutableList.of(datum))

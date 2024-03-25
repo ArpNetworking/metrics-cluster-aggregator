@@ -26,6 +26,7 @@ import com.google.common.collect.Sets;
 
 import java.text.DecimalFormat;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -58,7 +59,7 @@ public class TPStatistic extends BaseStatistic implements OrderedStatistic {
     }
 
     @Override
-    public Calculator<Void> createCalculator() {
+    public Calculator<NullSupportingData> createCalculator() {
         return new PercentileCalculator(this);
     }
 
@@ -118,7 +119,7 @@ public class TPStatistic extends BaseStatistic implements OrderedStatistic {
 
     private final double _percentile;
     private final String _defaultName;
-    private final Set<String> _aliases;
+    private final HashSet<String> _aliases;
 
     private static final DecimalFormat FORMAT = new DecimalFormat("##0.#");
     private static final StatisticFactory STATISTIC_FACTORY = new StatisticFactory();
@@ -133,7 +134,7 @@ public class TPStatistic extends BaseStatistic implements OrderedStatistic {
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
-    public static final class PercentileCalculator extends BaseCalculator<Void> {
+    public static final class PercentileCalculator extends BaseCalculator<NullSupportingData> {
 
         /**
          * Public constructor.
@@ -145,10 +146,10 @@ public class TPStatistic extends BaseStatistic implements OrderedStatistic {
         }
 
         @Override
-        public CalculatedValue<Void> calculate(final Map<Statistic, Calculator<?>> dependencies) {
+        public CalculatedValue<NullSupportingData> calculate(final Map<Statistic, Calculator<?>> dependencies) {
             final HistogramStatistic.HistogramAccumulator calculator =
                     (HistogramStatistic.HistogramAccumulator) dependencies.get(HISTOGRAM_STATISTIC.get());
-            return new CalculatedValue.Builder<Void>()
+            return new CalculatedValue.Builder<NullSupportingData>()
                     .setValue(calculator.calculate(((TPStatistic) getStatistic()).getPercentile()))
                     .build();
         }

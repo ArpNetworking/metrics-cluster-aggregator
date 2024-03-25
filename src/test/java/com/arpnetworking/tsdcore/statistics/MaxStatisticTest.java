@@ -72,11 +72,11 @@ public class MaxStatisticTest {
 
     @Test
     public void testAccumulator() {
-        final Accumulator<Void> accumulator = (Accumulator<Void>) MAX_STATISTIC.createCalculator();
+        final Accumulator<NullSupportingData> accumulator = (Accumulator<NullSupportingData>) MAX_STATISTIC.createCalculator();
         accumulator.accumulate(new Quantity.Builder().setValue(12d).build());
         accumulator.accumulate(new Quantity.Builder().setValue(18d).build());
         accumulator.accumulate(new Quantity.Builder().setValue(5d).build());
-        final CalculatedValue<Void> calculated = accumulator.calculate(Collections.emptyMap());
+        final CalculatedValue<NullSupportingData> calculated = accumulator.calculate(Collections.emptyMap());
         assertEquals(calculated.getValue(), new Quantity.Builder().setValue(18.0).build());
     }
 

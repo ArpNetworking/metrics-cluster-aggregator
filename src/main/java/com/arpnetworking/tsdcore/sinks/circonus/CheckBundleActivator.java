@@ -42,7 +42,7 @@ import java.util.concurrent.TimeUnit;
  * Actor responsible for keeping check bundle metrics active.
  * A parent actor is responsible for telling the refresher about check bundles.
  * Once notified of the existence of a check bundle, the refresher will use the
- * Circonus API to continually lookup the check bundle and set any metrics to
+ * Circonus API to continually look up the check bundle and set any metrics to
  * the active state.
  *
  * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
@@ -66,6 +66,11 @@ public class CheckBundleActivator extends AbstractActor {
     @SuppressFBWarnings(value = "MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR", justification = "Context is safe to use in constructor.")
     public CheckBundleActivator(final CirconusClient client) {
         _client = client;
+    }
+
+    @Override
+    public void preStart() throws Exception {
+        super.preStart();
         _dispatcher = context().dispatcher();
         _refresher = new UniformRandomTimeScheduler.Builder()
                 .setExecutionContext(context().dispatcher())
@@ -76,7 +81,6 @@ public class CheckBundleActivator extends AbstractActor {
                 .setSender(self())
                 .setTarget(self())
                 .build();
-
     }
 
     @Override
@@ -172,8 +176,8 @@ public class CheckBundleActivator extends AbstractActor {
     private final CirconusClient _client;
     private final Queue<String> _pendingCheckBundleRefresh = Queues.newArrayDeque();
     private final Set<String> _checkBundleCids = Sets.newHashSet();
-    private final ExecutionContextExecutor _dispatcher;
-    private final UniformRandomTimeScheduler _refresher;
+    private ExecutionContextExecutor _dispatcher;
+    private UniformRandomTimeScheduler _refresher;
     private static final Logger LOGGER = LoggerFactory.getLogger(CheckBundleActivator.class);
     private static final Statistic HISTOGRAM_STATISTIC = new StatisticFactory().getStatistic("histogram");
 
