@@ -54,6 +54,11 @@ public class BrokerRefresher extends AbstractActor {
     @SuppressFBWarnings(value = "MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR", justification = "Context is safe to use in constructor.")
     public BrokerRefresher(final CirconusClient client) {
         _client = client;
+    }
+
+    @Override
+    public void preStart() throws Exception {
+        super.preStart();
         _brokerLookup = new UniformRandomTimeScheduler.Builder()
                 .setExecutionContext(context().dispatcher())
                 .setMinimumTime(FiniteDuration.apply(45, TimeUnit.MINUTES))
@@ -117,7 +122,7 @@ public class BrokerRefresher extends AbstractActor {
     }
 
     private final CirconusClient _client;
-    private final UniformRandomTimeScheduler _brokerLookup;
+    private UniformRandomTimeScheduler _brokerLookup;
     private static final Logger LOGGER = LoggerFactory.getLogger(BrokerRefresher.class);
 
     /**

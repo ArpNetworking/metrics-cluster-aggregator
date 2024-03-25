@@ -83,6 +83,11 @@ public class TcpSinkActor extends AbstractActor {
         _maximumQueueSize = maximumQueueSize;
         _exponentialBackoffBase = exponentialBackoffBase;
         _pendingRequests = new LinkedList<>();
+    }
+
+    @Override
+    public void preStart() throws Exception {
+        super.preStart();
         connect();
     }
 

@@ -94,6 +94,15 @@ public abstract class TcpSink extends BaseSink {
      */
     protected TcpSink(final Builder<?, ?> builder) {
         super(builder);
+    }
+
+    /**
+     * Starts the actor for the sink. This is necessary to prevent references to 'this' from
+     * escaping the constructor.
+     *
+     * @param builder The builder used to create the sink.
+     */
+    protected void start(final Builder<?, ?> builder) {
         _sinkActor = builder._actorSystem.actorOf(
                 TcpSinkActor.props(
                         this,
@@ -103,7 +112,7 @@ public abstract class TcpSink extends BaseSink {
                         builder._exponentialBackoffBase));
     }
 
-    private final ActorRef _sinkActor;
+    private ActorRef _sinkActor;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TcpSink.class);
 
@@ -114,7 +123,7 @@ public abstract class TcpSink extends BaseSink {
      * @param <S> type of the object to be built
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
-    public abstract static class Builder<B extends BaseSink.Builder<B, S>, S extends Sink> extends BaseSink.Builder<B, S> {
+    public abstract static class Builder<B extends BaseSink.Builder<B, S>, S extends TcpSink> extends BaseSink.Builder<B, S> {
 
         /**
          * The server host name. Cannot be null or empty.
@@ -167,6 +176,13 @@ public abstract class TcpSink extends BaseSink {
          */
         protected Builder(final Function<B, S> targetConstructor) {
             super(targetConstructor);
+        }
+
+        @Override
+        public S build() {
+            final S result = super.build();
+            result.start(this);
+            return result;
         }
 
         @NotNull

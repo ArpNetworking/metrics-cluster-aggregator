@@ -92,17 +92,13 @@ public class AggregationRouter extends AbstractActor {
             @Named("reaggregation-cluster-as-host") final boolean injectClusterAsHost,
             @Named("reaggregation-timeout") final Duration aggregatorTimeout,
             final PeriodicMetrics periodicMetrics) {
+        this._periodicStatistics = periodicStatistics;
+        _emitter = emitter;
+        _clusterHostSuffix = clusterHostSuffix;
+        _reaggregationDimensions = reaggregationDimensions;
+        _injectClusterAsHost = injectClusterAsHost;
+        _aggregatorTimeout = aggregatorTimeout;
         _periodicMetrics = periodicMetrics;
-        _streamingChild = context().actorOf(
-                StreamingAggregator.props(
-                        periodicStatistics,
-                        emitter,
-                        clusterHostSuffix,
-                        reaggregationDimensions,
-                        injectClusterAsHost,
-                        aggregatorTimeout,
-                        periodicMetrics),
-                "streaming");
     }
 
     @Override
@@ -124,6 +120,16 @@ public class AggregationRouter extends AbstractActor {
 
     @Override
     public void preStart() {
+        _streamingChild = context().actorOf(
+                StreamingAggregator.props(
+                        _periodicStatistics,
+                        _emitter,
+                        _clusterHostSuffix,
+                        _reaggregationDimensions,
+                        _injectClusterAsHost,
+                        _aggregatorTimeout,
+                        _periodicMetrics),
+                "streaming");
         _periodicMetrics.recordCounter("actors/aggregation_router/started", 1);
     }
 
@@ -144,7 +150,13 @@ public class AggregationRouter extends AbstractActor {
         super.preRestart(reason, message);
     }
 
-    private final ActorRef _streamingChild;
+    private ActorRef _streamingChild;
+    private final ActorRef _periodicStatistics;
+    private final ActorRef _emitter;
+    private final String _clusterHostSuffix;
+    private final ImmutableSet<String> _reaggregationDimensions;
+    private final boolean _injectClusterAsHost;
+    private final Duration _aggregatorTimeout;
     private final PeriodicMetrics _periodicMetrics;
     private static final Logger LOGGER = LoggerFactory.getLogger(AggregationRouter.class);
 

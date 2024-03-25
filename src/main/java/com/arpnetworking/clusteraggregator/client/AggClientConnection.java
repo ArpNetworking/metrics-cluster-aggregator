@@ -86,12 +86,18 @@ public class AggClientConnection extends AbstractActor {
             final boolean calculateAggregates) {
         _connection = connection;
         _remoteAddress = remote;
+        _maxConnectionAge = maxConnectionAge;
         _calculateAggregates = calculateAggregates;
 
-        context().watch(connection);
+    }
+
+    @Override
+    public void preStart() throws Exception {
+        super.preStart();
+        context().watch(_connection);
 
         context().system().scheduler().scheduleOnce(
-                maxConnectionAge,
+                _maxConnectionAge,
                 self(),
                 TcpMessage.close(),
                 context().dispatcher(),
@@ -293,6 +299,7 @@ public class AggClientConnection extends AbstractActor {
     private ByteString _buffer = ByteString.emptyByteString();
     private final ActorRef _connection;
     private final InetSocketAddress _remoteAddress;
+    private final FiniteDuration _maxConnectionAge;
     private final boolean _calculateAggregates;
     private static final Logger LOGGER = LoggerFactory.getLogger(AggClientConnection.class);
     private static final Logger INCOMPLETE_RECORD_LOGGER = LoggerFactory.getRateLimitLogger(
