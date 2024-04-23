@@ -194,7 +194,7 @@ public class TcpSinkActor extends AbstractActor {
                         context().system().scheduler().scheduleOnce(
                                 Duration.ofSeconds(1),
                                 self(),
-                                HttpSinkActor.DrainAndShutdown.getInstance(),
+                                TcpSinkActor.DrainAndShutdown.getInstance(),
                                 context().dispatcher(),
                                 sender());
                     }
