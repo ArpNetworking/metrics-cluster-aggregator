@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableSet;
 import net.sf.oval.constraint.NotNull;
 
 import java.util.Collections;
+import java.util.concurrent.CompletionStage;
 
 /**
  * Filtering sink for excluding data based on dimensions present or absent.
@@ -43,7 +44,12 @@ public final class DimensionFilteringSink extends BaseSink {
 
     @Override
     public void close() {
-        // Nothing to do
+        _sink.close();
+    }
+
+    @Override
+    public CompletionStage<Void> shutdownGracefully() {
+        return _sink.shutdownGracefully();
     }
 
     private DimensionFilteringSink(final Builder builder) {

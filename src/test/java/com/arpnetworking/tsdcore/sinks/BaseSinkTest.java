@@ -19,6 +19,9 @@ import com.arpnetworking.tsdcore.model.PeriodicData;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+
 /**
  * Tests for the {@link BaseSink} class.
  *
@@ -53,6 +56,11 @@ public class BaseSinkTest {
         @Override
         public void close() {
             // Nothing to do
+        }
+
+        @Override
+        public CompletionStage<Void> shutdownGracefully() {
+            return CompletableFuture.completedFuture(null);
         }
 
         private TestAggregatedDataSink(final Builder builder) {

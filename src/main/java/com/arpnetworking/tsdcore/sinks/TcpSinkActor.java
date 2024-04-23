@@ -177,6 +177,28 @@ public class TcpSinkActor extends AbstractActor {
                     connect();
                 })
                 .match(Connect.class, connect -> connect())
+                .match(TcpSinkActor.DrainAndShutdown.class, message -> {
+                    if (_pendingRequests.isEmpty()) {
+                        LOGGER.info()
+                                .setMessage("Stopping actor")
+                                .addContext("actor", self())
+                                .log();
+                        context().stop(self());
+                        sender().tell("OK", self());
+                    } else {
+                        LOGGER.info()
+                                .setMessage("Waiting for pending requests to complete")
+                                .addData("pendingRequests", _pendingRequests.size())
+                                .addContext("actor", self())
+                                .log();
+                        context().system().scheduler().scheduleOnce(
+                                Duration.ofSeconds(1),
+                                self(),
+                                HttpSinkActor.DrainAndShutdown.getInstance(),
+                                context().dispatcher(),
+                                sender());
+                    }
+                })
                 .build();
     }
 
@@ -292,5 +314,22 @@ public class TcpSinkActor extends AbstractActor {
         }
 
         private final PeriodicData _data;
+    }
+
+    /**
+     * Message class to drain the queue and shutdown the actor.
+     */
+    public static final class DrainAndShutdown {
+        private DrainAndShutdown() { }
+        /**
+         * Get the singleton instance.
+         *
+         * @return The singleton instance.
+         */
+        public static TcpSinkActor.DrainAndShutdown getInstance() {
+            return TcpSinkActor.DrainAndShutdown.INSTANCE;
+        }
+
+        private static final TcpSinkActor.DrainAndShutdown INSTANCE = new TcpSinkActor.DrainAndShutdown();
     }
 }

@@ -21,6 +21,7 @@ import com.google.common.collect.Maps;
 import net.sf.oval.constraint.NotNull;
 
 import java.util.Map;
+import java.util.concurrent.CompletionStage;
 
 /**
  * Sink adds any specified dimensions.
@@ -40,7 +41,12 @@ public final class DimensionInjectingSink extends BaseSink {
 
     @Override
     public void close() {
-        // Nothing to do
+        _sink.close();
+    }
+
+    @Override
+    public CompletionStage<Void> shutdownGracefully() {
+        return _sink.shutdownGracefully();
     }
 
     private DimensionInjectingSink(final Builder builder) {

@@ -45,6 +45,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.Executors;
@@ -110,6 +112,21 @@ public final class PeriodicStatisticsSink extends BaseSink {
             throw new RuntimeException(e);
         }
         flushMetrics();
+    }
+
+    @Override
+    public CompletionStage<Void> shutdownGracefully() {
+            _executor.shutdown();
+        return CompletableFuture.runAsync(() -> {
+                    try {
+                            _executor.awaitTermination(EXECUTOR_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS);
+                            this.flushMetrics();
+                    } catch (final InterruptedException e) {
+                        Thread.interrupted();
+                        throw new RuntimeException(e);
+                    }
+            });
+
     }
 
     @LogValue

@@ -26,9 +26,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.apache.pekko.actor.AbstractActor;
 import org.apache.pekko.actor.Props;
+import org.apache.pekko.pattern.Patterns;
 
 import java.time.Duration;
 import java.time.ZonedDateTime;
+import java.util.concurrent.CompletionStage;
 
 /**
  * Holds the sinks and emits to them.
@@ -40,26 +42,35 @@ public class Emitter extends AbstractActor {
      * Creates a {@link Props} for construction in Pekko.
      *
      * @param config Config describing the sinks to write to
+     * @param shutdown The lifecycle registration instance.
      * @return A new {@link Props}.
      */
-    public static Props props(final EmitterConfiguration config) {
-        return Props.create(Emitter.class, config);
+    public static Props props(final EmitterConfiguration config, final LifecycleRegistration shutdown) {
+        return Props.create(Emitter.class, () -> new Emitter(config, shutdown));
     }
 
     /**
      * Public constructor.
      *
      * @param config Config describing the sinks to write to
+     * @param shutdown The lifecycle registration instance to register shutdown actions.
      */
-    public Emitter(final EmitterConfiguration config) {
+    public Emitter(final EmitterConfiguration config, final LifecycleRegistration shutdown) {
         _sink = new MultiSink.Builder()
                 .setName("EmitterMultiSink")
                 .setSinks(config.getSinks())
                 .build();
+        _shutdown = shutdown;
         LOGGER.info()
                 .setMessage("Emitter starting up")
                 .addData("sink", _sink)
                 .log();
+    }
+
+    @Override
+    public void preStart() throws Exception, Exception {
+        super.preStart();
+        _shutdown.registerShutdown(this::shutdown);
     }
 
     @SuppressWarnings("deprecation")
@@ -90,7 +101,24 @@ public class Emitter extends AbstractActor {
                             .log();
                     _sink.recordAggregateData(periodicData);
                 })
+                .matchEquals(SHUTDOWN, ignored -> {
+                    LOGGER.info()
+                            .setMessage("Shutting down emitter")
+                            .log();
+
+                    _sink.close();
+                    sender().tell(new Object(), self());
+                })
                 .build();
+    }
+
+    private CompletionStage<Void> shutdown() {
+        LOGGER.info()
+                .setMessage("Starting emitter graceful shutdown")
+                .log();
+
+        return Patterns.ask(self(), SHUTDOWN, Duration.ofSeconds(30))
+                .thenApply(response -> null);
     }
 
     @Override
@@ -99,6 +127,8 @@ public class Emitter extends AbstractActor {
         _sink.close();
     }
 
+    private static final Object SHUTDOWN = new Object();
     private final Sink _sink;
+    private final LifecycleRegistration _shutdown;
     private static final Logger LOGGER = LoggerFactory.getLogger(Emitter.class);
 }

@@ -32,11 +32,13 @@ import net.sf.oval.constraint.NotNull;
 import org.apache.pekko.actor.ActorRef;
 import org.apache.pekko.actor.ActorSystem;
 import org.apache.pekko.actor.PoisonPill;
+import org.apache.pekko.pattern.Patterns;
 import org.apache.pekko.stream.Materializer;
 
 import java.net.URI;
 import java.time.Duration;
 import java.util.Collection;
+import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 
 /**
@@ -70,6 +72,12 @@ public final class CirconusSink extends BaseSink {
     @Override
     public void close() {
         _sinkActor.tell(PoisonPill.getInstance(), ActorRef.noSender());
+    }
+
+    @Override
+    public CompletionStage<Void> shutdownGracefully() {
+        return Patterns.gracefulStop(_sinkActor, Duration.ofSeconds(30))
+                .thenApply(result -> null);
     }
 
     /**

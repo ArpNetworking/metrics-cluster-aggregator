@@ -62,7 +62,7 @@ public class EmitterTest extends BaseActorTest {
 
     @Test
     public void propsCreation() {
-        TestActorRef.create(getSystem(), Emitter.props(_config));
+        TestActorRef.create(getSystem(), Emitter.props(_config, _shutdown));
     }
 
     @Test
@@ -84,7 +84,7 @@ public class EmitterTest extends BaseActorTest {
                         .setValue(14.0)
                         .build())
                 .build();
-        final TestActorRef<Actor> ref = TestActorRef.create(getSystem(), Emitter.props(_config));
+        final TestActorRef<Actor> ref = TestActorRef.create(getSystem(), Emitter.props(_config, _shutdown));
 
         ref.tell(data, ActorRef.noSender());
         Mockito.verify(_sink).recordAggregateData(_periodicData.capture());
@@ -97,7 +97,7 @@ public class EmitterTest extends BaseActorTest {
     @Test
     public void doesNotSwallowUnhandled() {
         final TestProbe probe = TestProbe.apply(getSystem());
-        final TestActorRef<Actor> ref = TestActorRef.create(getSystem(), Emitter.props(_config));
+        final TestActorRef<Actor> ref = TestActorRef.create(getSystem(), Emitter.props(_config, _shutdown));
         getSystem().eventStream().subscribe(probe.ref(), UnhandledMessage.class);
         ref.tell("notAValidMessage", ActorRef.noSender());
         probe.expectMsgClass(FiniteDuration.apply(3, TimeUnit.SECONDS), UnhandledMessage.class);
@@ -108,6 +108,7 @@ public class EmitterTest extends BaseActorTest {
     private EmitterConfiguration _config = null;
     @Mock
     private Sink _sink = null;
+    private LifecycleRegistration _shutdown = new AppShutdown();
 
     private static final StatisticFactory STATISTIC_FACTORY = new StatisticFactory();
     private static final Statistic MEDIAN_STATISTIC = STATISTIC_FACTORY.getStatistic("median");
