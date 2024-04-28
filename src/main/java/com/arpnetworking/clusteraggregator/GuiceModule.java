@@ -442,20 +442,15 @@ public class GuiceModule extends AbstractModule {
     private static final class RoundRobinEmitterFactory implements ConfiguredLaunchableFactory<Props, EmitterConfiguration> {
         /**
          * Constructor.
-         *
-         * @param shutdown The lifecycle registration instance.
          */
         RoundRobinEmitterFactory(final LifecycleRegistration shutdown) {
-            _shutdown = shutdown;
         }
 
         @Override
         public Props create(final EmitterConfiguration config) {
             final DefaultResizer resizer = new DefaultResizer(config.getPoolSize(), config.getPoolSize());
-            return new RoundRobinPool(config.getPoolSize()).withResizer(resizer).props(Emitter.props(config, _shutdown));
+            return new RoundRobinPool(config.getPoolSize()).withResizer(resizer).props(Emitter.props(config));
         }
-
-        private final LifecycleRegistration _shutdown;
     }
 
     private static final class DatabaseProvider implements com.google.inject.Provider<Database> {

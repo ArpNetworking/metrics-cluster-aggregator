@@ -42,25 +42,22 @@ public class Emitter extends AbstractActor {
      * Creates a {@link Props} for construction in Pekko.
      *
      * @param config Config describing the sinks to write to
-     * @param shutdown The lifecycle registration instance.
      * @return A new {@link Props}.
      */
-    public static Props props(final EmitterConfiguration config, final LifecycleRegistration shutdown) {
-        return Props.create(Emitter.class, () -> new Emitter(config, shutdown));
+    public static Props props(final EmitterConfiguration config) {
+        return Props.create(Emitter.class, () -> new Emitter(config));
     }
 
     /**
      * Public constructor.
      *
      * @param config Config describing the sinks to write to
-     * @param shutdown The lifecycle registration instance to register shutdown actions.
      */
-    public Emitter(final EmitterConfiguration config, final LifecycleRegistration shutdown) {
+    public Emitter(final EmitterConfiguration config) {
         _sink = new MultiSink.Builder()
                 .setName("EmitterMultiSink")
                 .setSinks(config.getSinks())
                 .build();
-        _shutdown = shutdown;
         LOGGER.info()
                 .setMessage("Emitter starting up")
                 .addData("sink", _sink)
@@ -70,7 +67,6 @@ public class Emitter extends AbstractActor {
     @Override
     public void preStart() throws Exception, Exception {
         super.preStart();
-        _shutdown.registerShutdown(this::shutdown);
     }
 
     @SuppressWarnings("deprecation")
@@ -101,24 +97,22 @@ public class Emitter extends AbstractActor {
                             .log();
                     _sink.recordAggregateData(periodicData);
                 })
-                .matchEquals(SHUTDOWN, ignored -> {
+                .match(Shutdown.class, ignored -> {
                     LOGGER.info()
                             .setMessage("Shutting down emitter")
                             .log();
 
-                    _sink.close();
-                    sender().tell(new Object(), self());
+                    final CompletionStage<Object> shutdownFuture = _sink.shutdownGracefully()
+                            .thenApply(ignore -> ShutdownComplete.getInstance());
+                    Patterns.pipe(shutdownFuture, context().dispatcher()).to(self());
+                })
+                .match(ShutdownComplete.class, ignored -> {
+                    LOGGER.info()
+                            .setMessage("Emitter shutdown complete")
+                            .log();
+                    context().stop(self());
                 })
                 .build();
-    }
-
-    private CompletionStage<Void> shutdown() {
-        LOGGER.info()
-                .setMessage("Starting emitter graceful shutdown")
-                .log();
-
-        return Patterns.ask(self(), SHUTDOWN, Duration.ofSeconds(30))
-                .thenApply(response -> null);
     }
 
     @Override
@@ -127,8 +121,35 @@ public class Emitter extends AbstractActor {
         _sink.close();
     }
 
-    private static final Object SHUTDOWN = new Object();
     private final Sink _sink;
-    private final LifecycleRegistration _shutdown;
     private static final Logger LOGGER = LoggerFactory.getLogger(Emitter.class);
+    /**
+     * Message to initiate a graceful shutdown.
+     */
+    public static final class Shutdown {
+        private Shutdown() {}
+
+        /**
+         * Get the singleton instance.
+         *
+         * @return the singleton instance
+         */
+        public static Shutdown getInstance() {
+            return INSTANCE;
+        }
+        private static final Shutdown INSTANCE = new Shutdown();
+    }
+    private static final class ShutdownComplete {
+        private ShutdownComplete() {}
+
+        /**
+         * Get the singleton instance.
+         *
+         * @return the singleton instance
+         */
+        public static ShutdownComplete getInstance() {
+            return INSTANCE;
+        }
+        private static final ShutdownComplete INSTANCE = new ShutdownComplete();
+    }
 }

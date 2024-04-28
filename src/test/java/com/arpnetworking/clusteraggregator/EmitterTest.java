@@ -62,7 +62,7 @@ public class EmitterTest extends BaseActorTest {
 
     @Test
     public void propsCreation() {
-        TestActorRef.create(getSystem(), Emitter.props(_config, _shutdown));
+        TestActorRef.create(getSystem(), Emitter.props(_config));
     }
 
     @Test
@@ -84,7 +84,7 @@ public class EmitterTest extends BaseActorTest {
                         .setValue(14.0)
                         .build())
                 .build();
-        final TestActorRef<Actor> ref = TestActorRef.create(getSystem(), Emitter.props(_config, _shutdown));
+        final TestActorRef<Actor> ref = TestActorRef.create(getSystem(), Emitter.props(_config));
 
         ref.tell(data, ActorRef.noSender());
         Mockito.verify(_sink).recordAggregateData(_periodicData.capture());
@@ -97,7 +97,7 @@ public class EmitterTest extends BaseActorTest {
     @Test
     public void doesNotSwallowUnhandled() {
         final TestProbe probe = TestProbe.apply(getSystem());
-        final TestActorRef<Actor> ref = TestActorRef.create(getSystem(), Emitter.props(_config, _shutdown));
+        final TestActorRef<Actor> ref = TestActorRef.create(getSystem(), Emitter.props(_config));
         getSystem().eventStream().subscribe(probe.ref(), UnhandledMessage.class);
         ref.tell("notAValidMessage", ActorRef.noSender());
         probe.expectMsgClass(FiniteDuration.apply(3, TimeUnit.SECONDS), UnhandledMessage.class);

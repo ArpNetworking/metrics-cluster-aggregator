@@ -26,6 +26,11 @@ import org.apache.pekko.actor.ActorSystem;
 import org.apache.pekko.actor.Terminated;
 import org.apache.pekko.cluster.Cluster;
 import org.apache.pekko.cluster.sharding.ShardRegion;
+import org.apache.pekko.pattern.Patterns;
+
+import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 /**
  * Shuts down the Pekko cluster gracefully.
@@ -37,11 +42,18 @@ public class GracefulShutdownActor extends AbstractActor {
      * Public constructor.
      *
      * @param shardRegion aggregator shard region
+     * @param hostEmitter host emitter
+     * @param clusterEmitter cluster emitter
      */
     @Inject
     @SuppressFBWarnings(value = "MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR", justification = "Context is safe to use in constructor.")
-    public GracefulShutdownActor(@Named("aggregator-shard-region") final ActorRef shardRegion) {
+    public GracefulShutdownActor(
+            @Named("aggregator-shard-region") final ActorRef shardRegion,
+            @Named("host-emitter") final ActorRef hostEmitter,
+            @Named("cluster-emitter") final ActorRef clusterEmitter) {
         _shardRegion = shardRegion;
+        _hostEmitter = hostEmitter;
+        _clusterEmitter = clusterEmitter;
     }
 
     @Override
@@ -50,6 +62,31 @@ public class GracefulShutdownActor extends AbstractActor {
                 .match(Shutdown.class, message -> {
                     LOGGER.info()
                             .setMessage("Initiating graceful shutdown")
+                            .addData("actor", self())
+                            .log();
+                    self().tell(EmitterShutdown.instance(), self());
+                })
+                .match(EmitterShutdown.class, message -> {
+                    LOGGER.info()
+                            .setMessage("Shutting down emitters")
+                            .addData("actor", self())
+                            .log();
+                    final CompletionStage<Object> host = Patterns.ask(_hostEmitter,
+                            Emitter.Shutdown.getInstance(),
+                            Duration.ofSeconds(30));
+                    final CompletionStage<Object> cluster = Patterns.ask(_clusterEmitter,
+                            Emitter.Shutdown.getInstance(),
+                            Duration.ofSeconds(30));
+                    final CompletableFuture<ShutdownShardRegion> allShutdown = CompletableFuture.allOf(
+                            host.toCompletableFuture(),
+                            cluster.toCompletableFuture())
+                            .thenApply(result -> ShutdownShardRegion.instance());
+                    Patterns.pipe(allShutdown, context().dispatcher()).to(self());
+
+                })
+                .match(ShutdownShardRegion.class, message -> {
+                    LOGGER.info()
+                            .setMessage("Shutting down shard region")
                             .addData("actor", self())
                             .log();
                     context().watch(_shardRegion);
@@ -69,7 +106,9 @@ public class GracefulShutdownActor extends AbstractActor {
         _system = context().system();
     }
 
-    private ActorRef _shardRegion;
+    private final ActorRef _shardRegion;
+    private final ActorRef _hostEmitter;
+    private final ActorRef _clusterEmitter;
     private Cluster _cluster;
     private ActorSystem _system;
     private static final Logger LOGGER = LoggerFactory.getLogger(GracefulShutdownActor.class);
@@ -88,5 +127,19 @@ public class GracefulShutdownActor extends AbstractActor {
         }
 
         private static final Shutdown SHUTDOWN = new Shutdown();
+    }
+    private static final class ShutdownShardRegion {
+        private ShutdownShardRegion() {}
+        public static ShutdownShardRegion instance() {
+            return INSTANCE;
+        }
+        private static final ShutdownShardRegion INSTANCE = new ShutdownShardRegion();
+    }
+    private static final class EmitterShutdown {
+        private EmitterShutdown() {}
+        public static EmitterShutdown instance() {
+            return INSTANCE;
+        }
+        private static final EmitterShutdown INSTANCE = new EmitterShutdown();
     }
 }
