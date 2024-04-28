@@ -15,6 +15,7 @@
  */
 package com.arpnetworking.clusteraggregator;
 
+import com.arpnetworking.clusteraggregator.client.HttpSourceActor;
 import com.arpnetworking.clusteraggregator.http.Routes;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
@@ -47,6 +48,7 @@ public class GracefulShutdownActor extends AbstractActor {
      * @param clusterEmitter cluster emitter
      * @param routes routes
      * @param healthcheckShutdownDelay delay after shutting down healthcheck before shutting down emitters
+     * @param ingestActor ingest actor
      */
     @Inject
     @SuppressFBWarnings(value = "MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR", justification = "Context is safe to use in constructor.")
@@ -55,12 +57,14 @@ public class GracefulShutdownActor extends AbstractActor {
             @Named("host-emitter") final ActorRef hostEmitter,
             @Named("cluster-emitter") final ActorRef clusterEmitter,
             final Routes routes,
-            @Named("healthcheck-shutdown-delay") final Duration healthcheckShutdownDelay) {
+            @Named("healthcheck-shutdown-delay") final Duration healthcheckShutdownDelay,
+            @Named("http-ingest-v1") final ActorRef ingestActor) {
         _shardRegion = shardRegion;
         _hostEmitter = hostEmitter;
         _clusterEmitter = clusterEmitter;
         _routes = routes;
         _healthcheckShutdownDelay = healthcheckShutdownDelay;
+        _ingestActor = ingestActor;
     }
 
     @Override
@@ -71,7 +75,7 @@ public class GracefulShutdownActor extends AbstractActor {
                             .setMessage("Initiating graceful shutdown")
                             .addData("actor", self())
                             .log();
-                    self().tell(ShutdownHealthcheck.instance(), self());
+                    self().tell(ShutdownHealthcheck.getInstance(), self());
                 })
                 .match(ShutdownHealthcheck.class, message -> {
                     LOGGER.info()
@@ -79,10 +83,11 @@ public class GracefulShutdownActor extends AbstractActor {
                             .addData("actor", self())
                             .log();
                     _routes.shutdownHealthcheck();
+                    _ingestActor.tell(HttpSourceActor.Shutdown.getInstance(), self());
                     context().system().scheduler().scheduleOnce(
                             _healthcheckShutdownDelay,
                             self(),
-                            ShutdownEmitter.instance(),
+                            ShutdownEmitter.getInstance(),
                             context().dispatcher(),
                             self());
                 })
@@ -100,7 +105,7 @@ public class GracefulShutdownActor extends AbstractActor {
                     final CompletableFuture<ShutdownShardRegion> allShutdown = CompletableFuture.allOf(
                             host.toCompletableFuture(),
                             cluster.toCompletableFuture())
-                            .thenApply(result -> ShutdownShardRegion.instance());
+                            .thenApply(result -> ShutdownShardRegion.getInstance());
                     Patterns.pipe(allShutdown, context().dispatcher()).to(self());
 
                 })
@@ -131,6 +136,7 @@ public class GracefulShutdownActor extends AbstractActor {
     private final ActorRef _clusterEmitter;
     private final Routes _routes;
     private final Duration _healthcheckShutdownDelay;
+    private final ActorRef _ingestActor;
     private Cluster _cluster;
     private ActorSystem _system;
     private static final Logger LOGGER = LoggerFactory.getLogger(GracefulShutdownActor.class);
@@ -144,7 +150,7 @@ public class GracefulShutdownActor extends AbstractActor {
          *
          * @return a singleton instance
          */
-        public static Shutdown instance() {
+        public static Shutdown getInstance() {
             return SHUTDOWN;
         }
 
@@ -152,21 +158,21 @@ public class GracefulShutdownActor extends AbstractActor {
     }
     private static final class ShutdownHealthcheck {
         private ShutdownHealthcheck() {}
-        public static ShutdownHealthcheck instance() {
+        public static ShutdownHealthcheck getInstance() {
             return INSTANCE;
         }
         private static final ShutdownHealthcheck INSTANCE = new ShutdownHealthcheck();
     }
     private static final class ShutdownShardRegion {
         private ShutdownShardRegion() {}
-        public static ShutdownShardRegion instance() {
+        public static ShutdownShardRegion getInstance() {
             return INSTANCE;
         }
         private static final ShutdownShardRegion INSTANCE = new ShutdownShardRegion();
     }
     private static final class ShutdownEmitter {
         private ShutdownEmitter() {}
-        public static ShutdownEmitter instance() {
+        public static ShutdownEmitter getInstance() {
             return INSTANCE;
         }
         private static final ShutdownEmitter INSTANCE = new ShutdownEmitter();

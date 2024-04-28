@@ -38,6 +38,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.GeneratedMessageV3;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.apache.http.HttpHeaders;
 import org.apache.pekko.Done;
 import org.apache.pekko.NotUsed;
 import org.apache.pekko.actor.AbstractActor;
@@ -215,7 +216,12 @@ public final class HttpSourceActor extends AbstractActor {
                             .run(_materializer)
                             .whenComplete((done, err) -> {
                                 if (err == null) {
-                                    sender.tell(HttpResponse.create().withStatus(200), self());
+                                    HttpResponse response = HttpResponse.create().withStatus(200);
+                                    if (_closeConnections) {
+                                        response = response.withHeaders(
+                                                Collections.singletonList(HttpHeader.parse(HttpHeaders.CONNECTION, "close")));
+                                    }
+                                    sender.tell(response, self());
                                 } else {
                                     if (err instanceof InvalidRecordsException) {
                                         BAD_REQUEST_LOGGER.debug()
@@ -238,6 +244,9 @@ public final class HttpSourceActor extends AbstractActor {
                                     }
                                 }
                             });
+                })
+                .match(Shutdown.class, message -> {
+                    _closeConnections = true;
                 })
                 .build();
     }
@@ -378,6 +387,7 @@ public final class HttpSourceActor extends AbstractActor {
     private final Materializer _materializer;
     private final Sink<AggregationRequest, CompletionStage<Done>> _sink;
     private final Graph<FlowShape<HttpRequest, AggregationRequest>, NotUsed> _processGraph;
+    private boolean _closeConnections = false;
 
     private static final StatisticFactory STATISTIC_FACTORY = new StatisticFactory();
     private static final Logger BAD_REQUEST_LOGGER =
@@ -397,6 +407,17 @@ public final class HttpSourceActor extends AbstractActor {
         }
 
         private static final long serialVersionUID = 1L;
+    }
+
+    /**
+     * Message to initiate a graceful shutdown.
+     */
+    public static final class Shutdown {
+        private Shutdown() {}
+        public static Shutdown getInstance() {
+            return INSTANCE;
+        }
+        private static final Shutdown INSTANCE = new Shutdown();
     }
 }
 

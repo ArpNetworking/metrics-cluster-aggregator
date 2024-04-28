@@ -237,7 +237,7 @@ public final class Main implements Launchable {
                 .setMessage("Stopping Pekko")
                 .log();
         if (_shutdownActor != null) {
-            _shutdownActor.tell(GracefulShutdownActor.Shutdown.instance(), ActorRef.noSender());
+            _shutdownActor.tell(GracefulShutdownActor.Shutdown.getInstance(), ActorRef.noSender());
         }
         try {
             if (_system != null) {
