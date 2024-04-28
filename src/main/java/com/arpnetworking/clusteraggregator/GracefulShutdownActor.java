@@ -15,6 +15,7 @@
  */
 package com.arpnetworking.clusteraggregator;
 
+import com.arpnetworking.clusteraggregator.http.Routes;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.google.inject.Inject;
@@ -44,16 +45,22 @@ public class GracefulShutdownActor extends AbstractActor {
      * @param shardRegion aggregator shard region
      * @param hostEmitter host emitter
      * @param clusterEmitter cluster emitter
+     * @param routes routes
+     * @param healthcheckShutdownDelay delay after shutting down healthcheck before shutting down emitters
      */
     @Inject
     @SuppressFBWarnings(value = "MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR", justification = "Context is safe to use in constructor.")
     public GracefulShutdownActor(
             @Named("aggregator-shard-region") final ActorRef shardRegion,
             @Named("host-emitter") final ActorRef hostEmitter,
-            @Named("cluster-emitter") final ActorRef clusterEmitter) {
+            @Named("cluster-emitter") final ActorRef clusterEmitter,
+            final Routes routes,
+            @Named("healthcheck-shutdown-delay") final Duration healthcheckShutdownDelay) {
         _shardRegion = shardRegion;
         _hostEmitter = hostEmitter;
         _clusterEmitter = clusterEmitter;
+        _routes = routes;
+        _healthcheckShutdownDelay = healthcheckShutdownDelay;
     }
 
     @Override
@@ -64,9 +71,22 @@ public class GracefulShutdownActor extends AbstractActor {
                             .setMessage("Initiating graceful shutdown")
                             .addData("actor", self())
                             .log();
-                    self().tell(EmitterShutdown.instance(), self());
+                    self().tell(ShutdownHealthcheck.instance(), self());
                 })
-                .match(EmitterShutdown.class, message -> {
+                .match(ShutdownHealthcheck.class, message -> {
+                    LOGGER.info()
+                            .setMessage("Shutting down healthcheck")
+                            .addData("actor", self())
+                            .log();
+                    _routes.shutdownHealthcheck();
+                    context().system().scheduler().scheduleOnce(
+                            _healthcheckShutdownDelay,
+                            self(),
+                            ShutdownEmitter.instance(),
+                            context().dispatcher(),
+                            self());
+                })
+                .match(ShutdownEmitter.class, message -> {
                     LOGGER.info()
                             .setMessage("Shutting down emitters")
                             .addData("actor", self())
@@ -109,6 +129,8 @@ public class GracefulShutdownActor extends AbstractActor {
     private final ActorRef _shardRegion;
     private final ActorRef _hostEmitter;
     private final ActorRef _clusterEmitter;
+    private final Routes _routes;
+    private final Duration _healthcheckShutdownDelay;
     private Cluster _cluster;
     private ActorSystem _system;
     private static final Logger LOGGER = LoggerFactory.getLogger(GracefulShutdownActor.class);
@@ -128,6 +150,13 @@ public class GracefulShutdownActor extends AbstractActor {
 
         private static final Shutdown SHUTDOWN = new Shutdown();
     }
+    private static final class ShutdownHealthcheck {
+        private ShutdownHealthcheck() {}
+        public static ShutdownHealthcheck instance() {
+            return INSTANCE;
+        }
+        private static final ShutdownHealthcheck INSTANCE = new ShutdownHealthcheck();
+    }
     private static final class ShutdownShardRegion {
         private ShutdownShardRegion() {}
         public static ShutdownShardRegion instance() {
@@ -135,11 +164,11 @@ public class GracefulShutdownActor extends AbstractActor {
         }
         private static final ShutdownShardRegion INSTANCE = new ShutdownShardRegion();
     }
-    private static final class EmitterShutdown {
-        private EmitterShutdown() {}
-        public static EmitterShutdown instance() {
+    private static final class ShutdownEmitter {
+        private ShutdownEmitter() {}
+        public static ShutdownEmitter instance() {
             return INSTANCE;
         }
-        private static final EmitterShutdown INSTANCE = new EmitterShutdown();
+        private static final ShutdownEmitter INSTANCE = new ShutdownEmitter();
     }
 }

@@ -385,6 +385,13 @@ public class GuiceModule extends AbstractModule {
     }
 
     @Provides
+    @Named("healthcheck-shutdown-delay")
+    @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
+    private Duration provideHealthCheckShutdownDelay(final ClusterAggregatorConfiguration config) {
+        return config.getHealthcheckShutdownDelay();
+    }
+
+    @Provides
     @Named("reaggregation-timeout")
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
     private Duration provideReaggregationTimeout(final ClusterAggregatorConfiguration config) {

@@ -274,7 +274,7 @@ public final class HttpSourceActor extends AbstractActor {
             recordsBuilder.add(message);
             current = current.drop(message.getLength());
             messageOptional = AggregationMessage.deserialize(current);
-            if (!messageOptional.isPresent() && current.lengthCompare(0) > 0) {
+            if (messageOptional.isEmpty() && current.lengthCompare(0) > 0) {
                 throw new InvalidRecordsException(
                         String.format("buffer did not deserialize completely, %d leftover bytes", current.size()));
             }
