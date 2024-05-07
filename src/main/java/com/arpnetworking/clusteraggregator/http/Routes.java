@@ -56,6 +56,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
@@ -163,20 +164,39 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
                 });
     }
 
+    /**
+     * Start failing health checks in preparation for service shutdown.
+     */
+    public void shutdownHealthcheck() {
+        _healthCheckShutdown.set(true);
+    }
+
     private CompletionStage<HttpResponse> process(final HttpRequest request) {
         if (HttpMethods.GET.equals(request.method())) {
             if (_healthCheckPath.equals(request.getUri().path())) {
-                return ask("/user/status", new Status.HealthRequest(), Boolean.FALSE)
-                        .thenApply(
-                                isHealthy -> HttpResponse.create()
-                                        .withStatus(isHealthy ? StatusCodes.OK : StatusCodes.INTERNAL_SERVER_ERROR)
-                                        .addHeader(PING_CACHE_CONTROL_HEADER)
-                                        .withEntity(
-                                                JSON_CONTENT_TYPE,
-                                                ByteString.fromString(
-                                                        "{\"status\":\""
-                                                                + (isHealthy ? HEALTHY_STATE : UNHEALTHY_STATE)
-                                                                + "\"}")));
+                if (!_healthCheckShutdown.get()) {
+                    return ask("/user/status", new Status.HealthRequest(), Boolean.FALSE)
+                            .thenApply(
+                                    isHealthy -> HttpResponse.create()
+                                            .withStatus(isHealthy ? StatusCodes.OK : StatusCodes.INTERNAL_SERVER_ERROR)
+                                            .addHeader(PING_CACHE_CONTROL_HEADER)
+                                            .withEntity(
+                                                    JSON_CONTENT_TYPE,
+                                                    ByteString.fromString(
+                                                            "{\"status\":\""
+                                                                    + (isHealthy ? HEALTHY_STATE : UNHEALTHY_STATE)
+                                                                    + "\"}")));
+                } else {
+                    return CompletableFuture.completedFuture(HttpResponse.create()
+                            .withStatus(StatusCodes.INTERNAL_SERVER_ERROR)
+                            .addHeader(PING_CACHE_CONTROL_HEADER)
+                            .withEntity(
+                                    JSON_CONTENT_TYPE,
+                                    ByteString.fromString(
+                                            "{\"status\":\""
+                                                    + UNHEALTHY_STATE
+                                                    + "\"}")));
+                }
             } else if (_statusPath.equals(request.getUri().path())) {
                 return ask("/user/status", new Status.StatusRequest(), (StatusResponse) null)
                         .thenApply(
@@ -264,6 +284,7 @@ public final class Routes implements Function<HttpRequest, CompletionStage<HttpR
     private final String _statusPath;
     private final String _versionPath;
     private final ObjectMapper _objectMapper;
+    private AtomicBoolean _healthCheckShutdown = new AtomicBoolean(false);
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Routes.class);
 

@@ -207,7 +207,7 @@ public class GuiceModule extends AbstractModule {
 
     private ActorRef launchEmitter(final Injector injector, final ActorSystem system, final File pipelineFile, final String name) {
         final ActorRef emitterConfigurationProxy = system.actorOf(
-                ConfigurableActorProxy.props(new RoundRobinEmitterFactory()),
+                ConfigurableActorProxy.props(new RoundRobinEmitterFactory(_shutdown)),
                 name);
         final ActorConfigurator<EmitterConfiguration> configurator =
                 new ActorConfigurator<>(emitterConfigurationProxy, EmitterConfiguration.class);
@@ -385,6 +385,13 @@ public class GuiceModule extends AbstractModule {
     }
 
     @Provides
+    @Named("healthcheck-shutdown-delay")
+    @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
+    private Duration provideHealthCheckShutdownDelay(final ClusterAggregatorConfiguration config) {
+        return config.getHealthcheckShutdownDelay();
+    }
+
+    @Provides
     @Named("reaggregation-timeout")
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Guice
     private Duration provideReaggregationTimeout(final ClusterAggregatorConfiguration config) {
@@ -440,6 +447,11 @@ public class GuiceModule extends AbstractModule {
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.getInstance();
 
     private static final class RoundRobinEmitterFactory implements ConfiguredLaunchableFactory<Props, EmitterConfiguration> {
+        /**
+         * Constructor.
+         */
+        RoundRobinEmitterFactory(final LifecycleRegistration shutdown) {
+        }
 
         @Override
         public Props create(final EmitterConfiguration config) {

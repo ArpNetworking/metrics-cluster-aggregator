@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableSet;
 import net.sf.oval.constraint.NotNull;
 
 import java.util.Optional;
+import java.util.concurrent.CompletionStage;
 import javax.annotation.Nullable;
 
 /**
@@ -49,7 +50,12 @@ public final class DomainInjectingSink extends BaseSink {
 
     @Override
     public void close() {
-        // Nothing to do
+        _sink.close();
+    }
+
+    @Override
+    public CompletionStage<Void> shutdownGracefully() {
+        return _sink.shutdownGracefully();
     }
 
     private Optional<String> getDomain(@Nullable final String host) {

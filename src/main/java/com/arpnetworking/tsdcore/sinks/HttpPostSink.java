@@ -33,10 +33,10 @@ import net.sf.oval.constraint.NotNull;
 import net.sf.oval.context.OValContext;
 import org.apache.pekko.actor.ActorRef;
 import org.apache.pekko.actor.ActorSystem;
-import org.apache.pekko.actor.PoisonPill;
 import org.apache.pekko.http.javadsl.model.HttpMethods;
 import org.apache.pekko.http.javadsl.model.MediaTypes;
 import org.apache.pekko.http.javadsl.model.StatusCodes;
+import org.apache.pekko.pattern.Patterns;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.AsyncHttpClientConfig;
 import org.asynchttpclient.DefaultAsyncHttpClient;
@@ -50,6 +50,7 @@ import java.net.URI;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 
 /**
@@ -71,7 +72,17 @@ public abstract class HttpPostSink extends BaseSink {
                 .addData("sink", getName())
                 .addData("uri", _uri)
                 .log();
-        _sinkActor.tell(PoisonPill.getInstance(), ActorRef.noSender());
+        _sinkActor.tell(HttpSinkActor.DrainAndShutdown.getInstance(), ActorRef.noSender());
+    }
+
+    @Override
+    public CompletionStage<Void> shutdownGracefully() {
+        LOGGER.info()
+                .setMessage("Closing sink")
+                .addData("sink", getName())
+                .log();
+        return Patterns.ask(_sinkActor, HttpSinkActor.DrainAndShutdown.getInstance(), Duration.ofSeconds(30))
+                .thenApply(response -> null);
     }
 
     @LogValue

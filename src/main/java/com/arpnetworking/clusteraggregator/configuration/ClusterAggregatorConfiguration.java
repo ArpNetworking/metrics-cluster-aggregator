@@ -160,6 +160,10 @@ public final class ClusterAggregatorConfiguration {
         return _clusterStatusInterval;
     }
 
+    public Duration getHealthcheckShutdownDelay() {
+        return _healthcheckShutdownDelay;
+    }
+
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
@@ -189,6 +193,7 @@ public final class ClusterAggregatorConfiguration {
                 .add("RebalanceConfiguration", _rebalanceConfiguration)
                 .add("ClusterHostSuffix", _clusterHostSuffix)
                 .add("DatabaseConfigurations", _databaseConfigurations)
+                .add("HealthcheckShutdownDelay", _healthcheckShutdownDelay)
                 .toString();
     }
 
@@ -220,6 +225,7 @@ public final class ClusterAggregatorConfiguration {
         _calculateClusterAggregations = builder._calculateClusterAggregations;
         _databaseConfigurations = Maps.newHashMap(builder._databaseConfigurations);
         _clusterStatusInterval = builder._clusterStatusInterval;
+        _healthcheckShutdownDelay = builder._healthcheckShutdownDelay;
     }
 
     private final String _monitoringCluster;
@@ -249,6 +255,7 @@ public final class ClusterAggregatorConfiguration {
     private final boolean _calculateClusterAggregations;
     private final Map<String, DatabaseConfiguration> _databaseConfigurations;
     private final Duration _clusterStatusInterval;
+    private final Duration _healthcheckShutdownDelay;
 
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.getInstance();
 
@@ -591,6 +598,16 @@ public final class ClusterAggregatorConfiguration {
             return this;
         }
 
+        /**
+         * The time to wait for the healthcheck to shutdown. Optional. Defaults to 30 seconds.
+         * @param value The time to wait for the healthcheck to shutdown.
+         * @return This instance of {@link Builder}.
+         */
+        public Builder setHealthcheckShutdownDelay(final Duration value) {
+            _healthcheckShutdownDelay = value;
+            return this;
+        }
+
         @NotNull
         @NotEmpty
         private String _monitoringCluster;
@@ -655,5 +672,7 @@ public final class ClusterAggregatorConfiguration {
         private Map<String, DatabaseConfiguration> _databaseConfigurations = Maps.newHashMap();
         @NotNull
         private Duration _clusterStatusInterval = Duration.ofSeconds(10);
+        @NotNull
+        private Duration _healthcheckShutdownDelay = Duration.ofSeconds(30);
     }
 }

@@ -29,6 +29,7 @@ import net.sf.oval.constraint.NotNull;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.concurrent.CompletionStage;
 
 /**
  * Implementation of {@link Sink} which maps values in one unit to another.
@@ -81,6 +82,11 @@ public final class UnitMappingSink extends BaseSink {
     @Override
     public void close() {
         _sink.close();
+    }
+
+    @Override
+    public CompletionStage<Void> shutdownGracefully() {
+        return _sink.shutdownGracefully();
     }
 
     /**

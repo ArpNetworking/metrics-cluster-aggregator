@@ -26,9 +26,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.apache.pekko.actor.AbstractActor;
 import org.apache.pekko.actor.Props;
+import org.apache.pekko.pattern.Patterns;
 
 import java.time.Duration;
 import java.time.ZonedDateTime;
+import java.util.concurrent.CompletionStage;
 
 /**
  * Holds the sinks and emits to them.
@@ -43,7 +45,7 @@ public class Emitter extends AbstractActor {
      * @return A new {@link Props}.
      */
     public static Props props(final EmitterConfiguration config) {
-        return Props.create(Emitter.class, config);
+        return Props.create(Emitter.class, () -> new Emitter(config));
     }
 
     /**
@@ -60,6 +62,11 @@ public class Emitter extends AbstractActor {
                 .setMessage("Emitter starting up")
                 .addData("sink", _sink)
                 .log();
+    }
+
+    @Override
+    public void preStart() throws Exception, Exception {
+        super.preStart();
     }
 
     @SuppressWarnings("deprecation")
@@ -90,6 +97,22 @@ public class Emitter extends AbstractActor {
                             .log();
                     _sink.recordAggregateData(periodicData);
                 })
+                .match(Shutdown.class, ignored -> {
+                    LOGGER.info()
+                            .setMessage("Shutting down emitter")
+                            .log();
+
+                    final CompletionStage<Object> shutdownFuture = _sink.shutdownGracefully()
+                            .thenApply(ignore -> ShutdownComplete.getInstance());
+                    Patterns.pipe(shutdownFuture, context().dispatcher()).to(self(), sender());
+                })
+                .match(ShutdownComplete.class, ignored -> {
+                    LOGGER.info()
+                            .setMessage("Emitter shutdown complete")
+                            .log();
+                    sender().tell("OK", self());
+                    context().stop(self());
+                })
                 .build();
     }
 
@@ -101,4 +124,33 @@ public class Emitter extends AbstractActor {
 
     private final Sink _sink;
     private static final Logger LOGGER = LoggerFactory.getLogger(Emitter.class);
+    /**
+     * Message to initiate a graceful shutdown.
+     */
+    public static final class Shutdown {
+        private Shutdown() {}
+
+        /**
+         * Get the singleton instance.
+         *
+         * @return the singleton instance
+         */
+        public static Shutdown getInstance() {
+            return INSTANCE;
+        }
+        private static final Shutdown INSTANCE = new Shutdown();
+    }
+    private static final class ShutdownComplete {
+        private ShutdownComplete() {}
+
+        /**
+         * Get the singleton instance.
+         *
+         * @return the singleton instance
+         */
+        public static ShutdownComplete getInstance() {
+            return INSTANCE;
+        }
+        private static final ShutdownComplete INSTANCE = new ShutdownComplete();
+    }
 }

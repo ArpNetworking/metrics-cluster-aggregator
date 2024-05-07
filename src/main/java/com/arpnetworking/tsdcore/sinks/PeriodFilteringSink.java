@@ -28,6 +28,7 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletionStage;
 
 /**
  * A publisher that wraps another, filters the metrics with specific periods,
@@ -48,6 +49,11 @@ public final class PeriodFilteringSink extends BaseSink {
     @Override
     public void close() {
         _sink.close();
+    }
+
+    @Override
+    public CompletionStage<Void> shutdownGracefully() {
+        return _sink.shutdownGracefully();
     }
 
     /**

@@ -72,12 +72,13 @@ public class HttpSinkActor extends AbstractActorWithTimers {
             final PeriodicMetrics periodicMetrics) {
         return Props.create(
                 HttpSinkActor.class,
-                client,
-                sink,
-                maximumConcurrency,
-                maximumQueueSize,
-                spreadPeriod,
-                periodicMetrics);
+                () -> new HttpSinkActor(
+                        client,
+                        sink,
+                        maximumConcurrency,
+                        maximumQueueSize,
+                        spreadPeriod,
+                        periodicMetrics));
     }
 
     /**
@@ -249,6 +250,7 @@ public class HttpSinkActor extends AbstractActorWithTimers {
                     _periodicMetrics.recordCounter(_pendingRequestsQueueSizeName, _pendingRequests.size());
                     _periodicMetrics.recordCounter(_inflightRequestsCountName, _inflightRequestsCount);
                 })
+                .match(DrainAndShutdown.class, this::processDrainMessage)
                 .matchAny(message -> {
                     LOGGER.error()
                             .setMessage("Unexpected message")
@@ -388,6 +390,34 @@ public class HttpSinkActor extends AbstractActorWithTimers {
                 // Spreading is disabled, just keep dispatching the work
                 dispatchPending();
             }
+        }
+    }
+
+    private void processDrainMessage(final DrainAndShutdown message) {
+        if (_pendingRequests.isEmpty() && _inflightRequestsCount == 0) {
+            LOGGER.info()
+                    .setMessage("Stopping actor")
+                    .addContext("actor", self())
+                    .log();
+            context().stop(self());
+            sender().tell("OK", self());
+
+        } else {
+            LOGGER.info()
+                    .setMessage("Waiting for pending requests to complete")
+                    .addData("pendingRequests", _pendingRequests.size())
+                    .addData("inflightRequests", _inflightRequestsCount)
+                    .addContext("actor", self())
+                    .log();
+
+            context().system()
+                    .scheduler()
+                    .scheduleOnce(
+                            Duration.ofSeconds(1),
+                            self(),
+                            DrainAndShutdown.getInstance(),
+                            context().dispatcher(),
+                            sender());
         }
     }
 
@@ -662,5 +692,22 @@ public class HttpSinkActor extends AbstractActorWithTimers {
     private static final class SampleMetrics {
         private SampleMetrics() { }
         private static final SampleMetrics INSTANCE = new SampleMetrics();
+    }
+
+    /**
+     * Message class to indicate that the actor should drain and shutdown.
+     */
+    public static final class DrainAndShutdown {
+        private DrainAndShutdown() { }
+
+        /**
+         * Get the singleton instance of this class.
+         * @return The singleton instance of this class.
+         */
+        public static DrainAndShutdown getInstance() {
+            return DrainAndShutdown.INSTANCE;
+        }
+
+        private static final DrainAndShutdown INSTANCE = new DrainAndShutdown();
     }
 }

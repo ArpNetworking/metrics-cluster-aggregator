@@ -28,9 +28,11 @@ import net.sf.oval.constraint.Range;
 import org.apache.pekko.actor.ActorRef;
 import org.apache.pekko.actor.ActorSystem;
 import org.apache.pekko.actor.PoisonPill;
+import org.apache.pekko.pattern.Patterns;
 import org.apache.pekko.util.ByteString;
 
 import java.time.Duration;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 
 /**
@@ -51,6 +53,16 @@ public abstract class TcpSink extends BaseSink {
                 .addData("sink", getName())
                 .log();
         _sinkActor.tell(PoisonPill.getInstance(), ActorRef.noSender());
+    }
+
+    @Override
+    public CompletionStage<Void> shutdownGracefully() {
+        LOGGER.info()
+                .setMessage("Closing sink")
+                .addData("sink", getName())
+                .log();
+        return Patterns.ask(_sinkActor, TcpSinkActor.DrainAndShutdown.getInstance(), Duration.ofSeconds(30))
+                .thenApply(response -> null);
     }
 
     /**

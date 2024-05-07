@@ -29,6 +29,7 @@ import net.sf.oval.constraint.NotNull;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletionStage;
 import java.util.regex.Pattern;
 
 /**
@@ -74,6 +75,11 @@ public final class ServiceNameFilteringSink extends BaseSink {
     @Override
     public void close() {
         _sink.close();
+    }
+
+    @Override
+    public CompletionStage<Void> shutdownGracefully() {
+        return _sink.shutdownGracefully();
     }
 
     /**

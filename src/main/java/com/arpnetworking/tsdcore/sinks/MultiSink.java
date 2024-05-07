@@ -24,6 +24,9 @@ import com.google.common.collect.Lists;
 import net.sf.oval.constraint.NotNull;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 /**
  * A publisher that wraps multiple others and publishes to all of them. This
@@ -58,6 +61,17 @@ public final class MultiSink extends BaseSink {
         for (final Sink sink : _sinks) {
             sink.close();
         }
+    }
+
+    @Override
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public CompletionStage<Void> shutdownGracefully() {
+        final List<CompletableFuture<Void>> futures = _sinks.stream()
+                .map(Sink::shutdownGracefully)
+                .map(CompletionStage::toCompletableFuture)
+                .toList();
+
+        return CompletableFuture.allOf(futures.<CompletableFuture<Void>>toArray(new CompletableFuture[0]));
     }
 
     /**

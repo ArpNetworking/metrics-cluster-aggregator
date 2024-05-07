@@ -24,6 +24,8 @@ import net.sf.oval.constraint.Max;
 import net.sf.oval.constraint.Min;
 import net.sf.oval.constraint.NotNull;
 
+import java.util.concurrent.CompletionStage;
+
 /**
  * A {@link com.arpnetworking.tsdcore.sinks.Sink} that only allows a percentage of data through to the wrapped
  * {@link com.arpnetworking.tsdcore.sinks.Sink}.
@@ -49,6 +51,11 @@ public final class RandomMetricNameFilterSink extends BaseSink {
     @Override
     public void close() {
         _sink.close();
+    }
+
+    @Override
+    public CompletionStage<Void> shutdownGracefully() {
+        return _sink.shutdownGracefully();
     }
 
     /**

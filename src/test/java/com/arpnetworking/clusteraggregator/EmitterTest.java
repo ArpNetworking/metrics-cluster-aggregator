@@ -108,6 +108,7 @@ public class EmitterTest extends BaseActorTest {
     private EmitterConfiguration _config = null;
     @Mock
     private Sink _sink = null;
+    private LifecycleRegistration _shutdown = new AppShutdown();
 
     private static final StatisticFactory STATISTIC_FACTORY = new StatisticFactory();
     private static final Statistic MEDIAN_STATISTIC = STATISTIC_FACTORY.getStatistic("median");

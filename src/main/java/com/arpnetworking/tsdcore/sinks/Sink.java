@@ -18,6 +18,8 @@ package com.arpnetworking.tsdcore.sinks;
 import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+import java.util.concurrent.CompletionStage;
+
 /**
  * Interface to describe a class that publishes {@link PeriodicData}.
  *
@@ -42,4 +44,12 @@ public interface Sink {
      * recordAggregation will be made after a call to close.
      */
     void close();
+
+    /**
+     * Called to allow the publisher to clean-up. No further calls to
+     * recordAggregation will be made after a call to close.
+     *
+     * @return A {@link CompletionStage} that completes when the sink is closed.
+     */
+    CompletionStage<Void> shutdownGracefully();
 }

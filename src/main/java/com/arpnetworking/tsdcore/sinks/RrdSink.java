@@ -33,6 +33,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 /**
  * RRD publisher that maintains all the rrd databases for a cluster. This class
@@ -74,6 +76,11 @@ public final class RrdSink extends BaseSink {
 
     @Override
     public void close() {}
+
+    @Override
+    public CompletionStage<Void> shutdownGracefully() {
+        return CompletableFuture.completedFuture(null);
+    }
 
     /**
      * Generate a Steno log compatible representation.
