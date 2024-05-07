@@ -104,12 +104,13 @@ public class Emitter extends AbstractActor {
 
                     final CompletionStage<Object> shutdownFuture = _sink.shutdownGracefully()
                             .thenApply(ignore -> ShutdownComplete.getInstance());
-                    Patterns.pipe(shutdownFuture, context().dispatcher()).to(self());
+                    Patterns.pipe(shutdownFuture, context().dispatcher()).to(self(), sender());
                 })
                 .match(ShutdownComplete.class, ignored -> {
                     LOGGER.info()
                             .setMessage("Emitter shutdown complete")
                             .log();
+                    sender().tell("OK", self());
                     context().stop(self());
                 })
                 .build();

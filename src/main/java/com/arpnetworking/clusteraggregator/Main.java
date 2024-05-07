@@ -37,17 +37,19 @@ import com.google.inject.name.Names;
 import org.apache.pekko.actor.ActorRef;
 import org.apache.pekko.actor.ActorSystem;
 import org.apache.pekko.http.javadsl.ServerBinding;
+import org.apache.pekko.pattern.Patterns;
 import org.slf4j.LoggerFactory;
-import scala.concurrent.Await;
-import scala.concurrent.duration.Duration;
 
 import java.io.File;
+import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Entry point for the pekko-based cluster aggregator.
@@ -236,15 +238,21 @@ public final class Main implements Launchable {
         LOGGER.info()
                 .setMessage("Stopping Pekko")
                 .log();
-        if (_shutdownActor != null) {
-            _shutdownActor.tell(GracefulShutdownActor.Shutdown.getInstance(), ActorRef.noSender());
-        }
+
         try {
+            if (_shutdownActor != null) {
+                final CompletionStage<Object> gracefulShutdown =
+                        Patterns.ask(_shutdownActor, GracefulShutdownActor.Shutdown.getInstance(), Duration.ofMinutes(10));
+                gracefulShutdown.toCompletableFuture().join();
+                LOGGER.info()
+                        .setMessage("Graceful shutdown actor reported completion")
+                        .log();
+            }
             if (_system != null) {
-                Await.result(_system.whenTerminated(), SHUTDOWN_TIMEOUT);
+                _system.getWhenTerminated().toCompletableFuture().get(SHUTDOWN_TIMEOUT.toSeconds(), TimeUnit.SECONDS);
             }
             // CHECKSTYLE.OFF: IllegalCatch - Prevent program shutdown
-        } catch (final Exception e) {
+        } catch (final InterruptedException | TimeoutException | ExecutionException e) {
             // CHECKSTYLE.ON: IllegalCatch
             LOGGER.warn()
                     .setMessage("Interrupted at shutdown")
@@ -274,7 +282,7 @@ public final class Main implements Launchable {
     private volatile List<Database> _databases;
 
     private static final Logger LOGGER = com.arpnetworking.steno.LoggerFactory.getLogger(Main.class);
-    private static final Duration SHUTDOWN_TIMEOUT = Duration.create(3, TimeUnit.MINUTES);
+    private static final Duration SHUTDOWN_TIMEOUT = Duration.ofMinutes(3);
     private static final SourceTypeLiteral SOURCE_TYPE_LITERAL = new SourceTypeLiteral();
     private static final Semaphore SHUTDOWN_SEMAPHORE = new Semaphore(0);
     private static final Thread SHUTDOWN_THREAD = new ShutdownThread();

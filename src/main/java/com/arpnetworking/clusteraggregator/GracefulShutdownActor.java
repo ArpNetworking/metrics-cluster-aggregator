@@ -25,7 +25,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.pekko.actor.AbstractActor;
 import org.apache.pekko.actor.ActorRef;
 import org.apache.pekko.actor.ActorSystem;
-import org.apache.pekko.actor.Terminated;
 import org.apache.pekko.cluster.Cluster;
 import org.apache.pekko.cluster.sharding.ShardRegion;
 import org.apache.pekko.pattern.Patterns;
@@ -75,7 +74,7 @@ public class GracefulShutdownActor extends AbstractActor {
                             .setMessage("Initiating graceful shutdown")
                             .addData("actor", self())
                             .log();
-                    self().tell(ShutdownHealthcheck.getInstance(), self());
+                    self().tell(ShutdownHealthcheck.getInstance(), sender());
                 })
                 .match(ShutdownHealthcheck.class, message -> {
                     LOGGER.info()
@@ -84,12 +83,17 @@ public class GracefulShutdownActor extends AbstractActor {
                             .log();
                     _routes.shutdownHealthcheck();
                     _ingestActor.tell(HttpSourceActor.Shutdown.getInstance(), self());
+                    LOGGER.info()
+                            .setMessage("Waiting before proceeding with shutdown of emitters")
+                            .addData("delay", _healthcheckShutdownDelay)
+                            .addData("actor", self())
+                            .log();
                     context().system().scheduler().scheduleOnce(
                             _healthcheckShutdownDelay,
                             self(),
                             ShutdownEmitter.getInstance(),
                             context().dispatcher(),
-                            self());
+                            sender());
                 })
                 .match(ShutdownEmitter.class, message -> {
                     LOGGER.info()
@@ -106,7 +110,7 @@ public class GracefulShutdownActor extends AbstractActor {
                             host.toCompletableFuture(),
                             cluster.toCompletableFuture())
                             .thenApply(result -> ShutdownShardRegion.getInstance());
-                    Patterns.pipe(allShutdown, context().dispatcher()).to(self());
+                    Patterns.pipe(allShutdown, context().dispatcher()).to(self(), sender());
 
                 })
                 .match(ShutdownShardRegion.class, message -> {
@@ -114,12 +118,20 @@ public class GracefulShutdownActor extends AbstractActor {
                             .setMessage("Shutting down shard region")
                             .addData("actor", self())
                             .log();
-                    context().watch(_shardRegion);
+                    context().watchWith(_shardRegion, new ShutdownShardRegionComplete(sender()));
                     _shardRegion.tell(ShardRegion.gracefulShutdownInstance(), self());
                 })
-                .match(Terminated.class, terminated -> {
+                .match(ShutdownShardRegionComplete.class, terminated -> {
+                    terminated._replyTo.tell("OK", self());
                     _cluster.registerOnMemberRemoved(_system::terminate);
                     _cluster.leave(_cluster.selfAddress());
+                })
+                .matchAny(unhandled -> {
+                    LOGGER.warn()
+                            .setMessage("Received unhandled message")
+                            .addData("message", unhandled)
+                            .addData("actor", self())
+                            .log();
                 })
                 .build();
     }
@@ -176,5 +188,12 @@ public class GracefulShutdownActor extends AbstractActor {
             return INSTANCE;
         }
         private static final ShutdownEmitter INSTANCE = new ShutdownEmitter();
+    }
+    private static final class ShutdownShardRegionComplete {
+        ShutdownShardRegionComplete(final ActorRef replyTo) {
+            _replyTo = replyTo;
+        }
+
+        private final ActorRef _replyTo;
     }
 }
