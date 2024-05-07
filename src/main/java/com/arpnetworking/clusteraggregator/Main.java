@@ -111,15 +111,29 @@ public final class Main implements Launchable {
             configuration.get().launch();
 
             // Wait for application shutdown
+            LOGGER.info()
+                    .setMessage("Configurators launched, waiting for shutdown signal")
+                    .log();
             SHUTDOWN_SEMAPHORE.acquire();
+            LOGGER.info()
+                    .setMessage("Shutdown signal received, shutting down main thread")
+                    .log();
         } catch (final InterruptedException e) {
             throw new RuntimeException(e);
         } finally {
             if (configurator.isPresent()) {
                 configurator.get().shutdown();
+            } else {
+                LOGGER.warn()
+                        .setMessage("No configurator present to shut down")
+                        .log();
             }
             if (configuration.isPresent()) {
                 configuration.get().shutdown();
+            } else {
+                LOGGER.warn()
+                        .setMessage("No running configuration present to shut down")
+                        .log();
             }
             // Notify the shutdown that we're done
             SHUTDOWN_SEMAPHORE.release();
@@ -284,7 +298,7 @@ public final class Main implements Launchable {
     private static final Logger LOGGER = com.arpnetworking.steno.LoggerFactory.getLogger(Main.class);
     private static final Duration SHUTDOWN_TIMEOUT = Duration.ofMinutes(3);
     private static final SourceTypeLiteral SOURCE_TYPE_LITERAL = new SourceTypeLiteral();
-    private static final Semaphore SHUTDOWN_SEMAPHORE = new Semaphore(0);
+    private static final Semaphore SHUTDOWN_SEMAPHORE = new Semaphore(0, true);
     private static final Thread SHUTDOWN_THREAD = new ShutdownThread();
     private static final String HOCON_FILE_EXTENSION = ".conf";
 
