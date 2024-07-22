@@ -412,6 +412,7 @@ public class StreamingAggregator extends AbstractActorWithTimers {
             StreamingAggregator.class, Duration.ofSeconds(30));
 
 
+    @SuppressFBWarnings("SING_SINGLETON_IMPLEMENTS_SERIALIZABLE")
     private static final class BucketCheck implements Serializable {
         /**
          * Gets the singleton instance.
@@ -426,6 +427,7 @@ public class StreamingAggregator extends AbstractActorWithTimers {
         private static final long serialVersionUID = 1L;
     }
 
+    @SuppressFBWarnings("SING_SINGLETON_IMPLEMENTS_SERIALIZABLE")
     private static final class ShutdownAggregator implements Serializable {
         /**
          * Gets the singleton instance.
