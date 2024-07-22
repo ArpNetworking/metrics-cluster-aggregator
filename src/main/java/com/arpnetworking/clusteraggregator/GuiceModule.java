@@ -278,7 +278,20 @@ public class GuiceModule extends AbstractModule {
         return binding.to(
                 org.apache.pekko.stream.javadsl.Sink.foreach(
                         connection -> connection.handleWithAsyncHandler(routes, materializer)))
-                .run(materializer);
+                .run(materializer)
+                .thenApply(bound -> {
+                            bound.addToCoordinatedShutdown(Duration.ofSeconds(10), system);
+                            bound.whenTerminationSignalIssued()
+                                    .thenAccept(signal -> {
+                                        system.log().info("Termination signal received for shutting down HTTP server: {}", signal);
+                                    });
+                            bound.whenTerminated()
+                                    .thenAccept(terminated -> {
+                                        system.log().info("HTTP server terminated: {}", terminated);
+                                    });
+
+                            return bound;
+                        });
     }
 
     @Provides
