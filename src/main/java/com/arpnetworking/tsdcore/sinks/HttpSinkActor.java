@@ -199,13 +199,15 @@ public class HttpSinkActor extends AbstractActorWithTimers {
                     final int attempt = rejected.getAttempt();
                     final Response response = rejected.getResponse();
                     if (_retryableStatusCodes.contains(response.getStatusCode()) && attempt < _sink.getMaximumAttempts()) {
+                        final byte[] requestBodyBytes = rejected.getRequestEntry().getRequest().getByteData();
+                        // CHECKSTYLE.OFF: IllegalInstantiation - This is ok for String from byte[]
+                        final String requestBody = requestBodyBytes == null ? null : new String(requestBodyBytes, Charsets.UTF_8);
+                        // CHECKSTYLE.ON: IllegalInstantiation
                         POST_RETRY_LOGGER.warn()
                             .setMessage("Attempt rejected")
                             .addData("sink", _sink)
                             .addData("status", response.getStatusCode())
-                            // CHECKSTYLE.OFF: IllegalInstantiation - This is ok for String from byte[]
-                            .addData("request", new String(rejected.getRequestEntry().getRequest().getByteData(), Charsets.UTF_8))
-                            // CHECKSTYLE.ON: IllegalInstantiation
+                            .addData("request", requestBody)
                             .addData("response", response.getResponseBody())
                             .addContext("actor", self())
                             .log();
@@ -294,12 +296,16 @@ public class HttpSinkActor extends AbstractActorWithTimers {
                     responseStatusClass == i ? 1 : 0);
         }
 
+        final byte[] requestBodyBytes = rejected.getRequestEntry().getRequest().getByteData();
+        // CHECKSTYLE.OFF: IllegalInstantiation - This is ok for String from byte[]
+        final String requestBody = requestBodyBytes == null ? null : new String(requestBodyBytes, Charsets.UTF_8);
+        // CHECKSTYLE.ON: IllegalInstantiation
         POST_ERROR_LOGGER.warn()
                 .setMessage("Post rejected")
                 .addData("sink", _sink)
                 .addData("status", responseStatusCode)
                 // CHECKSTYLE.OFF: IllegalInstantiation - This is ok for String from byte[]
-                .addData("request", new String(rejected.getRequestEntry().getRequest().getByteData(), Charsets.UTF_8))
+                .addData("request", requestBody)
                 // CHECKSTYLE.ON: IllegalInstantiation
                 .addData("response", responseBody)
                 .addContext("actor", self())
