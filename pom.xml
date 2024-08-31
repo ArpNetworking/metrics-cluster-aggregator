@@ -508,8 +508,8 @@
                   <JAVA_OPTS>${debugJavaOptions}</JAVA_OPTS>
                   <!-- TODO(ville): Obtain these from the current user! -->
                   <!-- Ref: https://github.com/rynr/user-id-maven-plugin -->
-                  <CAGG_UID>1000</CAGG_UID>
-                  <CAGG_GID>1000</CAGG_GID>
+                  <CAGG_UID>1001</CAGG_UID>
+                  <CAGG_GID>1001</CAGG_GID>
                 </env>
                 <volumes>
                   <bind>

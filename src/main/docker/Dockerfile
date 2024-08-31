@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM openjdk:17-slim-bullseye
+FROM eclipse-temurin:17-jre
 
 MAINTAINER arpnetworking
 
@@ -22,8 +22,8 @@ WORKDIR /opt/cluster-aggregator
 
 # Configuration
 ENV CAGG_USER="cagg"
-ENV CAGG_UID=1000
-ENV CAGG_GID=1000
+ENV CAGG_UID=1001
+ENV CAGG_GID=1001
 ENV JVM_XMS="64m"
 ENV JVM_XMX="1024m"
 ENV LOGBACK_CONFIG="-Dlogback.configurationFile=/opt/cluster-aggregator/config/logback-docker.xml"
