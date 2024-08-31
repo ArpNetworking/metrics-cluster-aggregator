@@ -314,16 +314,17 @@ public final class KairosDbSink extends HttpPostSink {
             }
         }
 
-       public void serializeHistogram(
-               final List<SerializedDatum> completeChunks,
-               final ByteBuffer currentChunk,
-               final ByteArrayOutputStream chunkStream,
-               final AggregatedData data,
-               final KairosHistogramAdditionalData additionalData,
-               final LongAdder currentChunkPopulationSize) {
-           final FQDSN fqdsn = data.getFQDSN();
+        // CHECKSTYLE.OFF: ExecutableStatementCount - There are a lot of fields, we just need to serialize them
+        public void serializeHistogram(
+                final List<SerializedDatum> completeChunks,
+                final ByteBuffer currentChunk,
+                final ByteArrayOutputStream chunkStream,
+                final AggregatedData data,
+                final KairosHistogramAdditionalData additionalData,
+                final LongAdder currentChunkPopulationSize) {
+            final FQDSN fqdsn = data.getFQDSN();
 
-           try {
+            try {
                 final HistogramStatistic.HistogramSnapshot bins = ((HistogramStatistic.HistogramSupportingData) data.getSupportingData())
                         .getHistogramSnapshot();
                 final JsonGenerator chunkGenerator = OBJECT_MAPPER.getFactory().createGenerator(chunkStream, JsonEncoding.UTF8);
@@ -338,6 +339,7 @@ public final class KairosDbSink extends HttpPostSink {
                 chunkGenerator.writeNumberField("max", additionalData.getMax());
                 chunkGenerator.writeNumberField("mean", additionalData.getMean());
                 chunkGenerator.writeNumberField("sum", additionalData.getSum());
+                chunkGenerator.writeNumberField("precision", bins.getPrecision());
                 chunkGenerator.writeObjectFieldStart("bins");
                 for (Double2LongMap.Entry bin : bins.getValues()) {
                     chunkGenerator.writeNumberField(String.valueOf(bin.getDoubleKey()), bin.getLongValue());
@@ -373,6 +375,7 @@ public final class KairosDbSink extends HttpPostSink {
                         .log();
             }
         }
+        // CHECKSTYLE.ON: ExecutableStatementCount
 
         public void serializeCondition(
                 final List<SerializedDatum> completeChunks,
