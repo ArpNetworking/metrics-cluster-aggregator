@@ -303,7 +303,13 @@ public final class CombinedMetricData {
                 if (statistic instanceof HistogramStatistic) {
                     final Messages.SparseHistogramSupportingData supportingData = deserialzeSupportingData(statisticRecord);
 
-                    final HistogramStatistic.Histogram histogram = new HistogramStatistic.Histogram();
+                    final HistogramStatistic.Histogram histogram;
+                    if (supportingData.getPrecision() == 0) {
+                        histogram = new HistogramStatistic.Histogram();
+                    } else {
+                        // Subtract 1 from the precision to get the actual precision since 0 means default precision
+                        histogram = new HistogramStatistic.Histogram(supportingData.getPrecision() - 1);
+                    }
                     for (final Messages.SparseHistogramEntry entry : supportingData.getEntriesList()) {
                         final double bucket = entry.getBucket();
                         final long count = entry.getCount();
