@@ -338,6 +338,7 @@ public final class KairosDbSink extends HttpPostSink {
                 chunkGenerator.writeNumberField("max", additionalData.getMax());
                 chunkGenerator.writeNumberField("mean", additionalData.getMean());
                 chunkGenerator.writeNumberField("sum", additionalData.getSum());
+                chunkGenerator.writeNumberField("precision", bins.getPrecision());
                 chunkGenerator.writeObjectFieldStart("bins");
                 for (Double2LongMap.Entry bin : bins.getValues()) {
                     chunkGenerator.writeNumberField(String.valueOf(bin.getDoubleKey()), bin.getLongValue());
