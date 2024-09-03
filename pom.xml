@@ -111,7 +111,7 @@
     <asynchttpclient.version>3.0.0</asynchttpclient.version>
     <awaitility.version>4.2.2</awaitility.version>
     <commons.codec.version>1.17.1</commons.codec.version>
-    <ebean.version>15.5.0</ebean.version>
+    <ebean.version>15.5.1</ebean.version>
     <ebean.annotation.version>8.4</ebean.annotation.version>
     <jakarta.persistence.api.version>3.0</jakarta.persistence.api.version>
     <flyway.version>10.17.2</flyway.version>
