@@ -108,7 +108,7 @@
     <apache.httpcore.version>4.4.16</apache.httpcore.version>
     <arpnetworking.commons.version>3.1.1</arpnetworking.commons.version>
     <aspectjrt.version>1.9.22.1</aspectjrt.version>
-    <asynchttpclient.version>3.0.0</asynchttpclient.version>
+    <asynchttpclient.version>3.0.1</asynchttpclient.version>
     <awaitility.version>4.2.2</awaitility.version>
     <commons.codec.version>1.17.1</commons.codec.version>
     <ebean.version>15.6.0</ebean.version>
