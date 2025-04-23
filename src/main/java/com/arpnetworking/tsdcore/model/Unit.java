@@ -170,8 +170,11 @@ public enum Unit {
     };
 
     /* package private */enum Type {
+        /** Time duration. */
         TIME,
+        /** Quantity of data. */
         DATA_SIZE,
+        /** Temperature. */
         TEMPERATURE
     }
 
