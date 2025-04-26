@@ -26,7 +26,6 @@ import com.arpnetworking.tsdcore.sinks.circonus.api.CheckBundle;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.sslconfig.ssl.SSLConfigSettings;
 import net.sf.oval.constraint.NotNull;
@@ -44,6 +43,7 @@ import play.libs.ws.ahc.StandaloneAhcWSClient;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
@@ -279,7 +279,7 @@ public final class CirconusClient {
     }
 
     private InMemoryBodyWritable createBody(final String bodyString) {
-        return new InMemoryBodyWritable(ByteString.fromString(bodyString, Charsets.UTF_8), "application/json");
+        return new InMemoryBodyWritable(ByteString.fromString(bodyString, StandardCharsets.UTF_8), "application/json");
     }
 
     private CirconusClient(final Builder builder) {

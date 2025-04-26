@@ -20,7 +20,6 @@ import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.arpnetworking.tsdcore.statistics.StatisticFactory;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
@@ -30,6 +29,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 
@@ -45,7 +45,7 @@ public class RrdSinkTest {
         _path = java.nio.file.Files.createTempDirectory("rrd-sink-test").toFile();
         final File rrdToolFile = getRrdToolFile();
         final File outFile = getOutFile();
-        Files.asCharSink(rrdToolFile, Charsets.UTF_8).write("#!/bin/bash\necho \"$@\" >> " + outFile.getAbsolutePath());
+        Files.asCharSink(rrdToolFile, StandardCharsets.UTF_8).write("#!/bin/bash\necho \"$@\" >> " + outFile.getAbsolutePath());
         rrdToolFile.setExecutable(true);
         _rrdSinkBuilder = new RrdSink.Builder()
                 .setName("rrd_sink_test")
@@ -66,7 +66,7 @@ public class RrdSinkTest {
         final PeriodicData periodicData = TestBeanFactory.createPeriodicData();
         rrdSink.recordAggregateData(periodicData);
 
-        final List<String> outLines = Files.readLines(getOutFile(), Charsets.UTF_8);
+        final List<String> outLines = Files.readLines(getOutFile(), StandardCharsets.UTF_8);
         Assert.assertEquals(2, outLines.size());
         final String[] createLine = outLines.get(0).split(" ");
         final String[] updateLine = outLines.get(1).split(" ");
@@ -110,7 +110,7 @@ public class RrdSinkTest {
                 .build();
         rrdSink.recordAggregateData(periodicDataB);
 
-        final List<String> outLines = Files.readLines(getOutFile(), Charsets.UTF_8);
+        final List<String> outLines = Files.readLines(getOutFile(), StandardCharsets.UTF_8);
         Assert.assertEquals(3, outLines.size());
         final String[] createLine = outLines.get(0).split(" ");
         final String[] updateLineA = outLines.get(1).split(" ");

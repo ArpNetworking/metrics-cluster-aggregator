@@ -19,9 +19,10 @@ import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.PeriodicData;
-import com.google.common.base.Charsets;
 import org.apache.pekko.util.ByteString;
 import org.apache.pekko.util.ByteStringBuilder;
+
+import java.nio.charset.StandardCharsets;
 
 /**
  * Publisher to send data to a Carbon server.
@@ -46,7 +47,7 @@ public class CarbonSink extends TcpSink {
                             datum.getFQDSN().getStatistic().getName(),
                             datum.getValue().getValue(),
                             periodicData.getStart().toEpochSecond())
-                    .getBytes(Charsets.UTF_8));
+                    .getBytes(StandardCharsets.UTF_8));
         }
         return builder.result();
     }

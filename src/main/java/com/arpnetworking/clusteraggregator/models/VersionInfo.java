@@ -19,12 +19,12 @@ import com.arpnetworking.commons.builder.OvalBuilder;
 import com.arpnetworking.commons.jackson.databind.ObjectMapperFactory;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
-import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import net.sf.oval.constraint.NotEmpty;
 import net.sf.oval.constraint.NotNull;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Represents the model for the version of the service currently running.
@@ -67,7 +67,7 @@ public final class VersionInfo {
         try {
             versionInfo =
                     ObjectMapperFactory.getInstance().readValue(
-                            Resources.toString(Resources.getResource("version.json"), Charsets.UTF_8),
+                            Resources.toString(Resources.getResource("version.json"), StandardCharsets.UTF_8),
                             VersionInfo.class);
         } catch (final IOException e) {
             LOGGER.error()

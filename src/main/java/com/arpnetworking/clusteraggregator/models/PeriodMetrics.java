@@ -18,11 +18,11 @@ package com.arpnetworking.clusteraggregator.models;
 import com.arpnetworking.metrics.Metrics;
 import com.arpnetworking.metrics.MetricsFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
-import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
 
+import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.util.Map;
 
@@ -141,21 +141,21 @@ public class PeriodMetrics {
 
     private BloomFilter<CharSequence> createServicesBF() {
         return BloomFilter.create(
-                Funnels.stringFunnel(Charsets.UTF_8),
+                Funnels.stringFunnel(StandardCharsets.UTF_8),
                 10_000,
                 0.001);
     }
 
     private BloomFilter<CharSequence> createMetricsBF() {
         return BloomFilter.create(
-                Funnels.stringFunnel(Charsets.UTF_8),
+                Funnels.stringFunnel(StandardCharsets.UTF_8),
                 1_000_000,
                 0.001);
     }
 
     private BloomFilter<CharSequence> createStatisticsBF() {
         return BloomFilter.create(
-                Funnels.stringFunnel(Charsets.UTF_8),
+                Funnels.stringFunnel(StandardCharsets.UTF_8),
                 10_000_000,
                 0.005);
     }

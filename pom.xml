@@ -115,7 +115,7 @@
     <ebean.annotation.version>8.4</ebean.annotation.version>
     <jakarta.persistence.api.version>3.0</jakarta.persistence.api.version>
     <flyway.version>11.7.2</flyway.version>
-    <guava.version>33.3.0-jre</guava.version>
+    <guava.version>33.4.8-jre</guava.version>
     <guice.version>7.0.0</guice.version>
     <hamcrest.version>3.0</hamcrest.version>
     <hikari.version>5.1.0</hikari.version>
