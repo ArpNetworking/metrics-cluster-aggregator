@@ -19,7 +19,6 @@ import com.arpnetworking.test.TestBeanFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.arpnetworking.utility.BaseActorTest;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.apache.pekko.util.ByteString;
@@ -29,6 +28,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.function.Consumer;
@@ -68,7 +68,7 @@ public class CarbonSinkTest extends BaseActorTest {
         Mockito.verify(recorder, Mockito.timeout(5000)).accept(recorded.capture());
         final ByteString buffer = recorded.getValue();
         Assert.assertNotNull(buffer);
-        String bufferString = buffer.decodeString(Charsets.UTF_8);
+        String bufferString = buffer.decodeString(StandardCharsets.UTF_8);
         Assert.assertTrue("Buffer=" + bufferString, bufferString.endsWith("\n"));
         bufferString = bufferString.substring(0, bufferString.length() - 1);
         final String[] keyValueParts = bufferString.split(" ");

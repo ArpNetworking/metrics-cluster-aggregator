@@ -21,7 +21,6 @@ import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.PeriodicData;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
 import net.sf.oval.constraint.NotEmpty;
@@ -31,6 +30,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
@@ -208,7 +208,7 @@ public final class RrdSink extends BaseSink {
                 proecssBuilder.redirectErrorStream(true);
                 final Process process = proecssBuilder.start();
                 try (BufferedReader processStandardOut = new BufferedReader(
-                        new InputStreamReader(process.getInputStream(), Charsets.UTF_8))) {
+                        new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
                     String line;
                     final StringBuilder processOutput = new StringBuilder();
                     while ((line = processStandardOut.readLine()) != null) {

@@ -24,7 +24,6 @@ import com.arpnetworking.tsdcore.model.AggregatedData;
 import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import net.sf.oval.constraint.NotEmpty;
 import net.sf.oval.constraint.NotNull;
@@ -33,6 +32,7 @@ import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.RequestBuilder;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -96,7 +96,7 @@ public final class DataDogSink extends HttpPostSink {
             return Collections.emptyList();
         }
         return Collections.singletonList(new SerializedDatum(
-                dataDogDataAsJson.getBytes(Charsets.UTF_8),
+                dataDogDataAsJson.getBytes(StandardCharsets.UTF_8),
                 Optional.empty()));
     }
 
