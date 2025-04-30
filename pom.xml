@@ -118,7 +118,7 @@
     <guava.version>33.4.8-jre</guava.version>
     <guice.version>7.0.0</guice.version>
     <hamcrest.version>3.0</hamcrest.version>
-    <hikari.version>5.1.0</hikari.version>
+    <hikari.version>6.3.0</hikari.version>
     <fastutil.version>8.5.14</fastutil.version>
     <h2.version>2.3.232</h2.version>
     <jackson.version>2.18.3</jackson.version>
