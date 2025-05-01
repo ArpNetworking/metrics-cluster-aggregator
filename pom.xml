@@ -113,7 +113,7 @@
     <commons.codec.version>1.18.0</commons.codec.version>
     <ebean.version>15.11.0</ebean.version>
     <ebean.annotation.version>8.4</ebean.annotation.version>
-    <jakarta.persistence.api.version>3.0</jakarta.persistence.api.version>
+    <jakarta.persistence.api.version>3.1</jakarta.persistence.api.version>
     <flyway.version>11.8.0</flyway.version>
     <guava.version>33.4.8-jre</guava.version>
     <guice.version>7.0.0</guice.version>
