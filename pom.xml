@@ -143,7 +143,7 @@
     <ning.http.client.version>1.9.31</ning.http.client.version>
     <oval.version>3.2.1</oval.version>
     <play.ws.version>3.0.7</play.ws.version>
-    <postgresql.version>42.7.5</postgresql.version>
+    <postgresql.version>42.7.6</postgresql.version>
     <protobuf.version>3.25.5</protobuf.version>
     <reflections.version>0.11.7</reflections.version>
     <scala.version>2.13</scala.version>
