@@ -16,7 +16,7 @@
 package com.arpnetworking.tsdcore.model;
 
 import com.arpnetworking.metrics.aggregation.protocol.Messages;
-import com.google.protobuf.GeneratedMessageV3;
+import com.google.protobuf.GeneratedMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.pekko.util.ByteIterator;
@@ -42,7 +42,7 @@ public final class AggregationMessage {
      * @param message The message.
      * @return New {@link AggregationMessage} instance.
      */
-    public static AggregationMessage create(final GeneratedMessageV3 message) {
+    public static AggregationMessage create(final GeneratedMessage message) {
         return new AggregationMessage(message);
     }
 
@@ -139,7 +139,7 @@ public final class AggregationMessage {
         return AggregationMessage.serialize(_message);
     }
 
-    private static ByteString serialize(final GeneratedMessageV3 message) {
+    private static ByteString serialize(final GeneratedMessage message) {
         final ByteStringBuilder b = ByteString.createBuilder();
         if (message instanceof Messages.HostIdentification) {
             b.putByte((byte) 0x01);
@@ -166,7 +166,7 @@ public final class AggregationMessage {
         return sizePrefix.result().concat(b.result());
     }
 
-    public GeneratedMessageV3 getMessage() {
+    public GeneratedMessage getMessage() {
         return _message;
     }
 
@@ -174,16 +174,16 @@ public final class AggregationMessage {
         return _length;
     }
 
-    private AggregationMessage(final GeneratedMessageV3 message) {
+    private AggregationMessage(final GeneratedMessage message) {
         this(message, serialize(message).length());
     }
 
-    private AggregationMessage(final GeneratedMessageV3 message, final int length) {
+    private AggregationMessage(final GeneratedMessage message, final int length) {
         _length = length;
         _message = message;
     }
 
-    private final GeneratedMessageV3 _message;
+    private final GeneratedMessage _message;
     private final int _length;
 
     private static final int BYTE_SIZE_IN_BYTES = 1;
