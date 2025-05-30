@@ -14,6 +14,16 @@
  * limitations under the License.
  */
 
+/**
+ * Package containing client connection and communication components.
+ * <p>
+ * This package provides classes for managing client connections to the cluster
+ * aggregator service, including TCP server components, client connection handlers,
+ * and HTTP source actors that receive and process metrics data from clients.
+ * </p>
+ *
+ * @author Inscope Metrics
+ */
 @ParametersAreNonnullByDefault
 @ReturnValuesAreNonnullByDefault
 package com.arpnetworking.clusteraggregator.client;

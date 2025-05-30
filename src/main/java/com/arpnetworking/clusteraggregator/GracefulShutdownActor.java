@@ -21,7 +21,6 @@ import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.pekko.actor.AbstractActor;
 import org.apache.pekko.actor.ActorRef;
 import org.apache.pekko.actor.ActorSystem;
@@ -50,7 +49,6 @@ public class GracefulShutdownActor extends AbstractActor {
      * @param ingestActor ingest actor
      */
     @Inject
-    @SuppressFBWarnings(value = "MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR", justification = "Context is safe to use in constructor.")
     public GracefulShutdownActor(
             @Named("aggregator-shard-region") final ActorRef shardRegion,
             @Named("host-emitter") final ActorRef hostEmitter,

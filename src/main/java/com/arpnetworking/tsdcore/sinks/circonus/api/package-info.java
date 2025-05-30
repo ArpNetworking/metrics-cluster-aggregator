@@ -14,6 +14,18 @@
  * limitations under the License.
  */
 
+/**
+ * Package containing data models for the Circonus API.
+ * <p>
+ * This package provides model classes that represent entities and responses from
+ * the Circonus API. These models are used by the Circonus sink implementation to
+ * interact with the Circonus platform, including managing brokers and check bundles.
+ * The classes in this package map directly to the JSON structures used in the
+ * Circonus API.
+ * </p>
+ *
+ * @author Inscope Metrics
+ */
 @ParametersAreNonnullByDefault
 @ReturnValuesAreNonnullByDefault
 package com.arpnetworking.tsdcore.sinks.circonus.api;

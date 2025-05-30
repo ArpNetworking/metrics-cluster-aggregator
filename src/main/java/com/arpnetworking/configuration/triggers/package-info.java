@@ -14,6 +14,17 @@
  * limitations under the License.
  */
 
+/**
+ * Package containing trigger implementations for configuration changes.
+ * <p>
+ * This package provides various trigger mechanisms that detect changes in resources
+ * such as files, directories, and URIs. These triggers are used primarily with
+ * dynamic configuration systems to reload or update configurations when the
+ * underlying resources change.
+ * </p>
+ *
+ * @author Inscope Metrics
+ */
 @ParametersAreNonnullByDefault
 @ReturnValuesAreNonnullByDefault
 package com.arpnetworking.configuration.triggers;

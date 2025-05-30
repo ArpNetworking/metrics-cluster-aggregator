@@ -14,6 +14,17 @@
  * limitations under the License.
  */
 
+/**
+ * Package providing integration with the ReMet GUI service.
+ * <p>
+ * This package contains components that facilitate interaction with the ReMet GUI,
+ * a metrics visualization and management interface. It includes functionality for
+ * creating dynamic configurations by mapping cluster and service parameters to
+ * API calls to the ReMet GUI service for configuration data retrieval.
+ * </p>
+ *
+ * @author Inscope Metrics
+ */
 @ParametersAreNonnullByDefault
 @ReturnValuesAreNonnullByDefault
 package com.arpnetworking.remet.gui;

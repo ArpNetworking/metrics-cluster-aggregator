@@ -16,6 +16,7 @@
 package com.arpnetworking.utility;
 
 import com.arpnetworking.configuration.Configuration;
+import com.arpnetworking.configuration.ConfigurationException;
 import com.arpnetworking.configuration.Listener;
 import com.arpnetworking.logback.annotations.LogValue;
 import com.arpnetworking.steno.LogValueMapFactory;
@@ -47,8 +48,14 @@ public class Reconfigurator<T extends Relaunchable<? super S>, S> implements Lis
     }
 
     @Override
-    public synchronized void offerConfiguration(final Configuration configuration) throws Exception {
-        _offeredConfiguration = configuration.getAs(_configurationClass);
+    public synchronized void offerConfiguration(final Configuration configuration) throws ConfigurationException {
+        try {
+            _offeredConfiguration = configuration.getAs(_configurationClass);
+        // CHECKSTYLE.OFF: IllegalCatch - The getAs method only throws RuntimeExceptions.
+        } catch (final RuntimeException e) {
+        // CHECKSTYLE.ON: IllegalCatch
+            throw new ConfigurationException("Could not load configuration", e);
+        }
     }
 
     @Override

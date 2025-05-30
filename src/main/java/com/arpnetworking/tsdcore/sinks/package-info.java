@@ -14,6 +14,18 @@
  * limitations under the License.
  */
 
+/**
+ * Package containing sink implementations for publishing metrics data.
+ * <p>
+ * This package provides various implementations of the Sink interface, which is
+ * responsible for publishing aggregated metrics data to different destinations.
+ * It includes sinks for popular time series databases and monitoring systems
+ * (such as InfluxDB, KairosDB, Graphite/Carbon, DataDog, SignalFx), as well as
+ * utility sinks for filtering, transforming, and routing metrics data.
+ * </p>
+ *
+ * @author Inscope Metrics
+ */
 @ParametersAreNonnullByDefault
 @ReturnValuesAreNonnullByDefault
 package com.arpnetworking.tsdcore.sinks;

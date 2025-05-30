@@ -14,6 +14,18 @@
  * limitations under the License.
  */
 
+/**
+ * Package containing utilities for data partitioning.
+ * <p>
+ * This package provides interfaces and classes for managing partitions of data
+ * or workloads. It includes functionality for mapping keys to partitions and
+ * creating partition sets. Partitioning is commonly used in distributed systems
+ * to distribute data or processing across multiple nodes for scalability and
+ * load balancing.
+ * </p>
+ *
+ * @author Inscope Metrics
+ */
 @ParametersAreNonnullByDefault
 @ReturnValuesAreNonnullByDefault
 package com.arpnetworking.utility.partitioning;

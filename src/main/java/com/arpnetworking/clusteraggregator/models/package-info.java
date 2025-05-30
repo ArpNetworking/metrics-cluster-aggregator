@@ -14,6 +14,17 @@
  * limitations under the License.
  */
 
+/**
+ * Package containing data model classes for the cluster aggregator.
+ * <p>
+ * This package provides model classes that represent the core data structures
+ * used throughout the cluster aggregator service, including metrics data models,
+ * HTTP request/response models, status information, and other domain objects.
+ * These models define the structure and behavior of the data processed by the service.
+ * </p>
+ *
+ * @author Inscope Metrics
+ */
 @ParametersAreNonnullByDefault
 @ReturnValuesAreNonnullByDefault
 package com.arpnetworking.clusteraggregator.models;
