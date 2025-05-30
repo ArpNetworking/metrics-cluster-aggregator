@@ -19,7 +19,6 @@ import com.arpnetworking.pekko.UniformRandomTimeScheduler;
 import com.arpnetworking.steno.Logger;
 import com.arpnetworking.steno.LoggerFactory;
 import com.arpnetworking.tsdcore.sinks.circonus.api.BrokerListResponse;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.pekko.actor.AbstractActor;
 import org.apache.pekko.actor.Props;
 import org.apache.pekko.pattern.Patterns;
@@ -51,7 +50,6 @@ public class BrokerRefresher extends AbstractActor {
      *
      * @param client The Circonus client used to access the API.
      */
-    @SuppressFBWarnings(value = "MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR", justification = "Context is safe to use in constructor.")
     public BrokerRefresher(final CirconusClient client) {
         _client = client;
     }

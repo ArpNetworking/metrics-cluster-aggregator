@@ -193,7 +193,6 @@ public final class UniformRandomTimeScheduler {
             return this;
         }
 
-        @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // Invoked reflectively by Oval
         private boolean minZeroDuration(final FiniteDuration duration) {
             return Duration.Zero().lteq(duration);
         }

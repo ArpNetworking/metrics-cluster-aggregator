@@ -83,7 +83,6 @@ public class AggregationRouter extends AbstractActor {
      * @param periodicMetrics The {@link PeriodicMetrics} instance.
      */
     @Inject
-    @SuppressFBWarnings(value = "MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR", justification = "context is safe to be used in constructors")
     public AggregationRouter(
             @Named("periodic-statistics") final ActorRef periodicStatistics,
             @Named("cluster-emitter") final ActorRef emitter,
@@ -139,6 +138,7 @@ public class AggregationRouter extends AbstractActor {
     }
 
     @Override
+    @SuppressFBWarnings(value = "THROWS_METHOD_THROWS_CLAUSE_BASIC_EXCEPTION", justification = "Exception is thrown by super method")
     public void preRestart(final Throwable reason, final Optional<Object> message) throws Exception {
         _periodicMetrics.recordCounter("actors/aggregation_router/restarted", 1);
         LOGGER.error()

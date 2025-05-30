@@ -29,7 +29,6 @@ import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.GeneratedMessage;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.pekko.actor.AbstractActor;
 import org.apache.pekko.actor.ActorRef;
 import org.apache.pekko.actor.Props;
@@ -78,7 +77,6 @@ public class AggClientConnection extends AbstractActor {
      * @param maxConnectionAge The maximum duration to keep a connection open before cycling it.
      * @param calculateAggregates True to compute cluster aggregations, false to only publish host aggregations
      */
-    @SuppressFBWarnings(value = "MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR", justification = "context is safe to be used in constructors")
     public AggClientConnection(
             final ActorRef connection,
             final InetSocketAddress remote,

@@ -15,6 +15,7 @@
  */
 package com.arpnetworking.utility;
 
+import com.arpnetworking.configuration.ConfigurationException;
 import com.arpnetworking.configuration.jackson.JsonNodeLiteralSource;
 import com.arpnetworking.configuration.jackson.StaticConfiguration;
 import org.junit.Assert;
@@ -121,9 +122,7 @@ public class ConfiguratorTest {
                     .addSource(new JsonNodeLiteralSource.Builder().setSource("{}").build())
                     .build());
             Assert.fail("Expected exception not thrown");
-            // CHECKSTYLE.OFF: IllegalCatch - Defined by interface.
-        } catch (final Exception e) {
-            // CHECKSTYLE.ON: IllegalCatch
+        } catch (final ConfigurationException e) {
             final Optional<TestLaunchable> launchable = configurator.getLaunchable();
             Assert.assertTrue(launchable.isPresent());
             Assert.assertSame(firstLaunchable.get(), launchable.get());

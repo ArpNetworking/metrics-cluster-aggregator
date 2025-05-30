@@ -67,7 +67,7 @@ public final class AggClientServer extends UntypedAbstractActor {
     }
 
     @Override
-    public void onReceive(final Object message) throws Exception {
+    public void onReceive(final Object message) {
         if (message instanceof Tcp.Bound) {
             final Tcp.Bound bound = (Tcp.Bound) message;
             LOGGER.debug()

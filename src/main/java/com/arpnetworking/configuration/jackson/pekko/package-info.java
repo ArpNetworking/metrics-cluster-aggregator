@@ -14,6 +14,18 @@
  * limitations under the License.
  */
 
+/**
+ * Package containing Jackson serialization/deserialization components for Pekko.
+ * <p>
+ * This package provides classes that handle the serialization and deserialization
+ * of Pekko (formerly Akka) specific objects using Jackson, including serializers
+ * and deserializers for ActorRef objects and other Pekko-specific types. These
+ * components enable Pekko objects to be properly represented in configuration
+ * and other JSON-based data structures.
+ * </p>
+ *
+ * @author Inscope Metrics
+ */
 @ParametersAreNonnullByDefault
 @ReturnValuesAreNonnullByDefault
 package com.arpnetworking.configuration.jackson.pekko;

@@ -14,6 +14,16 @@
  * limitations under the License.
  */
 
+/**
+ * Package containing utilities and extensions for the Pekko (formerly Akka) actor system.
+ * <p>
+ * This package provides additional functionality for working with Pekko actors,
+ * including specialized schedulers and other utilities that enhance the core
+ * Pekko functionality for use within the metrics cluster aggregator.
+ * </p>
+ *
+ * @author Inscope Metrics
+ */
 @ParametersAreNonnullByDefault
 @ReturnValuesAreNonnullByDefault
 package com.arpnetworking.pekko;

@@ -14,6 +14,18 @@
  * limitations under the License.
  */
 
+/**
+ * Package containing Jackson-specific configuration components.
+ * <p>
+ * This package provides classes that implement the configuration framework
+ * using Jackson for JSON processing. It includes implementations for various
+ * configuration sources (files, directories, URIs), as well as dynamic and
+ * static configuration implementations that use Jackson's JSON processing
+ * capabilities.
+ * </p>
+ *
+ * @author Inscope Metrics
+ */
 @ParametersAreNonnullByDefault
 @ReturnValuesAreNonnullByDefault
 package com.arpnetworking.configuration.jackson;

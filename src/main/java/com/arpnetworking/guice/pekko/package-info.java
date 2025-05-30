@@ -14,6 +14,17 @@
  * limitations under the License.
  */
 
+/**
+ * Package providing integration between Guice dependency injection and the Pekko actor system.
+ * <p>
+ * This package contains utilities that allow Pekko actors to be created and managed through
+ * Guice, enabling dependency injection for actor instances. This integration simplifies
+ * the creation of actors with complex dependencies and promotes better testability by
+ * allowing dependencies to be mocked or substituted during testing.
+ * </p>
+ *
+ * @author Inscope Metrics
+ */
 @ParametersAreNonnullByDefault
 @ReturnValuesAreNonnullByDefault
 package com.arpnetworking.guice.pekko;

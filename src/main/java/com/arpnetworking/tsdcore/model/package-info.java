@@ -14,6 +14,17 @@
  * limitations under the License.
  */
 
+/**
+ * Package containing core data models for time series data processing.
+ * <p>
+ * This package provides the fundamental data structures used throughout the
+ * time series database (TSD) core for representing and processing metrics data.
+ * It includes models for aggregated data, periodic data, quantities with units,
+ * conditions, and other essential components for working with time series metrics.
+ * </p>
+ *
+ * @author Inscope Metrics
+ */
 @ParametersAreNonnullByDefault
 @ReturnValuesAreNonnullByDefault
 package com.arpnetworking.tsdcore.model;

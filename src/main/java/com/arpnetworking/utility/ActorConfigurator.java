@@ -18,6 +18,7 @@ package com.arpnetworking.utility;
 
 import com.arpnetworking.clusteraggregator.configuration.ConfigurableActorProxy;
 import com.arpnetworking.configuration.Configuration;
+import com.arpnetworking.configuration.ConfigurationException;
 import com.arpnetworking.configuration.Listener;
 import org.apache.pekko.actor.ActorRef;
 
@@ -43,8 +44,14 @@ public class ActorConfigurator<T> implements Listener {
     }
 
     @Override
-    public synchronized void offerConfiguration(final Configuration configuration) throws Exception {
-        _offeredConfiguration = configuration.getAs(_configurationClass);
+    public synchronized void offerConfiguration(final Configuration configuration) throws ConfigurationException {
+        try {
+            _offeredConfiguration = configuration.getAs(_configurationClass);
+        // CHECKSTYLE.OFF: IllegalCatch - The getAs method only throws RuntimeExceptions.
+        } catch (final RuntimeException e) {
+        // CHECKSTYLE.ON: IllegalCatch
+            throw new ConfigurationException("Could not load configuration", e);
+        }
     }
 
     @Override

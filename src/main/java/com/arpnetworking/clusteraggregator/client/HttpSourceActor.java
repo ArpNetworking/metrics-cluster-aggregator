@@ -37,7 +37,6 @@ import com.google.common.util.concurrent.AtomicDouble;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.GeneratedMessage;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.http.HttpHeaders;
 import org.apache.pekko.Done;
 import org.apache.pekko.NotUsed;
@@ -104,7 +103,6 @@ public final class HttpSourceActor extends AbstractActor {
      * @param periodicMetrics The periodic metrics instance.
      */
     @Inject
-    @SuppressFBWarnings(value = "MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR", justification = "context is safe to be used in constructors")
     public HttpSourceActor(
             @Named("aggregator-shard-region") final ActorRef shardRegion,
             @Named("host-emitter") final ActorRef emitter,

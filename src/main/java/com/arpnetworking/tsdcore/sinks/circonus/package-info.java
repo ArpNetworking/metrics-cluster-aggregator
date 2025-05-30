@@ -14,6 +14,18 @@
  * limitations under the License.
  */
 
+/**
+ * Package containing sink implementation for the Circonus monitoring platform.
+ * <p>
+ * This package provides components for sending metrics data to Circonus, a monitoring
+ * and analytics platform. It includes a sink implementation, actor-based processing,
+ * client for the Circonus API, and utilities for managing brokers and check bundles.
+ * The implementation supports features like histogram data and configurable concurrency
+ * for efficient data transmission.
+ * </p>
+ *
+ * @author Inscope Metrics
+ */
 @ParametersAreNonnullByDefault
 @ReturnValuesAreNonnullByDefault
 package com.arpnetworking.tsdcore.sinks.circonus;

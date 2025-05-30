@@ -14,6 +14,18 @@
  * limitations under the License.
  */
 
+/**
+ * Package containing statistical calculation implementations for time series data.
+ * <p>
+ * This package provides various statistical calculations and aggregations that can
+ * be applied to time series data. It includes implementations for common statistics
+ * such as count, min, max, mean, median, sum, histograms, and percentiles. The package
+ * also contains utilities for creating and managing statistics, including factories,
+ * calculators, and accumulators.
+ * </p>
+ *
+ * @author Inscope Metrics
+ */
 @ParametersAreNonnullByDefault
 @ReturnValuesAreNonnullByDefault
 package com.arpnetworking.tsdcore.statistics;

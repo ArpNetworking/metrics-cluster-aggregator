@@ -14,6 +14,17 @@
  * limitations under the License.
  */
 
+/**
+ * Package containing partitioning components for the cluster aggregator.
+ * <p>
+ * This package provides classes that handle the partitioning of data across
+ * the cluster, including implementations for database-based and in-memory
+ * partition sets. These components are responsible for determining how metrics
+ * data is distributed and processed across the nodes in the cluster.
+ * </p>
+ *
+ * @author Inscope Metrics
+ */
 @ParametersAreNonnullByDefault
 @ReturnValuesAreNonnullByDefault
 package com.arpnetworking.clusteraggregator.partitioning;

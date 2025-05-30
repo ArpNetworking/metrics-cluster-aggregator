@@ -14,6 +14,17 @@
  * limitations under the License.
  */
 
+/**
+ * Package containing components for metrics data aggregation.
+ * <p>
+ * This package provides classes that handle the aggregation of metrics data
+ * across a cluster, including routing of aggregation messages, extraction of
+ * message data, and streaming aggregation of metrics. These components form
+ * the core aggregation functionality of the cluster aggregator service.
+ * </p>
+ *
+ * @author Inscope Metrics
+ */
 @ParametersAreNonnullByDefault
 @ReturnValuesAreNonnullByDefault
 package com.arpnetworking.clusteraggregator.aggregation;

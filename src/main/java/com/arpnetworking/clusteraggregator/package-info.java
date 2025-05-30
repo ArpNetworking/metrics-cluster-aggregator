@@ -14,6 +14,16 @@
  * limitations under the License.
  */
 
+/**
+ * Main package for the metrics cluster aggregator application.
+ * <p>
+ * This package contains the core components for the Pekko-based metrics cluster aggregator service,
+ * including the main entry point, application lifecycle management, and core service functionality.
+ * The service aggregates metrics data across a cluster of nodes.
+ * </p>
+ *
+ * @author Inscope Metrics
+ */
 @ParametersAreNonnullByDefault
 @ReturnValuesAreNonnullByDefault
 package com.arpnetworking.clusteraggregator;

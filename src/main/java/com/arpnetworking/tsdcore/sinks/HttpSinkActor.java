@@ -151,6 +151,7 @@ public class HttpSinkActor extends AbstractActorWithTimers {
     }
 
     @Override
+    @SuppressFBWarnings(value = "THROWS_METHOD_THROWS_CLAUSE_BASIC_EXCEPTION", justification = "Exception is thrown by super method")
     public void preRestart(final Throwable reason, final Optional<Object> message) throws Exception {
         super.preRestart(reason, message);
 

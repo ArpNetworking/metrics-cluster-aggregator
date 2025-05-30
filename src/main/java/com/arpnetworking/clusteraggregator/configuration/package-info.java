@@ -14,6 +14,18 @@
  * limitations under the License.
  */
 
+/**
+ * Package containing configuration classes specific to the cluster aggregator.
+ * <p>
+ * This package provides configuration classes for various components of the
+ * cluster aggregator service, including the main service configuration,
+ * database configuration, emitter configuration, and rebalance configuration.
+ * These classes define the structure and validation of configuration data
+ * used to initialize and operate the cluster aggregator.
+ * </p>
+ *
+ * @author Inscope Metrics
+ */
 @ParametersAreNonnullByDefault
 @ReturnValuesAreNonnullByDefault
 package com.arpnetworking.clusteraggregator.configuration;

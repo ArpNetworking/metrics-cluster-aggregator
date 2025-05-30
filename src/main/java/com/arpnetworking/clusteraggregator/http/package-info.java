@@ -14,6 +14,17 @@
  * limitations under the License.
  */
 
+/**
+ * Package containing HTTP-related components for the cluster aggregator.
+ * <p>
+ * This package provides classes for handling HTTP requests and responses
+ * in the cluster aggregator service, including route definitions and
+ * HTTP endpoint implementations for service management and metrics data
+ * submission.
+ * </p>
+ *
+ * @author Inscope Metrics
+ */
 @ParametersAreNonnullByDefault
 @ReturnValuesAreNonnullByDefault
 package com.arpnetworking.clusteraggregator.http;

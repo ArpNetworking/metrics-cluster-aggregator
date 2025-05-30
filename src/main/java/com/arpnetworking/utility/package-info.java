@@ -14,6 +14,17 @@
  * limitations under the License.
  */
 
+/**
+ * Package containing general-purpose utility classes for the application.
+ * <p>
+ * This package provides a collection of utility classes that support various
+ * aspects of the application, including configuration management, database access,
+ * host resolution, reflection utilities, and application lifecycle management.
+ * These utilities are used throughout the application to provide common functionality.
+ * </p>
+ *
+ * @author Inscope Metrics
+ */
 @ParametersAreNonnullByDefault
 @ReturnValuesAreNonnullByDefault
 package com.arpnetworking.utility;

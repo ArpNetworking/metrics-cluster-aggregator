@@ -38,6 +38,11 @@ import java.util.List;
  */
 public final class AggregatedData implements Serializable {
 
+    /**
+     * Gets the fully qualified data space name.
+     *
+     * @return The fully qualified data space name (FQDSN).
+     */
     public FQDSN getFQDSN() {
         return _fqdsn;
     }
@@ -78,14 +83,29 @@ public final class AggregatedData implements Serializable {
         return _start;
     }
 
+    /**
+     * Determines whether this aggregated data was explicitly specified.
+     *
+     * @return True if the data was explicitly specified, false otherwise.
+     */
     public boolean isSpecified() {
         return _isSpecified;
     }
 
+    /**
+     * Gets the aggregated value.
+     *
+     * @return The aggregated value as a Quantity.
+     */
     public Quantity getValue() {
         return _value;
     }
 
+    /**
+     * Gets the list of samples used in the aggregation.
+     *
+     * @return The list of samples as Quantities.
+     */
     public List<Quantity> getSamples() {
         return _samples;
     }

@@ -14,6 +14,16 @@
  * limitations under the License.
  */
 
+/**
+ * Package containing configuration management components for the application.
+ * <p>
+ * This package provides interfaces and classes for loading, parsing, and managing
+ * application configuration from various sources. It includes support for dynamic
+ * configuration updates, configuration listeners, and configuration triggers.
+ * </p>
+ *
+ * @author Inscope Metrics
+ */
 @ParametersAreNonnullByDefault
 @ReturnValuesAreNonnullByDefault
 package com.arpnetworking.configuration;
