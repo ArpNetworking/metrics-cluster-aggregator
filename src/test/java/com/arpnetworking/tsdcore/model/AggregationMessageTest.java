@@ -16,7 +16,7 @@
 package com.arpnetworking.tsdcore.model;
 
 import com.arpnetworking.metrics.aggregation.protocol.Messages;
-import com.google.protobuf.GeneratedMessageV3;
+import com.google.protobuf.GeneratedMessage;
 import org.apache.pekko.util.ByteString;
 import org.apache.pekko.util.ByteStringBuilder;
 import org.junit.Assert;
@@ -34,7 +34,7 @@ public class AggregationMessageTest {
 
     @Test
     public void testHostIdentification() {
-        final GeneratedMessageV3 protobufMessage = Messages.HostIdentification.getDefaultInstance();
+        final GeneratedMessage protobufMessage = Messages.HostIdentification.getDefaultInstance();
         final AggregationMessage message = AggregationMessage.create(protobufMessage);
         Assert.assertNotNull(message);
         Assert.assertSame(protobufMessage, message.getMessage());
@@ -65,7 +65,7 @@ public class AggregationMessageTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testSerializedUnsupportedMessage() {
-        final GeneratedMessageV3 message = Messages.SparseHistogramEntry.newBuilder()
+        final GeneratedMessage message = Messages.SparseHistogramEntry.newBuilder()
                 .build();
         AggregationMessage.create(message).serialize();
     }

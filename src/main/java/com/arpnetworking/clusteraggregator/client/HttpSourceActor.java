@@ -36,7 +36,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.google.protobuf.GeneratedMessageV3;
+import com.google.protobuf.GeneratedMessage;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.http.HttpHeaders;
 import org.apache.pekko.Done;
@@ -145,8 +145,8 @@ public final class HttpSourceActor extends AbstractActor {
 
         final AggregationMode aggregationMode = aggregationRequest.getAggregationMode();
         for (final AggregationMessage aggregationMessage : aggregationRequest.getAggregationMessages()) {
-            final GeneratedMessageV3 generatedMessageV3 = aggregationMessage.getMessage();
-            if (generatedMessageV3 instanceof Messages.StatisticSetRecord) {
+            final GeneratedMessage generatedMessage = aggregationMessage.getMessage();
+            if (generatedMessage instanceof Messages.StatisticSetRecord) {
                 final Messages.StatisticSetRecord statisticSetRecord =
                         (Messages.StatisticSetRecord) aggregationMessage.getMessage();
 

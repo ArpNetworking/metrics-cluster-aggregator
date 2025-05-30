@@ -28,7 +28,7 @@ import com.arpnetworking.tsdcore.model.PeriodicData;
 import com.arpnetworking.tsdcore.statistics.Statistic;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.protobuf.GeneratedMessageV3;
+import com.google.protobuf.GeneratedMessage;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.pekko.actor.AbstractActor;
 import org.apache.pekko.actor.ActorRef;
@@ -153,7 +153,7 @@ public class AggClientConnection extends AbstractActor {
         while (messageOptional.isPresent()) {
             final AggregationMessage message = messageOptional.get();
             current = current.drop(message.getLength());
-            final GeneratedMessageV3 gm = message.getMessage();
+            final GeneratedMessage gm = message.getMessage();
             if (gm instanceof Messages.HostIdentification) {
                 final Messages.HostIdentification hostIdent = (Messages.HostIdentification) gm;
                 _hostName = Optional.ofNullable(hostIdent.getHostName());
