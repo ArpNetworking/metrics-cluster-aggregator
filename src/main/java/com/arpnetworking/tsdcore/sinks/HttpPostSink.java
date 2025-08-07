@@ -25,6 +25,8 @@ import com.arpnetworking.tsdcore.model.RequestEntry;
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaderValues;
 import net.sf.oval.Validator;
 import net.sf.oval.constraint.CheckWith;
 import net.sf.oval.constraint.CheckWithCheck;
@@ -33,7 +35,6 @@ import net.sf.oval.constraint.NotNull;
 import net.sf.oval.context.OValContext;
 import org.apache.pekko.actor.ActorRef;
 import org.apache.pekko.actor.ActorSystem;
-import org.apache.pekko.http.javadsl.model.HttpMethods;
 import org.apache.pekko.http.javadsl.model.MediaTypes;
 import org.apache.pekko.http.javadsl.model.StatusCodes;
 import org.apache.pekko.pattern.Patterns;
@@ -44,7 +45,10 @@ import org.asynchttpclient.DefaultAsyncHttpClientConfig;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.RequestBuilder;
 import org.asynchttpclient.uri.Uri;
+import org.asynchttpclient.util.HttpConstants;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.Serial;
 import java.net.URI;
 import java.time.Duration;
@@ -52,6 +56,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * Publishes to an HTTP endpoint. This class is thread safe.
@@ -103,13 +108,33 @@ public abstract class HttpPostSink extends BaseSink {
      * @param serializedData The serialized data.
      * @return {@link Request} to execute
      */
-    protected Request createRequest(final AsyncHttpClient client, final byte[] serializedData) {
-        return new RequestBuilder()
-                .setUri(_aysncHttpClientUri)
-                .setHeader("Content-Type", MediaTypes.APPLICATION_JSON.toString())
-                .setBody(serializedData)
-                .setMethod(HttpMethods.POST.value())
-                .build();
+    protected RequestInfo createRequest(final AsyncHttpClient client, final byte[] serializedData) {
+        final byte[] bodyData;
+        if (_enableCompression) {
+            try {
+                final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                final GZIPOutputStream gzipStream = new GZIPOutputStream(bos);
+                gzipStream.write(serializedData);
+                gzipStream.close();
+                bodyData = bos.toByteArray();
+            } catch (final IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            bodyData = serializedData;
+        }
+
+        final RequestBuilder requestBuilder = new RequestBuilder()
+                .setUri(getAysncHttpClientUri())
+                .setHeader(HttpHeaderNames.CONTENT_TYPE, MediaTypes.APPLICATION_JSON.toString())
+                .setBody(bodyData)
+                .setMethod(HttpConstants.Methods.POST);
+
+        if (_enableCompression) {
+            requestBuilder.setHeader(HttpHeaderNames.CONTENT_ENCODING, HttpHeaderValues.GZIP);
+        }
+
+        return new RequestInfo(requestBuilder.build(), serializedData.length, bodyData.length);
     }
 
     /**
@@ -130,8 +155,12 @@ public abstract class HttpPostSink extends BaseSink {
             // Unfortunately, the split builder logic across HttpPostSink and
             // HttpSinkActor does not permit this as-is. The logic would need
             // to be refactored to permit the use of a TLB.
+            final byte[] datum = serializedDatum.getDatum();
+            final RequestInfo requestInfo = createRequest(client, datum);
             requestEntryBuilders.add(new RequestEntry.Builder()
-                    .setRequest(createRequest(client, serializedDatum.getDatum()))
+                    .setRequest(requestInfo.request())
+                    .setRequestBodySize(requestInfo.bodySize())
+                    .setRequestBodyEncodedSize(requestInfo.encodedSize())
                     .setPopulationSize(serializedDatum.getPopulationSize()));
         }
         return requestEntryBuilders;
@@ -223,6 +252,7 @@ public abstract class HttpPostSink extends BaseSink {
         _maximumDelay = builder._maximumDelay;
         _acceptedStatusCodes = builder._acceptedStatusCodes;
         _retryableStatusCodes = builder._retryableStatusCodes;
+        _enableCompression = builder._enableCompression;
     }
 
     /**
@@ -250,6 +280,7 @@ public abstract class HttpPostSink extends BaseSink {
     private final Duration _maximumDelay;
     private final ImmutableSet<Integer> _acceptedStatusCodes;
     private final ImmutableSet<Integer> _retryableStatusCodes;
+    private final boolean _enableCompression;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpPostSink.class);
     private static final AsyncHttpClient CLIENT;
@@ -408,6 +439,18 @@ public abstract class HttpPostSink extends BaseSink {
         }
 
         /**
+         * Sets whether to enable request compression.
+         * Optional. Defaults to true.
+         *
+         * @param value true to enable compression
+         * @return This instance of {@link Builder}.
+         */
+        public B setEnableCompression(final Boolean value) {
+            _enableCompression = value;
+            return self();
+        }
+
+        /**
          * Protected constructor for subclasses.
          *
          * @param targetConstructor The constructor for the concrete type to be created by this builder.
@@ -444,6 +487,8 @@ public abstract class HttpPostSink extends BaseSink {
         private ImmutableSet<Integer> _acceptedStatusCodes = DEFAULT_ACCEPTED_STATUS_CODES;
         @NotNull
         private ImmutableSet<Integer> _retryableStatusCodes = DEFAULT_RETRYABLE_STATUS_CODES;
+        @NotNull
+        private Boolean _enableCompression = false;
 
         private static final ImmutableSet<Integer> DEFAULT_ACCEPTED_STATUS_CODES;
         private static final ImmutableSet<Integer> DEFAULT_RETRYABLE_STATUS_CODES;
@@ -485,6 +530,19 @@ public abstract class HttpPostSink extends BaseSink {
             }
         }
     }
+
+    /**
+     * Represents metadata for a request in the HttpPostSink. This record encapsulates a request
+     * alongside its associated sizes, including the body size and the encoded size.
+     *
+     * The metadata is used to track details about the request and its payload, such as the size of
+     * the data being transmitted to provide diagnostic or operational insights.
+     *
+     * @param request The {@link Request} object that represents the HTTP request to be sent.
+     * @param bodySize The size of the request body in bytes.
+     * @param encodedSize The size of the encoded request body in bytes.
+     */
+    record RequestInfo(Request request, long bodySize, long encodedSize) { }
 
     static final class SerializedDatum {
         SerializedDatum(final byte[] datum, final Optional<Long> populationSize) {

@@ -99,8 +99,8 @@ public final class SignalFxSink extends HttpPostSink {
     }
 
     @Override
-    protected Request createRequest(final AsyncHttpClient client, final byte[] serializedData) {
-        return new RequestBuilder()
+    protected RequestInfo createRequest(final AsyncHttpClient client, final byte[] serializedData) {
+        final Request request = new RequestBuilder()
                 .setUri(getAysncHttpClientUri())
                 .setBody(serializedData)
                 .setMethod(HttpMethods.POST.value())
@@ -110,6 +110,7 @@ public final class SignalFxSink extends HttpPostSink {
                 .setHeader("X-SF-TOKEN", _apiToken)
                 .addQueryParam("orgid", _organizationId)
                 .build();
+        return new RequestInfo(request, serializedData.length, serializedData.length);
     }
 
     private SignalFxProtocolBuffers.DataPoint createDataPoint(

@@ -146,13 +146,14 @@ public final class MonitordSink extends HttpPostSink {
     }
 
     @Override
-    protected Request createRequest(final AsyncHttpClient client, final byte[] serializedData) {
-        return new RequestBuilder()
+    protected RequestInfo createRequest(final AsyncHttpClient client, final byte[] serializedData) {
+        final Request request = new RequestBuilder()
                 .setUri(getAysncHttpClientUri())
                 .setHeader("Content-Type", MediaTypes.APPLICATION_X_WWW_FORM_URLENCODED.toString())
                 .setBody(serializedData)
                 .setMethod(HttpMethods.POST.value())
                 .build();
+        return new RequestInfo(request, serializedData.length, serializedData.length);
     }
 
     private Multimap<String, Condition> prepareConditions(final Collection<Condition> conditions) {

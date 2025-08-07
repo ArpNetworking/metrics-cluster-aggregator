@@ -113,6 +113,8 @@ public class HttpSinkActor extends AbstractActorWithTimers {
         }
         _evictedRequestsName = "sinks/http_post/" + _sink.getMetricSafeName() + "/evicted_requests";
         _requestLatencyName = "sinks/http_post/" + _sink.getMetricSafeName() + "/request_latency";
+        _requestBodySizeName = "sinks/http_post/" + _sink.getMetricSafeName() + "/request_body_size";
+        _requestBodyEncodedSizeName = "sinks/http_post/" + _sink.getMetricSafeName() + "/request_body_encoded_size";
         _inQueueLatencyName = "sinks/http_post/" + _sink.getMetricSafeName() + "/queue_time";
         _pendingRequestsQueueSizeName = "sinks/http_post/" + _sink.getMetricSafeName() + "/queue_size";
         _inflightRequestsCountName = "sinks/http_post/" + _sink.getMetricSafeName() + "/inflight_count";
@@ -121,6 +123,7 @@ public class HttpSinkActor extends AbstractActorWithTimers {
         _httpSinkAttemptsName = "sinks/http_post/" + _sink.getMetricSafeName() + "/attempts";
         _samplesSentName = "sinks/http_post/" + sink.getMetricSafeName() + "/samples_sent";
         _samplesDroppedName = "sinks/http_post/" + _sink.getMetricSafeName() + "/samples_dropped";
+
     }
 
     @Override
@@ -499,6 +502,14 @@ public class HttpSinkActor extends AbstractActorWithTimers {
                     }
                 });
         Patterns.pipe(responsePromise, context().dispatcher()).to(self());
+        _periodicMetrics.recordCounter(
+                _requestBodySizeName,
+                request.getRequestBodySize()
+        );
+        _periodicMetrics.recordCounter(
+                _requestBodyEncodedSizeName,
+                request.getRequestBodyEncodedSize()
+        );
         _client.executeRequest(request.getRequest(), new ResponseAsyncCompletionHandler(promise));
     }
 
@@ -547,6 +558,8 @@ public class HttpSinkActor extends AbstractActorWithTimers {
     private final String _httpSinkAttemptsName;
     private final String _samplesSentName;
     private final String _samplesDroppedName;
+    private final String _requestBodySizeName;
+    private final String _requestBodyEncodedSizeName;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpSinkActor.class);
     private static final Logger POST_RETRY_LOGGER = LoggerFactory.getRateLimitLogger(HttpSinkActor.class, Duration.ofSeconds(30));

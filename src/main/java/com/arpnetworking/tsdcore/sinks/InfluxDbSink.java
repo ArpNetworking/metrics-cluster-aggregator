@@ -44,13 +44,14 @@ public final class InfluxDbSink extends HttpPostSink {
 
 
     @Override
-    protected Request createRequest(final AsyncHttpClient client, final byte[] serializedData) {
-        return new RequestBuilder()
+    protected RequestInfo createRequest(final AsyncHttpClient client, final byte[] serializedData) {
+        final Request request = new RequestBuilder()
                 .setUri(getAysncHttpClientUri())
                 .setHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
                 .setBody(serializedData)
                 .setMethod(HttpMethods.POST.value())
                 .build();
+        return new RequestInfo(request, serializedData.length, serializedData.length);
     }
 
     @Override

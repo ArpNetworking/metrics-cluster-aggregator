@@ -40,15 +40,27 @@ public final class RequestEntry {
         return _populationSize;
     }
 
+    public Long getRequestBodySize() {
+        return _requestBodySize;
+    }
+
+    public Long getRequestBodyEncodedSize() {
+        return _requestBodyEncodedSize;
+    }
+
     private RequestEntry(final Builder builder) {
         _request = builder._request;
         _enterTime = builder._enterTime;
         _populationSize = builder._populationSize;
+        _requestBodySize = builder._requestBodySize;
+        _requestBodyEncodedSize = builder._requestBodyEncodedSize;
     }
 
     private final Request _request;
     private final Instant _enterTime;
     private final Optional<Long> _populationSize;
+    private final Long _requestBodySize;
+    private final Long _requestBodyEncodedSize;
 
     /**
      * {@link com.arpnetworking.commons.builder.Builder} implementation for
@@ -99,12 +111,38 @@ public final class RequestEntry {
             return this;
         }
 
+        /**
+         * Set the request body size. Cannot be null.
+         *
+         * @param value The request body size.
+         * @return This {@link Builder} instance.
+         */
+        public Builder setRequestBodySize(final Long value) {
+            _requestBodySize = value;
+            return this;
+        }
+
+        /**
+         * Set the request body encoded size. Cannot be null.
+         *
+         * @param value The request body encoded size.
+         * @return This {@link Builder} instance.
+         */
+        public Builder setRequestBodyEncodedSize(final Long value) {
+            _requestBodyEncodedSize = value;
+            return this;
+        }
+
         @NotNull
         private Request _request;
         @NotNull
         private Instant _enterTime;
         @NotNull
         private Optional<Long> _populationSize = Optional.empty();
+        @NotNull
+        private Long _requestBodySize = null;
+        @NotNull
+        private Long _requestBodyEncodedSize = null;
     }
 }
 

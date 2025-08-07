@@ -119,14 +119,15 @@ public final class DataDogSink extends HttpPostSink {
     }
 
     @Override
-    protected Request createRequest(final AsyncHttpClient client, final byte[] serializedData) {
-        return new RequestBuilder()
+    protected RequestInfo createRequest(final AsyncHttpClient client, final byte[] serializedData) {
+        final Request request = new RequestBuilder()
                 .setUri(getAysncHttpClientUri())
                 .setBody(serializedData)
                 .setMethod(HttpMethods.POST.value())
                 .setHeader("Content-Type", "application/json")
                 .addQueryParam("api_key", _apiKey)
                 .build();
+        return new RequestInfo(request, serializedData.length, serializedData.length);
     }
 
     private DataDogSink(final Builder builder) {
