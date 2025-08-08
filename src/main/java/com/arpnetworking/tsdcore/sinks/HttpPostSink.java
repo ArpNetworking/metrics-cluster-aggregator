@@ -115,6 +115,7 @@ public abstract class HttpPostSink extends BaseSink {
                  GZIPOutputStream gzipStream = new GZIPOutputStream(bos)) {
 
                 gzipStream.write(serializedData);
+                gzipStream.finish();
                 gzipStream.flush();
                 bodyData = bos.toByteArray();
             } catch (final IOException e) {
