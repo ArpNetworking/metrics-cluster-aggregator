@@ -35,9 +35,13 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import io.netty.handler.codec.http.HttpHeaderNames;
 import it.unimi.dsi.fastutil.doubles.Double2LongMap;
 import net.sf.oval.constraint.Min;
 import net.sf.oval.constraint.NotNull;
+import org.asynchttpclient.AsyncHttpClient;
+import org.asynchttpclient.RequestBuilder;
+import org.asynchttpclient.util.HttpConstants;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -49,6 +53,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.LongAdder;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * Publishes to a KairosDbSink endpoint. This class is thread safe.
@@ -153,6 +158,33 @@ public final class KairosDbSink extends HttpPostSink {
         }
 
         return completeChunks;
+    }
+
+    @Override
+    protected RequestInfo createRequest(final AsyncHttpClient client, final byte[] serializedData) {
+        if (this.getEnableCompression()) {
+            final byte[] bodyData;
+            try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                 GZIPOutputStream gzipStream = new GZIPOutputStream(bos)) {
+
+                gzipStream.write(serializedData);
+                gzipStream.flush();
+                bodyData = bos.toByteArray();
+            } catch (final IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            final RequestBuilder requestBuilder = new RequestBuilder()
+                    .setUri(getAysncHttpClientUri())
+                    .setHeader(HttpHeaderNames.CONTENT_TYPE, "application/gzip")
+                    .setBody(bodyData)
+                    .setMethod(HttpConstants.Methods.POST);
+
+            return new RequestInfo(requestBuilder.build(), serializedData.length, bodyData.length);
+
+        } else {
+            return super.createRequest(client, serializedData);
+        }
     }
 
     private void addChunk(

@@ -230,6 +230,15 @@ public abstract class HttpPostSink extends BaseSink {
     }
 
     /**
+     * Accessor for whether compression is enabled.
+     *
+     * @return True if compression is enabled.
+     */
+    protected boolean getEnableCompression() {
+        return _enableCompression;
+    }
+
+    /**
      * Serialize the {@link PeriodicData} instance for posting.
      *
      * @param periodicData The {@link PeriodicData} to be serialized.
