@@ -159,8 +159,8 @@ public abstract class HttpPostSink extends BaseSink {
             final RequestInfo requestInfo = createRequest(client, datum);
             requestEntryBuilders.add(new RequestEntry.Builder()
                     .setRequest(requestInfo.request())
-                    .setRequestBodySize(requestInfo.bodySize())
-                    .setRequestBodyEncodedSize(requestInfo.encodedSize())
+                    .setRequestBodyBytes(requestInfo.bodySize())
+                    .setRequestBodyCompressedBytes(requestInfo.encodedSize())
                     .setPopulationSize(serializedDatum.getPopulationSize()));
         }
         return requestEntryBuilders;

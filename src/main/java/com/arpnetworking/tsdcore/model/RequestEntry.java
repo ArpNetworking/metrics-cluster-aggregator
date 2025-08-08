@@ -40,27 +40,27 @@ public final class RequestEntry {
         return _populationSize;
     }
 
-    public Long getRequestBodySize() {
-        return _requestBodySize;
+    public Long getRequestBodyBytes() {
+        return _requestBodyBytes;
     }
 
-    public Long getRequestBodyEncodedSize() {
-        return _requestBodyEncodedSize;
+    public Long getRequestBodyCompressedBytes() {
+        return _requestBodyCompressedBytes;
     }
 
     private RequestEntry(final Builder builder) {
         _request = builder._request;
         _enterTime = builder._enterTime;
         _populationSize = builder._populationSize;
-        _requestBodySize = builder._requestBodySize;
-        _requestBodyEncodedSize = builder._requestBodyEncodedSize;
+        _requestBodyBytes = builder._requestBodyBytes;
+        _requestBodyCompressedBytes = builder._requestBodyCompressedBytes;
     }
 
     private final Request _request;
     private final Instant _enterTime;
     private final Optional<Long> _populationSize;
-    private final Long _requestBodySize;
-    private final Long _requestBodyEncodedSize;
+    private final Long _requestBodyBytes;
+    private final Long _requestBodyCompressedBytes;
 
     /**
      * {@link com.arpnetworking.commons.builder.Builder} implementation for
@@ -112,24 +112,24 @@ public final class RequestEntry {
         }
 
         /**
-         * Set the request body size. Required. Cannot be null.
+         * Set the request body size in bytes. Required. Cannot be null.
          *
-         * @param value The request body size.
+         * @param value The request body size in bytes.
          * @return This {@link Builder} instance.
          */
-        public Builder setRequestBodySize(final Long value) {
-            _requestBodySize = value;
+        public Builder setRequestBodyBytes(final Long value) {
+            _requestBodyBytes = value;
             return this;
         }
 
         /**
-         * Set the request body encoded size. Required. Cannot be null.
+         * Set the request body compressed size in bytes. Required. Cannot be null.
          *
-         * @param value The request body encoded size.
+         * @param value The request body compressed size in bytes.
          * @return This {@link Builder} instance.
          */
-        public Builder setRequestBodyEncodedSize(final Long value) {
-            _requestBodyEncodedSize = value;
+        public Builder setRequestBodyCompressedBytes(final Long value) {
+            _requestBodyCompressedBytes = value;
             return this;
         }
 
@@ -140,9 +140,9 @@ public final class RequestEntry {
         @NotNull
         private Optional<Long> _populationSize = Optional.empty();
         @NotNull
-        private Long _requestBodySize;
+        private Long _requestBodyBytes;
         @NotNull
-        private Long _requestBodyEncodedSize;
+        private Long _requestBodyCompressedBytes;
     }
 }
 
