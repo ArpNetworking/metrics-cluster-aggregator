@@ -111,11 +111,11 @@ public abstract class HttpPostSink extends BaseSink {
     protected RequestInfo createRequest(final AsyncHttpClient client, final byte[] serializedData) {
         final byte[] bodyData;
         if (_enableCompression) {
-            try {
-                final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                final GZIPOutputStream gzipStream = new GZIPOutputStream(bos);
+            try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                 GZIPOutputStream gzipStream = new GZIPOutputStream(bos)) {
+
                 gzipStream.write(serializedData);
-                gzipStream.close();
+                gzipStream.flush();
                 bodyData = bos.toByteArray();
             } catch (final IOException e) {
                 throw new RuntimeException(e);
@@ -440,7 +440,7 @@ public abstract class HttpPostSink extends BaseSink {
 
         /**
          * Sets whether to enable request compression.
-         * Optional. Defaults to true.
+         * Optional. Defaults to false.
          *
          * @param value true to enable compression
          * @return This instance of {@link Builder}.
@@ -453,7 +453,7 @@ public abstract class HttpPostSink extends BaseSink {
         /**
          * Protected constructor for subclasses.
          *
-         * @param targetConstructor The constructor for the concrete type to be created by this builder.
+         * @param targetConstructor The constructor for this builder to create the concrete type.
          */
         protected Builder(final Function<B, S> targetConstructor) {
             super(targetConstructor);
@@ -542,7 +542,7 @@ public abstract class HttpPostSink extends BaseSink {
      * @param bodySize The size of the request body in bytes.
      * @param encodedSize The size of the encoded request body in bytes.
      */
-    record RequestInfo(Request request, long bodySize, long encodedSize) { }
+    protected record RequestInfo(Request request, long bodySize, long encodedSize) { }
 
     static final class SerializedDatum {
         SerializedDatum(final byte[] datum, final Optional<Long> populationSize) {

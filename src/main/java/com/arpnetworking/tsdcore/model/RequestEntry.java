@@ -112,7 +112,7 @@ public final class RequestEntry {
         }
 
         /**
-         * Set the request body size. Cannot be null.
+         * Set the request body size. Required. Cannot be null.
          *
          * @param value The request body size.
          * @return This {@link Builder} instance.
@@ -123,7 +123,7 @@ public final class RequestEntry {
         }
 
         /**
-         * Set the request body encoded size. Cannot be null.
+         * Set the request body encoded size. Required. Cannot be null.
          *
          * @param value The request body encoded size.
          * @return This {@link Builder} instance.
@@ -140,9 +140,9 @@ public final class RequestEntry {
         @NotNull
         private Optional<Long> _populationSize = Optional.empty();
         @NotNull
-        private Long _requestBodySize = null;
+        private Long _requestBodySize;
         @NotNull
-        private Long _requestBodyEncodedSize = null;
+        private Long _requestBodyEncodedSize;
     }
 }
 
