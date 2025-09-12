@@ -145,7 +145,7 @@
     <oval.version>3.2.1</oval.version>
     <play.ws.version>3.0.8</play.ws.version>
     <postgresql.version>42.7.7</postgresql.version>
-    <protobuf.version>4.32.0</protobuf.version>
+    <protobuf.version>4.32.1</protobuf.version>
     <reflections.version>0.11.7</reflections.version>
     <scala.version>2.13</scala.version>
     <scala.library.version>2.13.16</scala.library.version>
