@@ -102,7 +102,8 @@ public class KairosDbSinkTest extends BaseActorTest {
 
         // Compare the bodies
         final JsonNode actual = OBJECT_MAPPER.readTree(_wireMock.find(requestPattern).get(0).getBody());
-        final JsonNode expected = OBJECT_MAPPER.readTree(getClass().getResource(getClass().getSimpleName() + ".testPost.expected.json"));
+        final JsonNode expected = OBJECT_MAPPER.readTree(getClass().getResource(getClass().getSimpleName() + ".testPost.expected.json")
+                .openStream());
         Assert.assertEquals(expected, actual);
     }
 
