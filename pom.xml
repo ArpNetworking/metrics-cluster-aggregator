@@ -148,7 +148,7 @@
     <protobuf.version>4.32.1</protobuf.version>
     <reflections.version>0.11.7</reflections.version>
     <scala.version>2.13</scala.version>
-    <scala.library.version>2.13.16</scala.library.version>
+    <scala.library.version>2.13.17</scala.library.version>
     <signalfx.protoc.version>1.0.49</signalfx.protoc.version>
     <slf4j.version>2.0.17</slf4j.version>
     <spotbugs.annotations.version>4.9.6</spotbugs.annotations.version>
