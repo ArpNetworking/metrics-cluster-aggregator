@@ -35,7 +35,6 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import io.netty.handler.codec.http.HttpHeaderNames;
 import it.unimi.dsi.fastutil.doubles.Double2LongMap;
 import net.sf.oval.constraint.Min;
 import net.sf.oval.constraint.NotNull;
@@ -177,7 +176,7 @@ public final class KairosDbSink extends HttpPostSink {
 
             final RequestBuilder requestBuilder = new RequestBuilder()
                     .setUri(getAysncHttpClientUri())
-                    .setHeader(HttpHeaderNames.CONTENT_TYPE, "application/gzip")
+                    .setHeader("Content-Type", "application/gzip")
                     .setBody(bodyData)
                     .setMethod(HttpConstants.Methods.POST);
 

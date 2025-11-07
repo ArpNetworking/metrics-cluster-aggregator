@@ -25,8 +25,6 @@ import com.arpnetworking.tsdcore.model.RequestEntry;
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpHeaderValues;
 import net.sf.oval.Validator;
 import net.sf.oval.constraint.CheckWith;
 import net.sf.oval.constraint.CheckWithCheck;
@@ -127,12 +125,12 @@ public abstract class HttpPostSink extends BaseSink {
 
         final RequestBuilder requestBuilder = new RequestBuilder()
                 .setUri(getAysncHttpClientUri())
-                .setHeader(HttpHeaderNames.CONTENT_TYPE, MediaTypes.APPLICATION_JSON.toString())
+                .setHeader("Content-Type", MediaTypes.APPLICATION_JSON.toString())
                 .setBody(bodyData)
                 .setMethod(HttpConstants.Methods.POST);
 
         if (_enableCompression) {
-            requestBuilder.setHeader(HttpHeaderNames.CONTENT_ENCODING, HttpHeaderValues.GZIP);
+            requestBuilder.setHeader("Content-Encoding", "gzip");
         }
 
         return new RequestInfo(requestBuilder.build(), serializedData.length, bodyData.length);
