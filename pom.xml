@@ -138,9 +138,8 @@
     <metrics.http.extra.version>0.14.1</metrics.http.extra.version>
     <metrics.aggregator.protocol.version>1.3.1</metrics.aggregator.protocol.version>
     <mockito.version>5.20.0</mockito.version>
-    <netty.version>4.0.56.Final</netty.version>
+    <netty.version>4.2.7.Final</netty.version>
     <netty.all.version>4.0.21.Final</netty.all.version>
-    <netty.codec.http.version>4.2.7.Final</netty.codec.http.version>
     <ning.http.client.version>1.9.31</ning.http.client.version>
     <oval.version>3.2.1</oval.version>
     <play.ws.version>3.0.9</play.ws.version>
@@ -974,7 +973,7 @@
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-bom</artifactId>
-        <version>${netty.codec.http.version}</version>
+        <version>${netty.version}</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
