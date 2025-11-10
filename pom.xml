@@ -157,7 +157,7 @@
 
     <!--Plugin versions-->
     <avaje.ebeanorm.mavenenhancer.version>17.1.1</avaje.ebeanorm.mavenenhancer.version>
-    <aspectjtools.maven.plugin>1.9.24</aspectjtools.maven.plugin>
+    <aspectjtools.maven.plugin>1.9.25</aspectjtools.maven.plugin>
     <aspectj.maven.plugin.version>1.15.0</aspectj.maven.plugin.version>
     <docker.maven.plugin.version>0.46.0</docker.maven.plugin.version>
     <javassist.maven.plugin.version>0.2.9</javassist.maven.plugin.version>
