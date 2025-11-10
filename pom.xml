@@ -110,7 +110,7 @@
     <aspectjrt.version>1.9.25</aspectjrt.version>
     <asynchttpclient.version>3.0.3</asynchttpclient.version>
     <awaitility.version>4.3.0</awaitility.version>
-    <commons.codec.version>1.19.0</commons.codec.version>
+    <commons.codec.version>1.20.0</commons.codec.version>
     <ebean.version>17.1.1</ebean.version>
     <ebean.annotation.version>8.4</ebean.annotation.version>
     <jakarta.persistence.api.version>3.1</jakarta.persistence.api.version>
